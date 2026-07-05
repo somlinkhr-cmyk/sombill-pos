@@ -466,19 +466,19 @@ INSERT INTO public.tables (number, capacity, status) VALUES
 (12, 6, 'available')
 ON CONFLICT (number) DO NOTHING;
 
--- Create initial manager user
--- This creates the user in Supabase Auth and the corresponding public.users record
+-- Create initial demo users
+-- This creates users in Supabase Auth and the corresponding public.users records
 -- Note: You may need to run this in the Supabase SQL Editor with proper permissions
 DO $$
 DECLARE
   user_id UUID;
 BEGIN
-  -- Check if user already exists in auth.users
+  -- Create Manager user
   SELECT id INTO user_id FROM auth.users WHERE email = 'manager@gmail.com';
   
-  -- If user doesn't exist, create them
   IF user_id IS NULL THEN
     INSERT INTO auth.users (
+      id,
       email,
       encrypted_password,
       email_confirmed_at,
@@ -486,6 +486,7 @@ BEGIN
       created_at,
       updated_at
     ) VALUES (
+      gen_random_uuid(),
       'manager@gmail.com',
       crypt('1133', gen_salt('bf')),
       NOW(),
@@ -496,7 +497,6 @@ BEGIN
     RETURNING id INTO user_id;
   END IF;
   
-  -- Insert/update in public.users
   IF user_id IS NOT NULL THEN
     INSERT INTO public.users (id, email, name, phone, role, salary, shift, is_active)
     VALUES (
@@ -506,6 +506,51 @@ BEGIN
       '+252 61 234 5678',
       'manager',
       1500,
+      'morning',
+      true
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      name = EXCLUDED.name,
+      phone = EXCLUDED.phone,
+      role = EXCLUDED.role,
+      salary = EXCLUDED.salary,
+      shift = EXCLUDED.shift,
+      is_active = EXCLUDED.is_active;
+  END IF;
+
+  -- Create Cashier user
+  SELECT id INTO user_id FROM auth.users WHERE email = 'cashier@gmail.com';
+  
+  IF user_id IS NULL THEN
+    INSERT INTO auth.users (
+      id,
+      email,
+      encrypted_password,
+      email_confirmed_at,
+      raw_user_meta_data,
+      created_at,
+      updated_at
+    ) VALUES (
+      gen_random_uuid(),
+      'cashier@gmail.com',
+      crypt('1133', gen_salt('bf')),
+      NOW(),
+      '{"role": "cashier"}',
+      NOW(),
+      NOW()
+    )
+    RETURNING id INTO user_id;
+  END IF;
+  
+  IF user_id IS NOT NULL THEN
+    INSERT INTO public.users (id, email, name, phone, role, salary, shift, is_active)
+    VALUES (
+      user_id,
+      'cashier@gmail.com',
+      'Cashier',
+      '+252 61 234 5679',
+      'cashier',
+      800,
       'morning',
       true
     )

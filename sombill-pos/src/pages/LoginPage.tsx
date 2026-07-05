@@ -30,11 +30,13 @@ export default function LoginPage() {
     setError('')
     
     try {
-      // Map role-based login to email/password for existing auth
-      const email = `${username}@sombill.com`
-      const password = pin.join('') || 'demo123'
+      // Use full email if provided, otherwise append @sombill.com
+      const email = username.includes('@') ? username : `${username}@sombill.com`
+      const password = pin.join('') || '1133'
+      console.log('Attempting login with:', email, password)
       await login(email, password)
     } catch (err: any) {
+      console.error('Login error:', err)
       setError(err.message || 'Login failed')
     }
   }
@@ -329,11 +331,9 @@ export default function LoginPage() {
           fontSize: '11px', color: '#B6AFD6', background: 'rgba(255,255,255,.05)'
         }}>
           <p className="font-semibold mb-1">Demo credentials:</p>
-          <p>Manager: manager@sombill.com</p>
-          <p>Cashier: cashier@sombill.com</p>
-          <p>Waiter: waiter@sombill.com</p>
-          <p>Kitchen: kitchen@sombill.com</p>
-          <p className="mt-1" style={{ color: '#8880AC' }}>Password: demo123</p>
+          <p>Manager: manager@gmail.com</p>
+          <p>Cashier: cashier@gmail.com</p>
+          <p>Password: 1133 or 1144</p>
         </div>
       </div>
     </div>
