@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="so">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SomBill — Nidaamka Maamulka Maqaayadda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --panel:#ffffff;
+    --panel-2:#f5f4f0;
+    --line: rgba(20,20,30,0.09);
+    --gold:#c9a227;
+    --gold-bright:#9c7209;
+    --purple:#6d4fd1;
+    --purple-dim: rgba(109,79,209,0.10);
+    --text:#1c2030;
+    --muted:#767b8c;
+    --green:#1f8f5c;
+    --amber:#a06615;
+    --red:#b83b3b;
+    --radius:20px;
+    --shadow: 0 1px 2px rgba(20,20,40,0.04), 0 10px 30px rgba(20,20,40,0.05);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:
+      radial-gradient(1100px 550px at 90% -10%, rgba(109,79,209,0.05), transparent 60%),
+      radial-gradient(900px 500px at 0% 100%, rgba(201,162,39,0.05), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  h1,h2,h3,.display{font-family:'Fraunces',serif;}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-thumb{background:rgba(201,162,39,0.3);border-radius:8px;}
+  button{font-family:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;}
+
+  /* ---------- App Shell / Sidebar ---------- */
+  .app-shell{display:flex;align-items:flex-start;min-height:100vh;}
+  .sidebar{
+    width:250px;flex-shrink:0;min-height:100vh;
+    background:#fffefb;
+    border-right:1px solid var(--line);
+    display:flex;flex-direction:column;
+    padding:26px 20px;
+    position:sticky;top:0;
+    box-shadow:1px 0 0 rgba(20,20,40,0.02);
+  }
+  .sidebar::before{
+    content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+    background:linear-gradient(180deg,var(--gold),var(--purple));
+  }
+  .sidebar{position:relative;}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:30px;padding:0 4px;}
+  .brand .mark{
+    width:40px;height:40px;border-radius:12px;
+    background:linear-gradient(135deg,var(--gold),var(--purple));
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-weight:700;color:#fff;font-size:19px;
+    box-shadow:var(--shadow);
+  }
+  .brand .name{font-family:'Fraunces',serif;font-size:19px;letter-spacing:0.3px;color:var(--text);}
+  .brand .sub{font-size:10.5px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;}
+
+  .role-switch{display:flex;flex-direction:column;gap:6px;flex:1;}
+  .role-switch button{
+    display:flex;align-items:center;gap:10px;
+    border:1px solid transparent;background:transparent;color:var(--muted);
+    padding:12px 16px;border-radius:14px;font-size:14px;font-weight:600;
+    transition:all .18s ease; letter-spacing:.2px;text-align:left;width:100%;
+  }
+  .role-switch button:hover{background:var(--panel-2);color:var(--text);}
+  .role-switch button.active{
+    background:linear-gradient(135deg, rgba(201,162,39,0.14), rgba(109,79,209,0.12));
+    color:var(--text);
+    border-color:var(--line);
+    box-shadow:var(--shadow);
+  }
+  .role-switch button .dot{width:8px;height:8px;border-radius:50%;background:var(--line);flex-shrink:0;}
+  .role-switch button.active .dot{background:linear-gradient(135deg,var(--gold),var(--purple));}
+
+  .clock{font-family:'IBM Plex Mono',monospace;color:var(--muted);font-size:12px;padding:14px 4px 4px;border-top:1px solid var(--line);margin-top:14px;}
+  .clock b{color:var(--gold-bright);}
+
+  .main-content{flex:1;min-width:0;}
+
+  .view{display:none;padding:30px 34px 60px;max-width:1200px;margin:0 auto;animation:fadein .35s ease;}
+  .view.active{display:block;}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  .view-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:10px;}
+  .view-head h1{font-size:27px;margin:0;font-weight:600;}
+  .view-head p{color:var(--muted);margin:4px 0 0;font-size:13.5px;}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:22px;
+  }
+
+  /* ---------- KPI cards ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+  .kpi{padding:18px 18px;position:relative;overflow:hidden;}
+  .kpi .lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);}
+  .kpi .val{font-family:'Fraunces',serif;font-size:28px;margin-top:8px;color:var(--gold-bright);}
+  .kpi .delta{font-size:12px;margin-top:6px;color:var(--green);}
+  .kpi::after{content:'';position:absolute;right:-30px;top:-30px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle, rgba(109,79,209,0.10), transparent 70%);}
+
+  /* ---------- CASHIER (POS layout) ---------- */
+  .pos-layout{display:grid;grid-template-columns:290px 1fr;gap:18px;align-items:start;}
+
+  /* order ticket (left) */
+  .order-ticket{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow);}
+  .ticket-header{display:flex;align-items:center;gap:11px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:6px;}
+  .ticket-header .tbl-icon{
+    width:38px;height:38px;border-radius:10px;background:var(--purple-dim);color:var(--purple);
+    display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;
+  }
+  .ticket-header .tbl-name{font-weight:700;font-size:14.5px;color:var(--text);}
+  .ticket-header .tbl-sub{font-size:11.5px;color:var(--muted);margin-top:1px;}
+
+  .ticket-items{max-height:340px;overflow-y:auto;}
+  .ticket-item{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);}
+  .ticket-item:last-child{border-bottom:none;}
+  .qty-badge{
+    width:24px;height:24px;border-radius:7px;background:var(--purple-dim);color:var(--purple);
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12.5px;flex-shrink:0;margin-top:1px;
+  }
+  .ticket-item-main{flex:1;min-width:0;}
+  .ticket-item-name{font-weight:600;font-size:13.5px;color:var(--text);}
+  .ticket-item-ctrl{display:flex;align-items:center;gap:6px;margin-top:6px;}
+  .ticket-item-ctrl button{width:20px;height:20px;border-radius:6px;border:1px solid var(--line);background:var(--panel-2);color:var(--text);font-size:12px;line-height:1;}
+  .ticket-item-ctrl span{font-size:11.5px;color:var(--muted);min-width:12px;text-align:center;}
+  .ticket-item-price{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text);font-weight:600;white-space:nowrap;flex-shrink:0;}
+  .ticket-item-remove{background:none;border:none;color:var(--muted);font-size:15px;padding:0 2px;flex-shrink:0;}
+  .ticket-item-remove:hover{color:var(--red);}
+  .cart-empty{color:var(--muted);font-size:13px;text-align:center;padding:34px 0;}
+
+  .totals{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:13px;}
+  .totals .row{display:flex;justify-content:space-between;padding:5px 0;color:var(--muted);}
+  .totals .row.grand{color:var(--text);font-size:18px;font-weight:700;border-top:1px solid var(--line);margin-top:6px;padding-top:11px;}
+  .pay-row{display:flex;gap:8px;margin-top:12px;}
+  .pay-row select{flex:1;background:var(--panel-2);border:1px solid var(--line);color:var(--text);padding:10px;border-radius:9px;font-size:12.5px;}
+  .btn-checkout{
+    width:100%;margin-top:12px;padding:15px;border:none;border-radius:14px;
+    background:linear-gradient(135deg,var(--purple),#8f7cf0);color:#fff;
+    font-weight:700;font-size:14.5px;letter-spacing:.2px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    box-shadow:0 10px 22px rgba(109,79,209,0.28);
+  }
+  .btn-checkout:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--muted);padding:9px 12px;border-radius:8px;font-size:12.5px;}
+  .btn-primary{
+    width:100%;margin-top:10px;padding:13px;border:none;border-radius:10px;
+    background:linear-gradient(135deg,var(--gold),var(--gold-bright));color:#fff;
+    font-weight:700;font-size:14px;letter-spacing:.3px;
+  }
+  .btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+
+  .open-bills{margin-top:16px;}
+  .open-bills h4{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px;}
+  .bill-chip{
+    display:flex;justify-content:space-between;align-items:center;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:9px;
+    padding:10px 13px;margin-bottom:8px;font-size:13px;
+  }
+  .bill-chip button{background:var(--purple-dim);border:1px solid var(--purple);color:var(--purple);padding:6px 11px;border-radius:7px;font-size:12px;font-weight:600;}
+
+  /* POS main (right) */
+  .pos-main{min-width:0;}
+  .pos-toolbar{
+    display:flex;background:#fff;border:1px solid var(--line);border-radius:16px;
+    padding:12px 6px;margin-bottom:14px;box-shadow:var(--shadow);
+  }
+  .pos-toolbar button{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    background:none;border:none;color:var(--muted);font-size:11px;font-weight:600;flex:1;
+  }
+  .pos-toolbar button .ic{
+    width:34px;height:34px;border-radius:10px;background:var(--purple-dim);
+    display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--purple);
+  }
+  .pos-toolbar button:hover .ic{background:var(--purple);color:#fff;}
+
+  .pos-search{display:flex;gap:10px;margin-bottom:14px;}
+  .pos-search input{
+    flex:1;background:#fff;border:1px solid var(--line);border-radius:12px;
+    padding:12px 16px;font-size:13.5px;color:var(--text);box-shadow:var(--shadow);
+  }
+  .pos-search input::placeholder{color:var(--muted);}
+  .pos-search .filter-btn{
+    width:44px;height:44px;flex-shrink:0;background:#fff;border:1px solid var(--line);
+    border-radius:12px;color:var(--muted);font-size:15px;box-shadow:var(--shadow);
+  }
+
+  .cat-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+  .cat-tabs button{
+    background:#fff;border:1px solid var(--line);color:var(--muted);
+    padding:9px 17px;border-radius:20px;font-size:12.5px;font-weight:600;box-shadow:var(--shadow);
+  }
+  .cat-tabs button.active{background:var(--purple);color:#fff;border-color:var(--purple);box-shadow:0 8px 18px rgba(109,79,209,0.25);}
+
+  .menu-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+  .menu-card{
+    position:relative;background:#fff;border:1px solid var(--line);border-radius:15px;
+    padding:0;text-align:left;transition:.15s;color:var(--text);overflow:hidden;
+  }
+  .menu-card:hover{border-color:var(--purple);transform:translateY(-2px);box-shadow:var(--shadow);}
+  .menu-card-img{width:100%;height:108px;background:#eceae3;display:flex;align-items:center;justify-content:center;}
+  .menu-card-img img{width:100%;height:100%;object-fit:cover;display:block;}
+  .menu-card-img.placeholder{font-family:'Fraunces',serif;font-size:26px;color:var(--muted);}
+  .menu-card-body{padding:11px 13px 14px;}
+  .menu-card .n{font-weight:600;font-size:13.5px;line-height:1.3;}
+  .menu-card .so{font-size:11px;color:var(--muted);margin-top:2px;}
+  .menu-card .p{font-family:'IBM Plex Mono',monospace;color:var(--muted);margin-top:6px;font-size:12.5px;}
+  .menu-card .add-fab{
+    position:absolute;right:10px;bottom:10px;width:28px;height:28px;border-radius:9px;
+    background:var(--purple-dim);color:var(--purple);display:flex;align-items:center;justify-content:center;
+    font-size:16px;font-weight:700;line-height:1;
+  }
+  .menu-card:hover .add-fab{background:var(--purple);color:#fff;}
+
+  /* ---------- WAITER ---------- */
+  .tables-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;}
+  .table-tile{
+    aspect-ratio:1/0.85;border-radius:12px;border:1px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    background:var(--panel-2); transition:.15s;
+  }
+  .table-tile:hover{transform:translateY(-2px);}
+  .table-tile .tn{font-family:'Fraunces',serif;font-size:22px;}
+  .table-tile .st{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;padding:3px 9px;border-radius:20px;}
+  .table-tile.free{border-color:rgba(76,175,125,0.35);}
+  .table-tile.free .st{background:rgba(76,175,125,0.15);color:var(--green);}
+  .table-tile.occupied{border-color:rgba(224,169,64,0.4);}
+  .table-tile.occupied .st{background:rgba(224,169,64,0.15);color:var(--amber);}
+  .table-tile.ready{border-color:rgba(109,79,209,0.5);}
+  .table-tile.ready .st{background:var(--purple-dim);color:var(--purple);}
+
+  .modal-backdrop{
+    position:fixed;inset:0;background:rgba(4,7,15,0.72);backdrop-filter:blur(3px);
+    display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
+  }
+  .modal-backdrop.active{display:flex;}
+  .modal{
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--line);
+    border-radius:16px;padding:22px;width:100%;max-width:900px;max-height:88vh;overflow:auto;
+  }
+  .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  .modal-head h3{margin:0;font-size:19px;}
+  .close-x{background:none;border:none;color:var(--muted);font-size:20px;}
+  .order-modal-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;}
+
+  /* ---------- RECEIPT ---------- */
+  .receipt-modal{max-width:380px;}
+  .receipt-print{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:#111;background:#fff;padding:16px;border-radius:8px;}
+  .receipt-print .rline{display:flex;justify-content:space-between;padding:3px 0;}
+  .receipt-print hr{border:none;border-top:1px dashed #999;margin:10px 0;}
+  .receipt-print h4{text-align:center;margin:0 0 4px;font-family:'Fraunces',serif;}
+  .receipt-print .center{text-align:center;}
+  @media print{
+    body *{visibility:hidden;}
+    #printReceiptArea, #printReceiptArea *{visibility:visible;}
+    #printReceiptArea{position:absolute;top:0;left:0;width:100%;padding:20px;}
+    .modal-backdrop{background:none !important;}
+  }
+
+  .status-badge{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;padding:3px 10px;border-radius:20px;font-weight:700;}
+  .status-badge.sent{background:rgba(224,169,64,0.15);color:var(--amber);}
+  .status-badge.preparing{background:var(--purple-dim);color:var(--purple);}
+  .status-badge.ready{background:rgba(76,175,125,0.15);color:var(--green);}
+  .status-badge.served{background:rgba(139,147,167,0.15);color:var(--muted);}
+  .status-badge.paid{background:rgba(201,162,39,0.18);color:var(--gold-bright);}
+
+  .order-row{
+    display:flex;justify-content:space-between;align-items:center;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
+    padding:12px 15px;margin-bottom:9px;
+  }
+  .order-row .meta{font-size:12.5px;color:var(--muted);margin-top:3px;}
+
+  /* ---------- MANAGER ---------- */
+  .mgr-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;}
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:13px;}
+  .bar-row .name{width:110px;color:var(--muted);flex-shrink:0;}
+  .bar-track{flex:1;height:10px;border-radius:6px;background:var(--panel-2);overflow:hidden;}
+  .bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--purple));}
+  .bar-row .amt{width:75px;text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--gold-bright);font-size:12.5px;}
+
+  table.data{width:100%;border-collapse:collapse;font-size:13px;}
+  table.data th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.8px;padding:8px 10px;border-bottom:1px solid var(--line);}
+  table.data td{padding:10px;border-bottom:1px solid rgba(20,20,40,0.06);}
+  table.data tr:hover td{background:rgba(20,20,40,0.02);}
+
+  .menu-editor-row{display:grid;grid-template-columns:48px 1.2fr 1fr 0.8fr 0.55fr 0.5fr;gap:8px;margin-bottom:8px;align-items:center;}
+  .menu-editor-row input,.menu-editor-row select{background:var(--panel-2);border:1px solid var(--line);color:var(--text);padding:8px 10px;border-radius:7px;font-size:12.5px;}
+  .icon-btn{background:transparent;border:1px solid var(--line);color:var(--red);border-radius:7px;padding:8px;font-size:12px;}
+
+  .thumb-upload{width:44px;height:44px;border-radius:9px;overflow:hidden;cursor:pointer;display:block;background:#eceae3;border:1px solid var(--line);flex-shrink:0;}
+  .thumb-upload img{width:100%;height:100%;object-fit:cover;display:block;}
+  .thumb-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;color:var(--muted);font-size:16px;}
+
+  .add-product-form{display:grid;grid-template-columns:1.1fr 1fr 0.8fr 0.55fr auto auto;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);align-items:center;}
+  .add-product-form input{background:var(--panel-2);border:1px solid var(--line);color:var(--text);padding:9px 11px;border-radius:8px;font-size:12.5px;width:100%;}
+  .add-product-form .btn-primary{margin:0;padding:9px 14px;font-size:12.5px;white-space:nowrap;width:auto;}
+  .img-upload-btn{background:var(--panel-2);border:1px dashed var(--line);color:var(--muted);padding:9px 12px;border-radius:8px;font-size:12px;text-align:center;white-space:nowrap;cursor:pointer;display:inline-block;}
+  .img-upload-btn:hover{border-color:var(--gold);color:var(--text);}
+  .img-preview-row{margin-top:10px;display:flex;align-items:center;gap:10px;}
+  .img-preview-thumb{width:46px;height:46px;border-radius:8px;object-fit:cover;border:1px solid var(--line);}
+  @media(max-width:980px){ .add-product-form{grid-template-columns:1fr;} }
+
+  .section-title{font-size:14px;font-weight:600;margin-bottom:14px;color:var(--gold-bright);letter-spacing:.3px;}
+  .empty-note{color:var(--muted);font-size:13px;text-align:center;padding:24px;}
+
+  @media(max-width:980px){
+    .cashier-grid, .mgr-grid, .order-modal-grid{grid-template-columns:1fr;}
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .menu-grid{grid-template-columns:repeat(2,1fr);}
+    .tables-grid{grid-template-columns:repeat(3,1fr);}
+    .app-shell{flex-direction:column;}
+    .sidebar{
+      width:100%;min-height:auto;position:sticky;top:0;z-index:50;
+      flex-direction:row;align-items:center;padding:14px 18px;
+    }
+    .sidebar::before{width:100%;height:3px;top:auto;bottom:0;}
+    .brand{margin-bottom:0;}
+    .role-switch{flex-direction:row;flex:0;}
+    .role-switch button{padding:9px 14px;font-size:13px;}
+    .clock{display:none;}
+    .view{padding:22px 18px 50px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">S</div>
+      <div>
+        <div class="name">SomBill</div>
+        <div class="sub">Restaurant Operations</div>
+      </div>
+    </div>
+    <div class="role-switch">
+      <button data-view="cashier" class="active"><span class="dot"></span>Cashier POS</button>
+      <button data-view="waiter"><span class="dot"></span>Waiter</button>
+      <button data-view="manager"><span class="dot"></span>Manager</button>
+    </div>
+    <div class="clock" id="clock">—</div>
+  </aside>
+
+  <main class="main-content">
+
+<!-- ===================== CASHIER VIEW ===================== -->
+<div class="view active" id="view-cashier">
+  <div class="view-head">
+    <div>
+      <h1>Cashier POS</h1>
+      <p>Dooro cuntada oo samee bilku — ama xaqiiji miis waiter ka soo diray.</p>
+    </div>
+  </div>
+
+  <div class="pos-layout">
+    <aside class="order-ticket">
+      <div class="ticket-header">
+        <div class="tbl-icon">🍽️</div>
+        <div>
+          <div class="tbl-name">Walk-in Order</div>
+          <div class="tbl-sub">Dine In</div>
+        </div>
+      </div>
+      <div class="ticket-items" id="cartLines"></div>
+      <div class="totals" id="cartTotals"></div>
+      <div class="pay-row">
+        <select id="payMethod">
+          <option value="Cash">Lacag caddaan (Cash)</option>
+          <option value="Card">Kaarka (Card)</option>
+          <option value="EDahab">E-Dahab / Zaad</option>
+        </select>
+      </div>
+      <button class="btn-checkout" id="chargeBtn">💳 Checkout</button>
+      <button class="btn-ghost" style="width:100%;margin-top:8px;" id="clearCartBtn">Nadiifi Bilka</button>
+
+      <div class="open-bills">
+        <h4>Miisaska Diyaar u ah Bixinta</h4>
+        <div id="openBills"></div>
+      </div>
+    </aside>
+
+    <div class="pos-main">
+      <div class="pos-toolbar">
+        <button id="printDraftBtn"><span class="ic">🖨️</span>Print</button>
+        <button><span class="ic">👨‍🍳</span>Kitchen</button>
+        <button><span class="ic">🚫</span>Void</button>
+        <button><span class="ic">%</span>Discount</button>
+        <button><span class="ic">📝</span>Notes</button>
+        <button><span class="ic">🏷️</span>Tags</button>
+        <button><span class="ic">⋯</span>More</button>
+      </div>
+      <div class="pos-search">
+        <input type="text" id="productSearch" placeholder="Search products">
+        <button class="filter-btn">⚙</button>
+      </div>
+      <div class="cat-tabs" id="catTabs"></div>
+      <div class="menu-grid" id="menuGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== WAITER VIEW ===================== -->
+<div class="view" id="view-waiter">
+  <div class="view-head">
+    <div>
+      <h1>Waiter Panel</h1>
+      <p>Dooro miiska si aad dalab uga qaadato ama xaalka ugu eegto.</p>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="tables-grid" id="tablesGrid"></div>
+  </div>
+
+  <div class="panel" style="margin-top:18px;">
+    <div class="section-title">Dalabyada Firfircoon (Active Orders)</div>
+    <div id="activeOrdersList"></div>
+  </div>
+</div>
+
+<!-- ===================== MANAGER VIEW ===================== -->
+<div class="view" id="view-manager">
+  <div class="view-head">
+    <div>
+      <h1>Manager Dashboard</h1>
+      <p>Guudmar ganacsiga maalinta, alaabta ugu iibsan, iyo maamulka menu-ga.</p>
+    </div>
+  </div>
+
+  <div class="kpis" id="kpiRow"></div>
+
+  <div class="mgr-grid">
+    <div class="panel">
+      <div class="section-title">Alaabta Ugu Iibsan (Top Items — Today)</div>
+      <div id="topItemsBars"></div>
+    </div>
+    <div class="panel">
+      <div class="section-title">Iibka Kooxda (Staff Sales)</div>
+      <div id="staffBars"></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:18px;">
+    <div class="section-title">Dalabyada Dhawaan (Recent Orders)</div>
+    <div style="overflow-x:auto;">
+      <table class="data" id="recentOrdersTable">
+        <thead><tr><th>Miis</th><th>Alaabta</th><th>Waiter</th><th>Xaalad</th><th>Wakhti</th><th>Qiimo</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:18px;">
+    <div class="section-title">Maamulka Menu-ga (Menu Management)</div>
+    <div id="menuEditor"></div>
+    <div class="add-product-form" id="addProductForm">
+      <input type="text" id="newItemName" placeholder="Magaca alaabta (English)">
+      <input type="text" id="newItemSo" placeholder="Magaca Soomaali (ikhtiyaari)">
+      <input type="text" id="newItemCat" placeholder="Category" list="catList">
+      <datalist id="catList"></datalist>
+      <input type="number" id="newItemPrice" placeholder="Qiimo $" step="0.25" min="0">
+      <label class="img-upload-btn" for="newItemImage">📷 Sawir</label>
+      <input type="file" id="newItemImage" accept="image/*" style="display:none;">
+      <button class="btn-primary" id="addMenuItemBtn">+ Ku Dar Alaabta</button>
+    </div>
+    <div id="newItemImgPreview" class="img-preview-row"></div>
+  </div>
+</div>
+
+  </main>
+</div>
+
+<!-- ===================== RECEIPT MODAL ===================== -->
+<div class="modal-backdrop" id="receiptModalBackdrop">
+  <div class="modal receipt-modal">
+    <div class="modal-head">
+      <h3>Rasiidka (Receipt)</h3>
+      <button class="close-x" id="closeReceiptModal">✕</button>
+    </div>
+    <div id="printReceiptArea" class="receipt-print"></div>
+    <button class="btn-primary" id="printReceiptBtn" style="margin-top:14px;">🖨️ Print Receipt</button>
+  </div>
+</div>
+
+<!-- ===================== ORDER MODAL (Waiter) ===================== -->
+<div class="modal-backdrop" id="orderModalBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="orderModalTitle">Miiska</h3>
+      <button class="close-x" id="closeOrderModal">✕</button>
+    </div>
+    <div class="order-modal-grid">
+      <div>
+        <div class="cat-tabs" id="modalCatTabs"></div>
+        <div class="menu-grid" id="modalMenuGrid"></div>
+      </div>
+      <div class="ticket">
+        <h3>Dalabka Miiska</h3>
+        <div id="modalCartLines"></div>
+        <div class="totals" id="modalCartTotals"></div>
+        <button class="btn-primary" id="sendKitchenBtn">Dir Jikada (Send to Kitchen)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- STATE ---------------- */
+  const STORE_KEY = "sombill-state-v1";
+  const TAX_RATE = 0.0; // Somaliland restaurants commonly don't add VAT at till level; adjust if needed
+
+  let state = {
+    menu: [
+      {id:"m1", name:"Grilled Chicken Suqaar", so:"Suqaar Digaag", cat:"Mains", price:6.50},
+      {id:"m2", name:"Camel Meat Steak", so:"Hilib Geel", cat:"Grills", price:8.00},
+      {id:"m3", name:"Fish Fillet & Rice", so:"Kalluun & Bariis", cat:"Mains", price:7.00},
+      {id:"m4", name:"Sambusa (3pc)", so:"Sambuus", cat:"Appetizers", price:2.50},
+      {id:"m5", name:"Somali Tea", so:"Shaah", cat:"Drinks", price:1.00},
+      {id:"m6", name:"Fresh Mango Juice", so:"Casiir Cambe", cat:"Drinks", price:2.00},
+      {id:"m7", name:"Beef Suqaar with Chapati", so:"Suqaar Lo' & Jibaab", cat:"Mains", price:6.00},
+      {id:"m8", name:"Mixed Grill Platter", so:"Grill Isku-jir", cat:"Grills", price:9.50},
+      {id:"m9", name:"Halwo (dessert)", so:"Xalwo", cat:"Desserts", price:3.00},
+      {id:"m10", name:"Bottled Water", so:"Biyo", cat:"Drinks", price:0.75}
+    ],
+    tables: Array.from({length:12}, (_,i)=>({id:"t"+(i+1), number:i+1, status:"free"})),
+    orders: [],   // {id, tableId, tableNumber, items:[{menuId,qty}], status, waiter, createdAt, total}
+    staff: ["Amina","Xasan","Cabdi","Faadumo"],
+    salesLog: []  // completed/paid orders history
+  };
+
+  let cart = [];          // cashier walk-in cart: {menuId, qty}
+  let modalCart = [];     // waiter modal cart
+  let activeTableId = null;
+  let activeCat = "All";
+  let activeModalCat = "All";
+
+  /* ---------------- PERSISTENCE ---------------- */
+  async function saveState(){
+    try{
+      await window.storage.set(STORE_KEY, JSON.stringify(state), true);
+    }catch(e){ console.warn("save failed", e); }
+  }
+  async function loadState(){
+    try{
+      const res = await window.storage.get(STORE_KEY, true);
+      if(res && res.value){
+        const parsed = JSON.parse(res.value);
+        state = Object.assign(state, parsed);
+      }
+    }catch(e){ /* first run, no saved state yet */ }
+  }
+
+  const money = n => "$" + n.toFixed(2);
+  const menuById = id => state.menu.find(m=>m.id===id);
+  const tableById = id => state.tables.find(t=>t.id===id);
+
+  /* ---------------- NAV / VIEWS ---------------- */
+  document.querySelectorAll(".role-switch button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll(".role-switch button").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+      document.getElementById("view-"+btn.dataset.view).classList.add("active");
+      renderAll();
+    });
+  });
+
+  function tick(){
+    const d = new Date();
+    document.getElementById("clock").innerHTML = d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) + "  <b>" + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + "</b>";
+  }
+  setInterval(tick,1000); tick();
+
+  /* ---------------- RECEIPT PRINTING ---------------- */
+  let receiptCounter = 1000;
+  function buildReceipt(sale){
+    receiptCounter++;
+    const itemsHtml = sale.items.map(l=>{
+      const m = menuById(l.menuId);
+      const name = m ? m.name : "?";
+      const price = m ? m.price : 0;
+      return `<div class="rline"><span>${name} ×${l.qty}</span><span>${money(price*l.qty)}</span></div>`;
+    }).join("");
+    const dt = new Date(sale.createdAt);
+    return `
+      <h4>SomBill Restaurant</h4>
+      <div class="center" style="color:#555;font-size:11px;">Hargeisa, Somaliland</div>
+      <hr>
+      <div class="rline"><span>Rasiid #</span><span>${receiptCounter}</span></div>
+      <div class="rline"><span>Miis</span><span>${sale.tableNumber}</span></div>
+      <div class="rline"><span>Taariikh</span><span>${dt.toLocaleDateString()} ${dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span></div>
+      <div class="rline"><span>Adeege</span><span>${sale.waiter}</span></div>
+      <hr>
+      ${itemsHtml}
+      <hr>
+      <div class="rline" style="font-weight:700;"><span>Wadarta Guud</span><span>${money(sale.total)}</span></div>
+      <div class="rline"><span>Habka Bixinta</span><span>${sale.method||"Cash"}</span></div>
+      <hr>
+      <div class="center" style="margin-top:8px;">Mahadsanid! Ku soo noqo.</div>
+    `;
+  }
+  function showReceipt(sale){
+    document.getElementById("printReceiptArea").innerHTML = buildReceipt(sale);
+    document.getElementById("receiptModalBackdrop").classList.add("active");
+  }
+  document.getElementById("closeReceiptModal").addEventListener("click", ()=>{
+    document.getElementById("receiptModalBackdrop").classList.remove("active");
+  });
+  document.getElementById("printReceiptBtn").addEventListener("click", ()=>{
+    window.print();
+  });
+
+  /* ---------------- CASHIER: MENU + CART ---------------- */
+  function categories(){
+    return ["All", ...Array.from(new Set(state.menu.map(m=>m.cat)))];
+  }
+
+  function renderCatTabs(container, active, onPick){
+    container.innerHTML = "";
+    categories().forEach(cat=>{
+      const b = document.createElement("button");
+      b.textContent = cat;
+      if(cat===active) b.classList.add("active");
+      b.addEventListener("click", ()=>onPick(cat));
+      container.appendChild(b);
+    });
+  }
+
+  function renderMenuGrid(container, activeCatVal, onAdd){
+    container.innerHTML = "";
+    const items = activeCatVal==="All" ? state.menu : state.menu.filter(m=>m.cat===activeCatVal);
+    if(items.length===0){
+      container.innerHTML = '<div class="empty-note">Alaab lama helin category-gan.</div>';
+      return;
+    }
+    items.forEach(m=>{
+      const card = document.createElement("button");
+      card.className = "menu-card";
+      const imgHtml = m.img
+        ? `<div class="menu-card-img"><img src="${m.img}" alt="${m.name}"></div>`
+        : `<div class="menu-card-img placeholder">${(m.name||"?").charAt(0)}</div>`;
+      card.innerHTML = `${imgHtml}<div class="n">${m.name}</div><div class="so">${m.so||""}</div><div class="p">${money(m.price)}</div>`;
+      card.addEventListener("click", ()=>onAdd(m.id));
+      container.appendChild(card);
+    });
+  }
+
+  function addToCart(cartArr, menuId){
+    const line = cartArr.find(l=>l.menuId===menuId);
+    if(line) line.qty++;
+    else cartArr.push({menuId, qty:1});
+  }
+
+  function renderCartLines(container, cartArr, onInc, onDec, onRemove){
+    container.innerHTML = "";
+    if(cartArr.length===0){
+      container.innerHTML = '<div class="cart-empty">Bilku waa madhan yahay — dooro alaab.</div>';
+      return;
+    }
+    cartArr.forEach(line=>{
+      const m = menuById(line.menuId);
+      if(!m) return;
+      const row = document.createElement("div");
+      row.className = "cart-line";
+      row.innerHTML = `
+        <div>
+          <div style="font-weight:600;">${m.name}</div>
+          <div style="color:var(--muted);font-size:11.5px;">${money(m.price)} × ${line.qty}</div>
+        </div>
+        <div class="qty-ctrl">
+          <button data-act="dec">−</button>
+          <span>${line.qty}</span>
+          <button data-act="inc">+</button>
+          <button data-act="rm" style="color:var(--red);border-color:rgba(209,101,101,0.4);">✕</button>
+        </div>`;
+      row.querySelector('[data-act="inc"]').addEventListener("click", ()=>onInc(line.menuId));
+      row.querySelector('[data-act="dec"]').addEventListener("click", ()=>onDec(line.menuId));
+      row.querySelector('[data-act="rm"]').addEventListener("click", ()=>onRemove(line.menuId));
+      container.appendChild(row);
+    });
+  }
+
+  function cartTotal(cartArr){
+    const sub = cartArr.reduce((s,l)=>{ const m = menuById(l.menuId); return s + (m? m.price*l.qty : 0); },0);
+    const tax = sub*TAX_RATE;
+    return {sub, tax, grand: sub+tax};
+  }
+
+  function renderTotals(container, cartArr){
+    const t = cartTotal(cartArr);
+    container.innerHTML = `
+      <div class="row"><span>Wadarta hoose</span><span>${money(t.sub)}</span></div>
+      <div class="row grand"><span>Wadarta Guud</span><span>${money(t.grand)}</span></div>`;
+  }
+
+  function renderCashierMenu(){
+    renderCatTabs(document.getElementById("catTabs"), activeCat, cat=>{ activeCat=cat; renderCashierMenu(); });
+    renderMenuGrid(document.getElementById("menuGrid"), activeCat, id=>{ addToCart(cart, id); renderCashierCart(); });
+  }
+
+  function renderCashierCart(){
+    renderCartLines(document.getElementById("cartLines"), cart,
+      id=>{ const l=cart.find(x=>x.menuId===id); if(l){l.qty++; renderCashierCart();} },
+      id=>{ const l=cart.find(x=>x.menuId===id); if(l){l.qty--; if(l.qty<=0) cart=cart.filter(x=>x.menuId!==id); renderCashierCart();} },
+      id=>{ cart = cart.filter(x=>x.menuId!==id); renderCashierCart(); }
+    );
+    renderTotals(document.getElementById("cartTotals"), cart);
+    document.getElementById("chargeBtn").disabled = cart.length===0;
+  }
+
+  document.getElementById("clearCartBtn").addEventListener("click", ()=>{ cart=[]; renderCashierCart(); });
+
+  document.getElementById("chargeBtn").addEventListener("click", async ()=>{
+    if(cart.length===0) return;
+    const t = cartTotal(cart);
+    const method = document.getElementById("payMethod").value;
+    const sale = {
+      id:"s"+Date.now(), tableNumber:"Walk-in", items:[...cart], waiter:"Cashier",
+      status:"paid", method, createdAt:new Date().toISOString(), total:t.grand
+    };
+    state.salesLog.push(sale);
+    cart=[];
+    renderCashierCart();
+    await saveState();
+    renderManager();
+    showReceipt(sale);
+  });
+
+  function renderOpenBills(){
+    const container = document.getElementById("openBills");
+    const readyToPay = state.orders.filter(o=>o.status==="ready" || o.status==="served");
+    if(readyToPay.length===0){
+      container.innerHTML = '<div class="empty-note" style="padding:10px 0;">Miis lagu bixinayo lama hayo hadda.</div>';
+      return;
+    }
+    container.innerHTML = "";
+    readyToPay.forEach(o=>{
+      const t = orderTotal(o);
+      const chip = document.createElement("div");
+      chip.className = "bill-chip";
+      chip.innerHTML = `<span>Miiska ${o.tableNumber} — ${money(t)}</span>`;
+      const btn = document.createElement("button");
+      btn.textContent = "Xir & Qaad Lacag";
+      btn.addEventListener("click", async ()=>{
+        o.status = "paid";
+        const sale = {id:"s"+Date.now(), tableNumber:o.tableNumber, items:o.items, waiter:o.waiter, status:"paid", method:"Cash", createdAt:new Date().toISOString(), total:t};
+        state.salesLog.push(sale);
+        const tbl = tableById(o.tableId);
+        if(tbl) tbl.status="free";
+        await saveState();
+        renderAll();
+        showReceipt(sale);
+      });
+      chip.appendChild(btn);
+      container.appendChild(chip);
+    });
+  }
+
+  function orderTotal(order){
+    return order.items.reduce((s,l)=>{ const m=menuById(l.menuId); return s + (m? m.price*l.qty:0); },0);
+  }
+
+  /* ---------------- WAITER: TABLES + ORDERS ---------------- */
+  function renderTables(){
+    const grid = document.getElementById("tablesGrid");
+    grid.innerHTML = "";
+    state.tables.forEach(t=>{
+      const tile = document.createElement("button");
+      tile.className = "table-tile "+t.status;
+      tile.innerHTML = `<div class="tn">${t.number}</div><div class="st">${labelForStatus(t.status)}</div>`;
+      tile.addEventListener("click", ()=>openOrderModal(t.id));
+      grid.appendChild(tile);
+    });
+  }
+  function labelForStatus(s){
+    return {free:"Banaan", occupied:"Qabsan", ready:"Diyaar"}[s] || s;
+  }
+
+  function openOrderModal(tableId){
+    activeTableId = tableId;
+    modalCart = [];
+    activeModalCat = "All";
+    const t = tableById(tableId);
+    document.getElementById("orderModalTitle").textContent = "Miiska "+t.number;
+    renderModalMenu();
+    renderModalCart();
+    document.getElementById("orderModalBackdrop").classList.add("active");
+  }
+  document.getElementById("closeOrderModal").addEventListener("click", ()=>{
+    document.getElementById("orderModalBackdrop").classList.remove("active");
+  });
+
+  function renderModalMenu(){
+    renderCatTabs(document.getElementById("modalCatTabs"), activeModalCat, cat=>{ activeModalCat=cat; renderModalMenu(); });
+    renderMenuGrid(document.getElementById("modalMenuGrid"), activeModalCat, id=>{ addToCart(modalCart, id); renderModalCart(); });
+  }
+  function renderModalCart(){
+    renderCartLines(document.getElementById("modalCartLines"), modalCart,
+      id=>{ const l=modalCart.find(x=>x.menuId===id); if(l){l.qty++; renderModalCart();} },
+      id=>{ const l=modalCart.find(x=>x.menuId===id); if(l){l.qty--; if(l.qty<=0) modalCart=modalCart.filter(x=>x.menuId!==id); renderModalCart();} },
+      id=>{ modalCart = modalCart.filter(x=>x.menuId!==id); renderModalCart(); }
+    );
+    renderTotals(document.getElementById("modalCartTotals"), modalCart);
+    document.getElementById("sendKitchenBtn").disabled = modalCart.length===0;
+  }
+
+  document.getElementById("sendKitchenBtn").addEventListener("click", async ()=>{
+    if(modalCart.length===0 || !activeTableId) return;
+    const t = tableById(activeTableId);
+    const order = {
+      id:"o"+Date.now(), tableId:activeTableId, tableNumber:t.number,
+      items:[...modalCart], status:"sent", waiter: state.staff[Math.floor(Math.random()*state.staff.length)],
+      createdAt:new Date().toISOString()
+    };
+    state.orders.push(order);
+    t.status = "occupied";
+    document.getElementById("orderModalBackdrop").classList.remove("active");
+    await saveState();
+    renderAll();
+  });
+
+  function renderActiveOrders(){
+    const container = document.getElementById("activeOrdersList");
+    const active = state.orders.filter(o=>o.status!=="paid");
+    if(active.length===0){
+      container.innerHTML = '<div class="empty-note">Dalab firfircoon lama hayo hadda.</div>';
+      return;
+    }
+    container.innerHTML = "";
+    active.forEach(o=>{
+      const row = document.createElement("div");
+      row.className = "order-row";
+      const itemsTxt = o.items.map(l=>{ const m=menuById(l.menuId); return (m?m.name:"?")+" ×"+l.qty; }).join(", ");
+      row.innerHTML = `
+        <div>
+          <div><b>Miiska ${o.tableNumber}</b> <span class="status-badge ${o.status}">${o.status}</span></div>
+          <div class="meta">${itemsTxt} — Waiter: ${o.waiter}</div>
+        </div>`;
+      const actions = document.createElement("div");
+      actions.style.display="flex"; actions.style.gap="6px";
+      if(o.status==="sent"){
+        actions.appendChild(mkBtn("Diyaar u dhig (Ready)", async ()=>{ o.status="ready"; const tbl=tableById(o.tableId); if(tbl) tbl.status="ready"; await saveState(); renderAll(); }));
+      } else if(o.status==="ready"){
+        actions.appendChild(mkBtn("La geeyay (Served)", async ()=>{ o.status="served"; await saveState(); renderAll(); }));
+      } else if(o.status==="served"){
+        actions.appendChild(mkBtn("Ku dir Cashier-ka", ()=>{ document.querySelector('[data-view="cashier"]').click(); }));
+      }
+      row.appendChild(actions);
+      container.appendChild(row);
+    });
+  }
+  function mkBtn(txt, fn){
+    const b = document.createElement("button");
+    b.textContent = txt; b.className="btn-ghost";
+    b.addEventListener("click", fn);
+    return b;
+  }
+
+  /* ---------------- MANAGER ---------------- */
+  function todayStr(){ return new Date().toDateString(); }
+
+  function renderKPIs(){
+    const todaySales = state.salesLog.filter(s=> new Date(s.createdAt).toDateString()===todayStr());
+    const totalSales = todaySales.reduce((s,o)=>s+o.total,0);
+    const orderCount = todaySales.length;
+    const avg = orderCount? totalSales/orderCount : 0;
+    const activeTables = state.tables.filter(t=>t.status!=="free").length;
+
+    const kpis = [
+      {lbl:"Iibka Maanta", val: money(totalSales)},
+      {lbl:"Tirada Dalabyada", val: orderCount},
+      {lbl:"Celceliska Bilka", val: money(avg)},
+      {lbl:"Miisaska Firfircoon", val: activeTables + " / " + state.tables.length}
+    ];
+    const row = document.getElementById("kpiRow");
+    row.innerHTML = "";
+    kpis.forEach(k=>{
+      const el = document.createElement("div");
+      el.className = "panel kpi";
+      el.innerHTML = `<div class="lbl">${k.lbl}</div><div class="val">${k.val}</div>`;
+      row.appendChild(el);
+    });
+  }
+
+  function renderTopItems(){
+    const counts = {};
+    state.salesLog.forEach(o=>o.items.forEach(l=>{ counts[l.menuId]=(counts[l.menuId]||0)+l.qty; }));
+    const arr = Object.entries(counts).map(([id,qty])=>({m:menuById(id), qty})).filter(x=>x.m).sort((a,b)=>b.qty-a.qty).slice(0,6);
+    const container = document.getElementById("topItemsBars");
+    if(arr.length===0){ container.innerHTML='<div class="empty-note">Weli iib lama diiwaan gelin.</div>'; return; }
+    const max = arr[0].qty;
+    container.innerHTML = "";
+    arr.forEach(x=>{
+      const row = document.createElement("div");
+      row.className = "bar-row";
+      row.innerHTML = `<div class="name">${x.m.name}</div><div class="bar-track"><div class="bar-fill" style="width:${(x.qty/max*100).toFixed(0)}%"></div></div><div class="amt">${x.qty}×</div>`;
+      container.appendChild(row);
+    });
+  }
+
+  function renderStaffBars(){
+    const counts = {};
+    state.salesLog.forEach(o=>{ counts[o.waiter]=(counts[o.waiter]||0)+o.total; });
+    const arr = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+    const container = document.getElementById("staffBars");
+    if(arr.length===0){ container.innerHTML='<div class="empty-note">Weli iib lama diiwaan gelin.</div>'; return; }
+    const max = arr[0][1];
+    container.innerHTML = "";
+    arr.forEach(([name,amt])=>{
+      const row = document.createElement("div");
+      row.className = "bar-row";
+      row.innerHTML = `<div class="name">${name}</div><div class="bar-track"><div class="bar-fill" style="width:${(amt/max*100).toFixed(0)}%"></div></div><div class="amt">${money(amt)}</div>`;
+      container.appendChild(row);
+    });
+  }
+
+  function renderRecentOrders(){
+    const tbody = document.querySelector("#recentOrdersTable tbody");
+    const all = [...state.orders.map(o=>({...o, total:orderTotal(o)})), ...state.salesLog.filter(s=>!state.orders.find(o=>o.id===s.id))]
+      .sort((a,b)=> new Date(b.createdAt)-new Date(a.createdAt)).slice(0,12);
+    tbody.innerHTML = "";
+    if(all.length===0){
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-note">Dalab lama hayo weli.</td></tr>';
+      return;
+    }
+    all.forEach(o=>{
+      const itemsTxt = o.items.map(l=>{ const m=menuById(l.menuId); return (m?m.name:"?")+"×"+l.qty; }).join(", ");
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${o.tableNumber}</td><td>${itemsTxt}</td><td>${o.waiter}</td><td><span class="status-badge ${o.status}">${o.status}</span></td><td>${new Date(o.createdAt).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td><td>${money(o.total)}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderMenuEditor(){
+    const catList = document.getElementById("catList");
+    if(catList){ catList.innerHTML = categories().filter(c=>c!=="All").map(c=>`<option value="${c}">`).join(""); }
+    const container = document.getElementById("menuEditor");
+    container.innerHTML = "";
+    state.menu.forEach(m=>{
+      const row = document.createElement("div");
+      row.className = "menu-editor-row";
+      row.innerHTML = `
+        <label class="thumb-upload" title="Bedel sawirka">
+          ${m.img ? `<img src="${m.img}" alt="${m.name}">` : `<div class="thumb-placeholder">${(m.name||"?").charAt(0)}</div>`}
+          <input type="file" accept="image/*" data-field="img" style="display:none;">
+        </label>
+        <input type="text" value="${m.name}" data-field="name">
+        <input type="text" value="${m.so||''}" data-field="so" placeholder="Soomaali">
+        <input type="text" value="${m.cat}" data-field="cat">
+        <input type="number" step="0.25" value="${m.price}" data-field="price">
+        <button class="icon-btn">Tirtir</button>`;
+      row.querySelector('[data-field="img"]').addEventListener("change", e=>{
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = async ()=>{
+          m.img = reader.result;
+          await saveState();
+          renderAll();
+        };
+        reader.readAsDataURL(file);
+      });
+      row.querySelector('[data-field="name"]').addEventListener("change", async e=>{ m.name=e.target.value; await saveState(); renderAll(); });
+      row.querySelector('[data-field="so"]').addEventListener("change", async e=>{ m.so=e.target.value; await saveState(); renderAll(); });
+      row.querySelector('[data-field="cat"]').addEventListener("change", async e=>{ m.cat=e.target.value; await saveState(); renderAll(); });
+      row.querySelector('[data-field="price"]').addEventListener("change", async e=>{ m.price=parseFloat(e.target.value)||0; await saveState(); renderAll(); });
+      row.querySelector(".icon-btn").addEventListener("click", async ()=>{ state.menu = state.menu.filter(x=>x.id!==m.id); await saveState(); renderAll(); });
+      container.appendChild(row);
+    });
+  }
+
+  let newItemImageData = "";
+  document.getElementById("newItemImage").addEventListener("change", e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      newItemImageData = reader.result;
+      document.getElementById("newItemImgPreview").innerHTML = `<img src="${newItemImageData}" class="img-preview-thumb" alt="preview"><span style="color:var(--muted);font-size:12px;">Sawirka waa la doortay</span>`;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  document.getElementById("addMenuItemBtn").addEventListener("click", async ()=>{
+    const nameEl = document.getElementById("newItemName");
+    const soEl = document.getElementById("newItemSo");
+    const catEl = document.getElementById("newItemCat");
+    const priceEl = document.getElementById("newItemPrice");
+    const imgEl = document.getElementById("newItemImage");
+    const name = nameEl.value.trim();
+    const cat = catEl.value.trim() || "Mains";
+    const price = parseFloat(priceEl.value) || 0;
+    if(!name){ nameEl.focus(); return; }
+    state.menu.push({id:"m"+Date.now(), name, so:soEl.value.trim(), cat, price, img:newItemImageData||""});
+    nameEl.value=""; soEl.value=""; catEl.value=""; priceEl.value=""; imgEl.value="";
+    newItemImageData = "";
+    document.getElementById("newItemImgPreview").innerHTML = "";
+    await saveState();
+    renderAll();
+  });
+
+  function renderManager(){
+    renderKPIs();
+    renderTopItems();
+    renderStaffBars();
+    renderRecentOrders();
+    renderMenuEditor();
+  }
+
+  /* ---------------- MASTER RENDER ---------------- */
+  function renderAll(){
+    renderCashierMenu();
+    renderCashierCart();
+    renderOpenBills();
+    renderTables();
+    renderActiveOrders();
+    renderManager();
+  }
+
+  /* ---------------- INIT ---------------- */
+  (async function init(){
+    await loadState();
+    renderAll();
+  })();
+
+})();
+</script>
+</body>
+</html>

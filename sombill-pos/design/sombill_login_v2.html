@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SomBill — Login v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --deep:      #2B0F73;
+    --deeper:    #1C0A54;
+    --deepest:   #12053B;
+    --ice:       #8FB8D6;
+    --ice-soft:  #B7D2E6;
+    --silver:    #D9DCE0;
+    --paper:     #FFFFFF;
+    --muted:     #B6AFD6;
+    --ink:       #1A1330;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    background:
+      radial-gradient(60% 55% at 15% 10%, rgba(143,184,214,.35), transparent 60%),
+      radial-gradient(55% 50% at 90% 15%, rgba(217,220,224,.20), transparent 60%),
+      radial-gradient(70% 65% at 50% 100%, rgba(94,45,168,.55), transparent 60%),
+      linear-gradient(160deg, var(--deep) 0%, var(--deeper) 55%, var(--deepest) 100%);
+    display:flex; align-items:center; justify-content:center;
+    padding:40px 20px;
+    position:relative;
+    overflow:hidden;
+  }
+  h1,h2,h3{font-family:'Outfit',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  /* floating blurred orbs for depth */
+  .orb{ position:absolute; border-radius:50%; filter:blur(70px); opacity:.55; pointer-events:none; }
+  .orb.o1{ width:420px; height:420px; background:#8FB8D6; top:-120px; left:-100px; }
+  .orb.o2{ width:340px; height:340px; background:#6E9BB9; bottom:-100px; right:-60px; opacity:.35;}
+  .orb.o3{ width:260px; height:260px; background:#D9DCE0; top:35%; right:12%; opacity:.15; }
+
+  /* background ribbon watermark */
+  .bg-ribbon{
+    position:absolute; top:50%; left:50%; width:1100px; height:1100px;
+    transform:translate(-50%,-50%); opacity:.05; pointer-events:none;
+  }
+
+  .wrap{ position:relative; z-index:2; width:100%; max-width:430px; }
+
+  .brand{ display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:34px; }
+  .brand .wordmark{ font-size:24px; font-weight:700; color:var(--paper); }
+  .brand .wordmark span{ color:var(--ice); }
+
+  .card{
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.16);
+    backdrop-filter:blur(22px);
+    -webkit-backdrop-filter:blur(22px);
+    border-radius:26px;
+    padding:38px 34px 32px;
+    box-shadow:0 30px 60px -20px rgba(10,4,40,.55);
+  }
+  .card .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--ice-soft); text-align:center; margin-bottom:8px;
+  }
+  .card h2{ font-size:26px; color:var(--paper); text-align:center; margin-bottom:6px; font-weight:700; }
+  .card .sub{ font-size:13px; color:var(--muted); text-align:center; margin-bottom:28px; }
+
+  .role-pills{ display:flex; gap:8px; margin-bottom:26px; background:rgba(255,255,255,.06); padding:5px; border-radius:14px; }
+  .role-pills button{
+    flex:1; border:none; background:transparent; color:var(--muted);
+    font-family:'Outfit',sans-serif; font-size:12.5px; font-weight:600; padding:9px 4px; border-radius:10px; cursor:pointer;
+    transition:all .18s ease;
+  }
+  .role-pills button.active{ background:var(--ice); color:var(--deepest); }
+
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:11.5px; font-weight:600; color:var(--muted); margin-bottom:7px; letter-spacing:.02em; }
+  .field .box{
+    display:flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14);
+    border-radius:13px; padding:13px 14px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .field .box:focus-within{ border-color:var(--ice); background:rgba(255,255,255,.11); }
+  .field .box svg{ width:16px; height:16px; stroke:var(--muted); flex-shrink:0; }
+  .field .box input{
+    border:none; outline:none; background:transparent; width:100%;
+    color:var(--paper); font-family:'Inter',sans-serif; font-size:14px;
+  }
+  .field .box input::placeholder{ color:#8880AC; }
+
+  .row-between{ display:flex; justify-content:space-between; align-items:center; margin:4px 0 24px; }
+  .row-between a{ font-size:12px; color:var(--ice-soft); text-decoration:none; font-weight:600; }
+  .lang-toggle{ display:flex; background:rgba(255,255,255,.07); border-radius:999px; padding:3px; }
+  .lang-toggle button{ border:none; background:transparent; font-size:11px; font-weight:700; padding:5px 11px; border-radius:999px; cursor:pointer; color:var(--muted); }
+  .lang-toggle button.on{ background:var(--ice); color:var(--deepest); }
+
+  .btn-primary{
+    width:100%; padding:15px; border:none; border-radius:14px;
+    background:linear-gradient(135deg, var(--ice) 0%, #6E9BB9 100%);
+    color:var(--deepest); font-family:'Outfit',sans-serif; font-weight:700; font-size:15px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    box-shadow:0 12px 24px -8px rgba(143,184,214,.5);
+    transition:transform .15s ease;
+  }
+  .btn-primary:hover{ transform:translateY(-1px); }
+
+  .divider{ display:flex; align-items:center; gap:12px; margin:22px 0; }
+  .divider .line{ flex:1; height:1px; background:rgba(255,255,255,.14); }
+  .divider span{ font-size:11px; color:var(--muted); font-family:'IBM Plex Mono',monospace; }
+
+  .nfc-tap{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    border:1.5px dashed rgba(255,255,255,.25); border-radius:14px; padding:14px;
+    color:var(--muted); font-size:12.5px; font-weight:600; cursor:pointer;
+  }
+  .nfc-tap svg{ width:18px; height:18px; stroke:var(--ice-soft); }
+
+  .foot{ text-align:center; font-size:11.5px; color:#8880AC; margin-top:26px; }
+</style>
+</head>
+<body>
+
+  <div class="orb o1"></div>
+  <div class="orb o2"></div>
+  <div class="orb o3"></div>
+  <svg class="bg-ribbon" viewBox="0 0 400 400" fill="none">
+    <path d="M60 90 L200 90 L120 200 L280 200 L200 310 L60 310" stroke="#FFFFFF" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+
+  <div class="wrap">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 100 100">
+        <path d="M28 20 L62 20 Q72 20 72 30 Q72 40 62 40 L38 40 L38 60 L72 60"
+              stroke="#D9DCE0" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M28 40 Q18 40 18 50 Q18 60 28 60 L62 60 Q72 60 72 70 Q72 80 62 80 L28 80"
+              stroke="#8FB8D6" stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="wordmark">Som<span>Bill</span></div>
+    </div>
+
+    <div class="card">
+      <p class="eyebrow">Sombill POS</p>
+      <h2>Sign in to your station</h2>
+      <p class="sub">Trusted Hospitality Partner</p>
+
+      <div class="role-pills">
+        <button class="active">Cashier</button>
+        <button>Waiter</button>
+        <button>Kitchen</button>
+        <button>Admin</button>
+      </div>
+
+      <div class="field">
+        <label>Username</label>
+        <div class="box">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          <input type="text" placeholder="cashier.hargeisa" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <div class="box">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+          <input type="password" placeholder="••••••••" />
+        </div>
+      </div>
+
+      <div class="row-between">
+        <a href="#">Forgot password?</a>
+        <div class="lang-toggle">
+          <button class="on">EN</button>
+          <button>SO</button>
+        </div>
+      </div>
+
+      <button class="btn-primary">
+        Start shift
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+
+      <div class="divider"><div class="line"></div><span>OR</span><div class="line"></div></div>
+
+      <div class="nfc-tap">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="2" y="7" width="20" height="13" rx="2"/><circle cx="12" cy="13.5" r="2.5"/><path d="M6 7V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v2"/></svg>
+        Tap staff NFC badge to sign in
+      </div>
+    </div>
+
+    <p class="foot">Not your station? Ask your manager for access.</p>
+  </div>
+
+</body>
+</html>
