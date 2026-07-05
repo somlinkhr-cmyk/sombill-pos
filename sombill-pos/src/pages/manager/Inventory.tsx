@@ -522,28 +522,28 @@ export default function Inventory() {
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
         <Button
-          variant={activeTab === 'ingredients' ? 'default' : 'outline'}
+          variant={activeTab === 'ingredients' ? 'primary' : 'outline'}
           onClick={() => setActiveTab('ingredients')}
         >
           <Package className="w-4 h-4 mr-2" />
           Ingredients
         </Button>
         <Button
-          variant={activeTab === 'suppliers' ? 'default' : 'outline'}
+          variant={activeTab === 'suppliers' ? 'primary' : 'outline'}
           onClick={() => setActiveTab('suppliers')}
         >
           <Truck className="w-4 h-4 mr-2" />
           Suppliers
         </Button>
         <Button
-          variant={activeTab === 'orders' ? 'default' : 'outline'}
+          variant={activeTab === 'orders' ? 'primary' : 'outline'}
           onClick={() => setActiveTab('orders')}
         >
           <Calendar className="w-4 h-4 mr-2" />
           Purchase Orders
         </Button>
         <Button
-          variant={activeTab === 'waste' ? 'default' : 'outline'}
+          variant={activeTab === 'waste' ? 'primary' : 'outline'}
           onClick={() => setActiveTab('waste')}
         >
           <TrendingDown className="w-4 h-4 mr-2" />

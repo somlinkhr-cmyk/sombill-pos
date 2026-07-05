@@ -228,8 +228,7 @@ export default function WaiterPanel() {
                   <Button
                     onClick={() => openTable(table)}
                     variant="outline"
-                    className="w-full"
-                    size="sm"
+                    className="w-full text-sm"
                   >
                     <Utensils className="w-4 h-4 mr-2" />
                     Add Items

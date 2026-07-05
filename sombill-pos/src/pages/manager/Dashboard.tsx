@@ -405,7 +405,7 @@ export default function ManagerDashboard() {
                     title="Total Customers"
                     value={stats.totalCustomers.toString()}
                     icon={Users}
-                    color="pink"
+                    color="purple"
                   />
                   <StatCard
                     title="Total Menu Items"
@@ -429,7 +429,7 @@ export default function ManagerDashboard() {
                     title="Cash in Register"
                     value={formatCurrency(stats.cashInRegister)}
                     icon={CreditCard}
-                    color="teal"
+                    color="green"
                   />
                   <StatCard
                     title="Expenses"

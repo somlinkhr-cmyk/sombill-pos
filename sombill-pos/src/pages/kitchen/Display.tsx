@@ -49,9 +49,9 @@ export default function KitchenDisplay() {
     const subscription = supabase
       .channel('kitchen-orders')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
-        if (payload.new && ['new', 'preparing', 'ready'].includes(payload.new.status)) {
+        if (payload.new && 'status' in payload.new && ['new', 'preparing', 'ready'].includes(payload.new.status as string)) {
           loadOrders()
-        } else if (payload.old && ['new', 'preparing', 'ready'].includes(payload.old.status)) {
+        } else if (payload.old && 'status' in payload.old && ['new', 'preparing', 'ready'].includes(payload.old.status as string)) {
           loadOrders()
         }
       })
@@ -238,8 +238,7 @@ function OrderCard({ order, statusColor, onUpdateStatus, availableActions }: any
           <Button
             key={action}
             onClick={() => onUpdateStatus(action)}
-            className="w-full"
-            size="sm"
+            className="w-full text-sm"
           >
             Mark as {action}
           </Button>

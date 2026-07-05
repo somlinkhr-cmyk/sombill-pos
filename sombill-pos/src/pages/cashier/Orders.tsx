@@ -168,11 +168,11 @@ export default function Orders() {
         customerPhone: order.customer?.phone,
         orderType: order.order_type,
         items: order.items?.map(item => ({
-          name: item.product.name,
+          name: item.product?.name || 'Unknown',
           quantity: item.quantity,
           unitPrice: item.unit_price,
-          totalPrice: item.total_price || (item.unit_price * item.quantity),
-          notes: item.notes
+          totalPrice: (item as any).total_price || (item.unit_price * item.quantity),
+          notes: (item as any).notes
         })) || [],
         subtotal: order.subtotal,
         tax: order.tax,
@@ -216,11 +216,11 @@ export default function Orders() {
         customerPhone: order.customer?.phone,
         orderType: order.order_type,
         items: order.items?.map(item => ({
-          name: item.product.name,
+          name: item.product?.name || 'Unknown',
           quantity: item.quantity,
           unitPrice: item.unit_price,
-          totalPrice: item.total_price || (item.unit_price * item.quantity),
-          notes: item.notes
+          totalPrice: (item as any).total_price || (item.unit_price * item.quantity),
+          notes: (item as any).notes
         })) || [],
         subtotal: order.subtotal,
         tax: order.tax,
@@ -514,7 +514,7 @@ Thank you for dining with us!
                       {selectedOrder.items.map((item, index) => (
                         <div key={index} className="flex justify-between py-2 border-b">
                           <div>
-                            <p className="font-medium">{item.product.name}</p>
+                            <p className="font-medium">{item.product?.name || 'Unknown'}</p>
                             <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                           </div>
                           <p className="font-medium">{formatCurrency(item.unit_price * item.quantity)}</p>

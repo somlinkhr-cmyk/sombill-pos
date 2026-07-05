@@ -313,7 +313,7 @@ export default function Reports() {
                 <Chart
                   type="line"
                   data={reportData.dailySales.map(d => ({
-                    label: d.date,
+                    name: d.date,
                     value: d.sales,
                   }))}
                   height={300}
@@ -329,7 +329,7 @@ export default function Reports() {
                 <Chart
                   type="pie"
                   data={reportData.categoryBreakdown.map(c => ({
-                    label: c.category,
+                    name: c.category,
                     value: c.revenue,
                   }))}
                   height={300}
