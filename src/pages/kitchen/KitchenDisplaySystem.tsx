@@ -80,6 +80,9 @@ export default function KitchenDisplaySystem() {
   })
 
   useEffect(() => {
+    console.log('KitchenDisplaySystem: user', user)
+    console.log('KitchenDisplaySystem: hasModuleAccess', hasModuleAccess('kitchen_display'))
+    
     if (!hasModuleAccess('kitchen_display')) {
       toast.error('Your subscription plan does not include the Kitchen Display System module')
       navigate('/')
@@ -100,16 +103,21 @@ export default function KitchenDisplaySystem() {
   async function loadData() {
     setLoading(true)
     try {
+      console.log('KitchenDisplaySystem: Loading data...')
+      
       // Load kitchen stations - filter by tenant_id if available, otherwise load all
       let stationsQuery = supabase.from('kitchen_stations').select('*').eq('is_active', true).order('display_order')
       if (user?.tenant_id) {
         stationsQuery = stationsQuery.eq('tenant_id', user.tenant_id)
       }
       
-      const { data: stationsData } = await stationsQuery
+      const { data: stationsData, error: stationsError } = await stationsQuery
       
-      if (stationsData) {
-        setStations(stationsData)
+      if (stationsError) {
+        console.error('KitchenDisplaySystem: Stations error', stationsError)
+      } else {
+        console.log('KitchenDisplaySystem: Stations loaded', stationsData?.length)
+        setStations(stationsData || [])
       }
 
       // Load orders - filter by tenant_id if available, otherwise load all
@@ -127,12 +135,16 @@ export default function KitchenDisplaySystem() {
         query = query.eq('kitchen_station', selectedStation)
       }
 
-      const { data: ordersData } = await query
+      const { data: ordersData, error: ordersError } = await query
 
-      if (ordersData) {
+      if (ordersError) {
+        console.error('KitchenDisplaySystem: Orders error', ordersError)
+      } else {
+        console.log('KitchenDisplaySystem: Orders loaded', ordersData?.length)
+        
         // Load order items for each order
         const ordersWithItems = await Promise.all(
-          ordersData.map(async (order: any) => {
+          (ordersData || []).map(async (order: any) => {
             let itemsQuery = supabase.from('order_items').select('*').eq('order_id', order.id)
             if (user?.tenant_id) {
               itemsQuery = itemsQuery.eq('tenant_id', user.tenant_id)
@@ -160,9 +172,10 @@ export default function KitchenDisplaySystem() {
         })
       }
     } catch (error) {
-      console.error('Error loading data:', error)
+      console.error('KitchenDisplaySystem: Error loading data:', error)
       toast.error('Failed to load data')
     } finally {
+      console.log('KitchenDisplaySystem: Loading complete')
       setLoading(false)
     }
   }

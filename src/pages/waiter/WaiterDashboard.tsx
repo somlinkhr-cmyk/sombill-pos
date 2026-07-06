@@ -93,6 +93,9 @@ export default function WaiterDashboard() {
   const [activeOrders, setActiveOrders] = useState<Order[]>([])
 
   useEffect(() => {
+    console.log('WaiterDashboard: user', user)
+    console.log('WaiterDashboard: hasModuleAccess', hasModuleAccess('waiter_dashboard'))
+    
     if (!hasModuleAccess('waiter_dashboard')) {
       toast.error('Your subscription plan does not include the Waiter Dashboard module')
       navigate('/')
@@ -113,16 +116,21 @@ export default function WaiterDashboard() {
   async function loadData() {
     setLoading(true)
     try {
+      console.log('WaiterDashboard: Loading data...')
+      
       // Load tables - filter by tenant_id if available, otherwise load all
       let tablesQuery = supabase.from('tables').select('*').order('number')
       if (user?.tenant_id) {
         tablesQuery = tablesQuery.eq('tenant_id', user.tenant_id)
       }
       
-      const { data: tablesData } = await tablesQuery
+      const { data: tablesData, error: tablesError } = await tablesQuery
       
-      if (tablesData) {
-        setTables(tablesData)
+      if (tablesError) {
+        console.error('WaiterDashboard: Tables error', tablesError)
+      } else {
+        console.log('WaiterDashboard: Tables loaded', tablesData?.length)
+        setTables(tablesData || [])
       }
 
       // Load products - filter by tenant_id if available, otherwise load all
@@ -131,16 +139,19 @@ export default function WaiterDashboard() {
         productsQuery = productsQuery.eq('tenant_id', user.tenant_id)
       }
       
-      const { data: productsData } = await productsQuery
+      const { data: productsData, error: productsError } = await productsQuery
       
-      if (productsData) {
-        setProducts(productsData)
+      if (productsError) {
+        console.error('WaiterDashboard: Products error', productsError)
+      } else {
+        console.log('WaiterDashboard: Products loaded', productsData?.length)
+        setProducts(productsData || [])
         
         // Extract unique categories
         const uniqueCategories = Array.from(
-          new Set(productsData.map(p => p.category_id))
+          new Set((productsData || []).map(p => p.category_id))
         ).map(catId => {
-          const cat = productsData.find(p => p.category_id === catId)?.categories
+          const cat = (productsData || []).find(p => p.category_id === catId)?.categories
           return cat ? { id: catId, name: cat.name } : null
         }).filter(Boolean)
         
@@ -159,15 +170,19 @@ export default function WaiterDashboard() {
         ordersQuery = ordersQuery.eq('tenant_id', user.tenant_id)
       }
       
-      const { data: ordersData } = await ordersQuery
+      const { data: ordersData, error: ordersError } = await ordersQuery
       
-      if (ordersData) {
-        setActiveOrders(ordersData)
+      if (ordersError) {
+        console.error('WaiterDashboard: Orders error', ordersError)
+      } else {
+        console.log('WaiterDashboard: Orders loaded', ordersData?.length)
+        setActiveOrders(ordersData || [])
       }
     } catch (error) {
-      console.error('Error loading data:', error)
+      console.error('WaiterDashboard: Error loading data:', error)
       toast.error('Failed to load data')
     } finally {
+      console.log('WaiterDashboard: Loading complete')
       setLoading(false)
     }
   }
