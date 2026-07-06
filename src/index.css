@@ -56,13 +56,13 @@
 
   @keyframes pulse {
     0% {
-      box-shadow: 0 0 0 0 rgba(227, 146, 46, 0.5);
+      box-shadow: 0 0 0 0 rgba(240, 85, 95, 0.55);
     }
     70% {
-      box-shadow: 0 0 0 8px rgba(227, 146, 46, 0);
+      box-shadow: 0 0 0 9px rgba(240, 85, 95, 0);
     }
     100% {
-      box-shadow: 0 0 0 0 rgba(227, 146, 46, 0);
+      box-shadow: 0 0 0 0 rgba(240, 85, 95, 0);
     }
   }
 
@@ -75,6 +75,6 @@
   }
 
   .animate-pulse-custom {
-    animation: pulse 1.3s infinite;
+    animation: pulse 1.4s infinite;
   }
 }

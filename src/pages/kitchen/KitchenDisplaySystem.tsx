@@ -435,7 +435,9 @@ export default function KitchenDisplaySystem() {
           <div className="flex flex-col gap-3.5">
             {ordersByStatus.new.map(order => (
               <div key={order.id} className="relative bg-gradient-to-br from-white/5 to-white/1.5 border border-white/9 rounded-[16px] p-[18px_18px_16px_22px] overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#8FB9D6]" />
+                <div className="absolute left-0 top-0 bottom-0 w-[6px] bg-[#8FB9D6]" style={{
+                  clipPath: 'path("M6 0 C6 22, 0 22, 0 44 C0 66, 6 66, 6 88 L6 400 L0 400 L0 0 Z")'
+                }} />
                 <div className="flex justify-between items-start mb-2.5">
                   <div>
                     <div className="font-['IBM_Plex_Mono'] text-[19px] font-bold tracking-[0.3px]">
@@ -497,7 +499,9 @@ export default function KitchenDisplaySystem() {
           <div className="flex flex-col gap-3.5">
             {ordersByStatus.preparing.map(order => (
               <div key={order.id} className="relative bg-gradient-to-br from-white/5 to-white/1.5 border border-white/9 rounded-[16px] p-[18px_18px_16px_22px] overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#F0A93E]" />
+                <div className="absolute left-0 top-0 bottom-0 w-[6px] bg-[#F0A93E]" style={{
+                  clipPath: 'path("M6 0 C6 22, 0 22, 0 44 C0 66, 6 66, 6 88 L6 400 L0 400 L0 0 Z")'
+                }} />
                 {isOrderDelayed(order) && (
                   <div className="absolute top-3.5 right-4 w-2 h-2 rounded-full bg-[#F0555F] animate-pulse-custom" />
                 )}
@@ -561,7 +565,9 @@ export default function KitchenDisplaySystem() {
           <div className="flex flex-col gap-3.5">
             {ordersByStatus.ready.map(order => (
               <div key={order.id} className="relative bg-gradient-to-br from-white/5 to-white/1.5 border border-white/9 rounded-[16px] p-[18px_18px_16px_22px] overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#3FD08F]" />
+                <div className="absolute left-0 top-0 bottom-0 w-[6px] bg-[#3FD08F]" style={{
+                  clipPath: 'path("M6 0 C6 22, 0 22, 0 44 C0 66, 6 66, 6 88 L6 400 L0 400 L0 0 Z")'
+                }} />
                 <div className="flex justify-between items-start mb-2.5">
                   <div>
                     <div className="font-['IBM_Plex_Mono'] text-[19px] font-bold tracking-[0.3px]">
