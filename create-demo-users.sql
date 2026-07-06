@@ -7,6 +7,8 @@
 --    - Email: admin@gmail.com, Password: 1155
 --    - Email: manager@gmail.com, Password: 1133
 --    - Email: cashier@gmail.com, Password: 1133
+--    - Email: waiter@gmail.com, Password: 1133
+--    - Email: kitchen@gmail.com, Password: 1133
 -- 3. Run this SQL script to create corresponding public.users records
 
 DO $$
@@ -14,6 +16,8 @@ DECLARE
   admin_id UUID;
   manager_id UUID;
   cashier_id UUID;
+  waiter_id UUID;
+  kitchen_id UUID;
 BEGIN
   -- Get Admin user ID from auth.users
   SELECT id INTO admin_id FROM auth.users WHERE email = 'admin@gmail.com';
@@ -23,6 +27,12 @@ BEGIN
   
   -- Get Cashier user ID from auth.users
   SELECT id INTO cashier_id FROM auth.users WHERE email = 'cashier@gmail.com';
+  
+  -- Get Waiter user ID from auth.users
+  SELECT id INTO waiter_id FROM auth.users WHERE email = 'waiter@gmail.com';
+  
+  -- Get Kitchen user ID from auth.users
+  SELECT id INTO kitchen_id FROM auth.users WHERE email = 'kitchen@gmail.com';
   
   -- Create corresponding public.users records
   IF admin_id IS NOT NULL THEN
@@ -76,6 +86,48 @@ BEGIN
       '+252 61 234 5679',
       'cashier',
       800,
+      'morning',
+      true
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      name = EXCLUDED.name,
+      phone = EXCLUDED.phone,
+      role = EXCLUDED.role,
+      salary = EXCLUDED.salary,
+      shift = EXCLUDED.shift,
+      is_active = EXCLUDED.is_active;
+  END IF;
+  
+  IF waiter_id IS NOT NULL THEN
+    INSERT INTO public.users (id, email, name, phone, role, salary, shift, is_active)
+    VALUES (
+      waiter_id,
+      'waiter@gmail.com',
+      'Waiter',
+      '+252 61 234 5680',
+      'waiter',
+      600,
+      'morning',
+      true
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      name = EXCLUDED.name,
+      phone = EXCLUDED.phone,
+      role = EXCLUDED.role,
+      salary = EXCLUDED.salary,
+      shift = EXCLUDED.shift,
+      is_active = EXCLUDED.is_active;
+  END IF;
+  
+  IF kitchen_id IS NOT NULL THEN
+    INSERT INTO public.users (id, email, name, phone, role, salary, shift, is_active)
+    VALUES (
+      kitchen_id,
+      'kitchen@gmail.com',
+      'Kitchen Staff',
+      '+252 61 234 5681',
+      'kitchen',
+      700,
       'morning',
       true
     )
