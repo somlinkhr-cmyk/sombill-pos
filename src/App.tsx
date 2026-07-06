@@ -55,8 +55,8 @@ function RoleRedirect() {
   const roleRoutes: Record<string, string> = {
     manager: '/manager',
     cashier: '/cashier',
-    waiter: '/waiter',
-    kitchen: '/kitchen',
+    waiter: '/waiter/dashboard',
+    kitchen: '/kitchen/system',
   }
 
   return <Navigate to={roleRoutes[user.role] || '/login'} replace />
