@@ -18,7 +18,7 @@ BEGIN
       'admin@gmail.com',
       crypt('1155', gen_salt('bf')),
       NOW(),
-      '{"role": "admin"}',
+      '{"role": "manager"}',
       NOW(),
       NOW()
     )
@@ -69,7 +69,7 @@ BEGIN
       'admin@gmail.com',
       'Admin',
       '+252 61 234 5677',
-      'admin',
+      'manager',
       2000,
       'morning',
       true
