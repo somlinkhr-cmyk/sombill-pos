@@ -38,6 +38,7 @@ export interface Subscription {
   billing_provider_ref: string
   current_period_start: string
   current_period_end: string
+  renewal_date?: string
   cancel_at_period_end: boolean
   canceled_at: string
   trial_start: string
@@ -52,6 +53,21 @@ export interface SubscriptionPlan {
   display_name: string
   monthly_price: number
   yearly_price: number
+  tier: SubscriptionTier
+  limits?: {
+    monthly_orders: number
+    tables: number
+    staff: number
+    products: number
+  }
+  modules?: {
+    waiter_dashboard: boolean
+    kitchen_display: boolean
+    nfc_menu: boolean
+    advanced_reports: boolean
+    multi_location: boolean
+    api_access: boolean
+  }
   allow_cashier: boolean
   allow_manager: boolean
   allow_waiter: boolean
@@ -90,6 +106,7 @@ export interface Product {
   short_description?: string
   short_description_so?: string
   full_description?: string
+  full_description_so?: string
   barcode: string
   sku: string
   cost_price: number

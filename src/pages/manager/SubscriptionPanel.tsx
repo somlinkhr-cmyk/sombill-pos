@@ -56,7 +56,7 @@ export default function SubscriptionPanel() {
     orders: { current: 0, limit: 0 },
     tables: { current: 0, limit: 0 },
     staff: { current: 0, limit: 0 },
-    products: { current: number, limit: 0 },
+    products: { current: 0, limit: 0 },
   })
   const [billingHistory, setBillingHistory] = useState<BillingHistory[]>([])
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
@@ -82,10 +82,10 @@ export default function SubscriptionPanel() {
       ])
 
       setUsageStats({
-        orders: { current: ordersCount.count || 0, limit: plan?.limits?.monthly_orders || 0 },
-        tables: { current: tablesCount.count || 0, limit: plan?.limits?.tables || 0 },
-        staff: { current: staffCount.count || 0, limit: plan?.limits?.staff || 0 },
-        products: { current: productsCount.count || 0, limit: plan?.limits?.products || 0 },
+        orders: { current: ordersCount.count || 0, limit: (plan as any)?.limits?.monthly_orders || 0 },
+        tables: { current: tablesCount.count || 0, limit: (plan as any)?.limits?.tables || 0 },
+        staff: { current: staffCount.count || 0, limit: (plan as any)?.limits?.staff || 0 },
+        products: { current: productsCount.count || 0, limit: (plan as any)?.limits?.products || 0 },
       })
 
       // Load billing history
@@ -219,7 +219,7 @@ export default function SubscriptionPanel() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {getPlanIcon(plan?.tier)}
+              {getPlanIcon((plan as any)?.tier)}
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
                   {plan?.name || 'No Plan'}
@@ -235,7 +235,7 @@ export default function SubscriptionPanel() {
                 <span className="text-sm font-normal text-gray-500">/month</span>
               </p>
               <p className="text-sm text-gray-500">
-                Renews: {subscription?.renewal_date ? new Date(subscription.renewal_date).toLocaleDateString() : 'N/A'}
+                Renews: {(subscription as any)?.renewal_date ? new Date((subscription as any).renewal_date).toLocaleDateString() : 'N/A'}
               </p>
             </div>
           </div>

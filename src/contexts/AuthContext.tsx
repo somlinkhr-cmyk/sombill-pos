@@ -228,7 +228,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     const accessKey = moduleAccess[module]
-    return accessKey ? plan[accessKey] : false
+    return accessKey ? (plan as any)[accessKey] : false
   }
 
   return (

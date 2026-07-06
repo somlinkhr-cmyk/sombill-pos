@@ -4,11 +4,13 @@ import { cn } from '../../lib/utils'
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline'
   buttonSize?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg'
   loading?: boolean
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'primary', buttonSize = 'md', loading, disabled, children, ...props }, ref) => {
+  ({ className, variant = 'primary', buttonSize, size, loading, disabled, children, ...props }, ref) => {
+    const finalSize = size || buttonSize || 'md';
     const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed'
     
     const variants = {
@@ -28,7 +30,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
-        className={cn(baseStyles, variants[variant], sizes[buttonSize], className)}
+        className={cn(baseStyles, variants[variant], sizes[finalSize], className)}
         disabled={disabled || loading}
         {...props}
       >

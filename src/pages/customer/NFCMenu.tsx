@@ -129,11 +129,11 @@ export default function NFCMenu() {
       }
 
       // Load restaurant info (from tenant)
-      if (tableData) {
+      if (table) {
         const { data: tenantData } = await supabase
           .from('tenants')
           .select('*')
-          .eq('id', tableData.tenant_id)
+          .eq('id', (table as any).tenant_id)
           .single()
         
         if (tenantData) {
@@ -183,7 +183,7 @@ export default function NFCMenu() {
   }
 
   function getProductDescription(product: Product): string {
-    return language === 'so' && product.description_so ? product.description_so : (product.description || product.short_description || '')
+    return language === 'so' && (product as any).description_so ? (product as any).description_so : (product.description || product.short_description || '')
   }
 
   const filteredProducts = products.filter(product => {
