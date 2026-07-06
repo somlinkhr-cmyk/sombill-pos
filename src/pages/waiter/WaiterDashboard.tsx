@@ -147,14 +147,19 @@ export default function WaiterDashboard() {
         setCategories(uniqueCategories)
       }
 
-      // Load active orders for this waiter
-      const { data: ordersData } = await supabase
+      // Load active orders for this waiter - filter by tenant_id if available
+      let ordersQuery = supabase
         .from('orders')
         .select('*, tables(number)')
-        .eq('tenant_id', user?.tenant_id)
         .eq('waiter_id', user?.id)
         .in('status', ['new', 'preparing', 'ready'])
         .order('created_at', { ascending: false })
+      
+      if (user?.tenant_id) {
+        ordersQuery = ordersQuery.eq('tenant_id', user.tenant_id)
+      }
+      
+      const { data: ordersData } = await ordersQuery
       
       if (ordersData) {
         setActiveOrders(ordersData)
@@ -168,7 +173,9 @@ export default function WaiterDashboard() {
   }
 
   function setupRealtimeSubscriptions() {
-    // Subscribe to table changes
+    // Subscribe to table changes - only filter by tenant_id if available
+    const tablesFilter = user?.tenant_id ? `tenant_id=eq.${user.tenant_id}` : undefined
+    
     const tablesSubscription = supabase
       .channel('tables-changes')
       .on(
@@ -177,7 +184,7 @@ export default function WaiterDashboard() {
           event: '*',
           schema: 'public',
           table: 'tables',
-          filter: `tenant_id=eq.${user?.tenant_id}`,
+          filter: tablesFilter,
         },
         (payload) => {
           if (payload.eventType === 'UPDATE') {
@@ -189,7 +196,9 @@ export default function WaiterDashboard() {
       )
       .subscribe()
 
-    // Subscribe to order changes
+    // Subscribe to order changes - only filter by tenant_id if available
+    const ordersFilter = user?.tenant_id ? `tenant_id=eq.${user.tenant_id}` : undefined
+    
     const ordersSubscription = supabase
       .channel('orders-changes')
       .on(
@@ -198,7 +207,7 @@ export default function WaiterDashboard() {
           event: '*',
           schema: 'public',
           table: 'orders',
-          filter: `tenant_id=eq.${user?.tenant_id}`,
+          filter: ordersFilter,
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {

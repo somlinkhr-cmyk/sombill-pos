@@ -168,7 +168,9 @@ export default function KitchenDisplaySystem() {
   }
 
   function setupRealtimeSubscriptions() {
-    // Subscribe to order changes
+    // Subscribe to order changes - only filter by tenant_id if available
+    const ordersFilter = user?.tenant_id ? `tenant_id=eq.${user.tenant_id}` : undefined
+    
     const ordersSubscription = supabase
       .channel('kitchen-orders')
       .on(
@@ -177,7 +179,7 @@ export default function KitchenDisplaySystem() {
           event: '*',
           schema: 'public',
           table: 'orders',
-          filter: `tenant_id=eq.${user?.tenant_id}`,
+          filter: ordersFilter,
         },
         (payload) => {
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
@@ -189,7 +191,9 @@ export default function KitchenDisplaySystem() {
       )
       .subscribe()
 
-    // Subscribe to order item changes
+    // Subscribe to order item changes - only filter by tenant_id if available
+    const orderItemsFilter = user?.tenant_id ? `tenant_id=eq.${user.tenant_id}` : undefined
+    
     const orderItemsSubscription = supabase
       .channel('kitchen-order-items')
       .on(
@@ -198,7 +202,7 @@ export default function KitchenDisplaySystem() {
           event: '*',
           schema: 'public',
           table: 'order_items',
-          filter: `tenant_id=eq.${user?.tenant_id}`,
+          filter: orderItemsFilter,
         },
         (payload) => {
           loadData()
