@@ -11,6 +11,9 @@ import CashierMessages from './pages/cashier/Messages'
 import CashierSettings from './pages/cashier/Settings'
 import KitchenDisplay from './pages/kitchen/Display'
 import WaiterPanel from './pages/waiter/Panel'
+import NFCMenu from './pages/customer/NFCMenu'
+import WaiterDashboard from './pages/waiter/WaiterDashboard'
+import KitchenDisplaySystem from './pages/kitchen/KitchenDisplaySystem'
 
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { user, loading } = useAuth()
@@ -141,6 +144,14 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/waiter/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['waiter', 'manager']}>
+                <WaiterDashboard />
+              </ProtectedRoute>
+            }
+          />
           
           <Route
             path="/kitchen"
@@ -149,6 +160,23 @@ function App() {
                 <KitchenDisplay />
               </ProtectedRoute>
             }
+          />
+          <Route
+            path="/kitchen/system"
+            element={
+              <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
+                <KitchenDisplaySystem />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/menu/:tableId"
+            element={<NFCMenu />}
+          />
+          <Route
+            path="/menu"
+            element={<NFCMenu />}
           />
           
           <Route path="*" element={<Navigate to="/" replace />} />
