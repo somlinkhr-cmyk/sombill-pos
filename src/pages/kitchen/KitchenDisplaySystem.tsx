@@ -525,7 +525,7 @@ export default function KitchenDisplaySystem() {
           <div className="flex-1 min-w-[320px] bg-white border border-[#e7e8ea] rounded-[18px] flex flex-col max-h-[calc(100vh-260px)]">
             <div className="flex items-center justify-between p-[16px_18px] border-b border-[#e7e8ea]">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#3d0f91]" />
+                <div className="w-[9px] h-[9px] rounded-full bg-[#3d0f91]" />
                 <h2 className="font-['Sora'] text-[14.5px] font-bold">New Orders</h2>
               </div>
               <span className="text-[12px] font-bold text-[#1c1530] bg-[#f5f6f8] px-2.5 py-0.5 rounded-[100px]">{ordersByStatus.new.length}</span>
@@ -549,7 +549,19 @@ export default function KitchenDisplaySystem() {
                       </div>
                     </div>
                     <div className="w-[46px] h-[46px] rounded-full flex items-center justify-center relative flex-shrink-0">
-                      <span className="font-['Sora'] text-[11.5px] font-bold bg-white w-[36px] h-[36px] rounded-full flex items-center justify-center">
+                      <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="16" fill="none" stroke="#e7e8ea" strokeWidth="3" />
+                        <circle 
+                          cx="18" cy="18" r="16" 
+                          fill="none" 
+                          stroke={isOrderDelayed(order) ? '#dc2626' : '#3d0f91'}
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeDasharray="100 100"
+                          strokeDashoffset={isOrderDelayed(order) ? '20' : '30'}
+                        />
+                      </svg>
+                      <span className="font-['Sora'] text-[11.5px] font-bold bg-white w-[36px] h-[36px] rounded-full flex items-center justify-center z-10">
                         {getOrderElapsedTime(order)}
                       </span>
                     </div>
@@ -586,7 +598,7 @@ export default function KitchenDisplaySystem() {
           <div className="flex-1 min-w-[320px] bg-white border border-[#e7e8ea] rounded-[18px] flex flex-col max-h-[calc(100vh-260px)]">
             <div className="flex items-center justify-between p-[16px_18px] border-b border-[#e7e8ea]">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#6d97b8]" />
+                <div className="w-[9px] h-[9px] rounded-full bg-[#6d97b8]" />
                 <h2 className="font-['Sora'] text-[14.5px] font-bold">Preparing</h2>
               </div>
               <span className="text-[12px] font-bold text-[#1c1530] bg-[#f5f6f8] px-2.5 py-0.5 rounded-[100px]">{ordersByStatus.preparing.length}</span>
@@ -610,7 +622,19 @@ export default function KitchenDisplaySystem() {
                       </div>
                     </div>
                     <div className="w-[46px] h-[46px] rounded-full flex items-center justify-center relative flex-shrink-0">
-                      <span className="font-['Sora'] text-[11.5px] font-bold bg-white w-[36px] h-[36px] rounded-full flex items-center justify-center">
+                      <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="16" fill="none" stroke="#e7e8ea" strokeWidth="3" />
+                        <circle 
+                          cx="18" cy="18" r="16" 
+                          fill="none" 
+                          stroke={isOrderDelayed(order) ? '#dc2626' : '#6d97b8'}
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeDasharray="100 100"
+                          strokeDashoffset={isOrderDelayed(order) ? '20' : '50'}
+                        />
+                      </svg>
+                      <span className="font-['Sora'] text-[11.5px] font-bold bg-white w-[36px] h-[36px] rounded-full flex items-center justify-center z-10">
                         {getOrderElapsedTime(order)}
                       </span>
                     </div>
@@ -646,7 +670,7 @@ export default function KitchenDisplaySystem() {
           <div className="flex-1 min-w-[320px] bg-white border border-[#e7e8ea] rounded-[18px] flex flex-col max-h-[calc(100vh-260px)]">
             <div className="flex items-center justify-between p-[16px_18px] border-b border-[#e7e8ea]">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#1a9a56]" />
+                <div className="w-[9px] h-[9px] rounded-full bg-[#1a9a56]" />
                 <h2 className="font-['Sora'] text-[14.5px] font-bold">Ready for Pickup</h2>
               </div>
               <span className="text-[12px] font-bold text-[#1c1530] bg-[#f5f6f8] px-2.5 py-0.5 rounded-[100px]">{ordersByStatus.ready.length}</span>
@@ -669,8 +693,20 @@ export default function KitchenDisplaySystem() {
                         </span>
                       </div>
                     </div>
-                    <div className="w-[46px] h-[46px] rounded-full flex items-center justify-center relative flex-shrink-0 bg-[#e6f6ec]">
-                      <span className="font-['Sora'] text-[11.5px] font-bold text-[#1a9a56]">✓</span>
+                    <div className="w-[46px] h-[46px] rounded-full flex items-center justify-center relative flex-shrink-0">
+                      <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 36 36">
+                        <circle cx="18" cy="18" r="16" fill="none" stroke="#e7e8ea" strokeWidth="3" />
+                        <circle 
+                          cx="18" cy="18" r="16" 
+                          fill="none" 
+                          stroke="#1a9a56"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeDasharray="100 100"
+                          strokeDashoffset="0"
+                        />
+                      </svg>
+                      <span className="font-['Sora'] text-[11.5px] font-bold bg-[#e6f6ec] w-[36px] h-[36px] rounded-full flex items-center justify-center z-10 text-[#1a9a56]">✓</span>
                     </div>
                   </div>
                   <div className="pl-2 flex flex-col gap-1.5 mb-2.5">
