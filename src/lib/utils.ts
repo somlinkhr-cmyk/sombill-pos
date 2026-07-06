@@ -14,30 +14,42 @@ export function formatCurrency(amount: number, currency = 'USD'): string {
 
 export function formatDate(date: string | Date | null | undefined): string {
   if (!date) return 'N/A'
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(new Date(date))
+  try {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }).format(new Date(date))
+  } catch {
+    return 'N/A'
+  }
 }
 
 export function formatDateTime(date: string | Date | null | undefined): string {
   if (!date) return 'N/A'
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(date))
+  try {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(date))
+  } catch {
+    return 'N/A'
+  }
 }
 
 export function formatTime(date: string | Date | null | undefined): string {
   if (!date) return 'N/A'
-  return new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(date))
+  try {
+    return new Intl.DateTimeFormat('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(date))
+  } catch {
+    return 'N/A'
+  }
 }
 
 export function generateId(): string {
