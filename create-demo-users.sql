@@ -1,5 +1,13 @@
--- Simple script to create demo users
--- Run this in Supabase SQL Editor
+-- Simple script to create demo users in public.users table
+-- IMPORTANT: First create users in Supabase Auth Dashboard, then run this script
+-- 
+-- STEPS:
+-- 1. Go to Supabase Dashboard → Authentication → Users
+-- 2. Click "Add user" and create these users:
+--    - Email: admin@gmail.com, Password: 1155
+--    - Email: manager@gmail.com, Password: 1133
+--    - Email: cashier@gmail.com, Password: 1133
+-- 3. Run this SQL script to create corresponding public.users records
 
 DO $$
 DECLARE
@@ -7,59 +15,14 @@ DECLARE
   manager_id UUID;
   cashier_id UUID;
 BEGIN
-  -- Check if Admin user exists
+  -- Get Admin user ID from auth.users
   SELECT id INTO admin_id FROM auth.users WHERE email = 'admin@gmail.com';
   
-  -- Create Admin user if doesn't exist
-  IF admin_id IS NULL THEN
-    INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, raw_user_meta_data, created_at, updated_at)
-    VALUES (
-      gen_random_uuid(),
-      'admin@gmail.com',
-      crypt('1155', gen_salt('bf')),
-      NOW(),
-      '{"role": "manager"}',
-      NOW(),
-      NOW()
-    )
-    RETURNING id INTO admin_id;
-  END IF;
-  
-  -- Check if Manager user exists
+  -- Get Manager user ID from auth.users
   SELECT id INTO manager_id FROM auth.users WHERE email = 'manager@gmail.com';
   
-  -- Create Manager user if doesn't exist
-  IF manager_id IS NULL THEN
-    INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, raw_user_meta_data, created_at, updated_at)
-    VALUES (
-      gen_random_uuid(),
-      'manager@gmail.com',
-      crypt('1133', gen_salt('bf')),
-      NOW(),
-      '{"role": "manager"}',
-      NOW(),
-      NOW()
-    )
-    RETURNING id INTO manager_id;
-  END IF;
-  
-  -- Check if Cashier user exists
+  -- Get Cashier user ID from auth.users
   SELECT id INTO cashier_id FROM auth.users WHERE email = 'cashier@gmail.com';
-  
-  -- Create Cashier user if doesn't exist
-  IF cashier_id IS NULL THEN
-    INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, raw_user_meta_data, created_at, updated_at)
-    VALUES (
-      gen_random_uuid(),
-      'cashier@gmail.com',
-      crypt('1133', gen_salt('bf')),
-      NOW(),
-      '{"role": "cashier"}',
-      NOW(),
-      NOW()
-    )
-    RETURNING id INTO cashier_id;
-  END IF;
   
   -- Create corresponding public.users records
   IF admin_id IS NOT NULL THEN
