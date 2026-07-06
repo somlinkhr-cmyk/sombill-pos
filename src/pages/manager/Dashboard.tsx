@@ -71,6 +71,7 @@ export default function ManagerDashboard() {
         .from('orders')
         .select('total')
         .eq('payment_status', 'paid')
+        .eq('tenant_id', user?.tenant_id)
         .gte('created_at', today)
 
       const todaySales = todayOrders?.reduce((sum: number, order: any) => sum + (order.total || 0), 0) || 0
@@ -82,6 +83,7 @@ export default function ManagerDashboard() {
         .from('orders')
         .select('total')
         .eq('payment_status', 'paid')
+        .eq('tenant_id', user?.tenant_id)
         .gte('created_at', weekStart.toISOString())
 
       const weeklySales = weekOrders?.reduce((sum: number, order: any) => sum + (order.total || 0), 0) || 0
@@ -91,6 +93,7 @@ export default function ManagerDashboard() {
         .from('orders')
         .select('total')
         .eq('payment_status', 'paid')
+        .eq('tenant_id', user?.tenant_id)
         .gte('created_at', monthStart)
 
       const monthlyRevenue = monthOrders?.reduce((sum: number, order: any) => sum + (order.total || 0), 0) || 0
@@ -99,6 +102,7 @@ export default function ManagerDashboard() {
       const { count: ordersToday } = await supabase
         .from('orders')
         .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', user?.tenant_id)
         .gte('created_at', today)
 
       // Active tables
@@ -106,21 +110,25 @@ export default function ManagerDashboard() {
         .from('tables')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'occupied')
+        .eq('tenant_id', user?.tenant_id)
 
       // Total customers
       const { count: totalCustomers } = await supabase
         .from('customers')
         .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', user?.tenant_id)
 
       // Total menu items
       const { count: totalMenuItems } = await supabase
         .from('products')
         .select('*', { count: 'exact', head: true })
+        .eq('tenant_id', user?.tenant_id)
 
       // Low stock items - fetch all and filter
       const { data: allIngredients } = await supabase
         .from('ingredients')
         .select('id, current_stock, min_stock')
+        .eq('tenant_id', user?.tenant_id)
 
       const lowStockItems = allIngredients?.filter((ing: any) => ing.current_stock < ing.min_stock).length || 0
 
@@ -131,6 +139,7 @@ export default function ManagerDashboard() {
       const { data: expenses } = await supabase
         .from('expenses')
         .select('amount')
+        .eq('tenant_id', user?.tenant_id)
         .gte('expense_date', monthStart)
 
       const totalExpenses = expenses?.reduce((sum: number, exp: any) => sum + (exp.amount || 0), 0) || 0
@@ -139,6 +148,7 @@ export default function ManagerDashboard() {
       const { data: recent } = await supabase
         .from('orders')
         .select('*, tables(number)')
+        .eq('tenant_id', user?.tenant_id)
         .order('created_at', { ascending: false })
         .limit(5)
 
@@ -154,6 +164,7 @@ export default function ManagerDashboard() {
       const { data: orderItems } = await supabase
         .from('order_items')
         .select('product_id, quantity, products(name)')
+        .eq('tenant_id', user?.tenant_id)
         .gte('created_at', monthStart)
 
       const productSales: { [key: string]: number } = {}
@@ -180,6 +191,7 @@ export default function ManagerDashboard() {
           .from('orders')
           .select('total')
           .eq('payment_status', 'paid')
+          .eq('tenant_id', user?.tenant_id)
           .gte('created_at', dateStr)
           .lt('created_at', `${dateStr}T23:59:59.999Z`)
         
@@ -191,6 +203,7 @@ export default function ManagerDashboard() {
       const { data: allOrders } = await supabase
         .from('orders')
         .select('status')
+        .eq('tenant_id', user?.tenant_id)
         .gte('created_at', today)
 
       const statusCounts: { [key: string]: number } = {}
@@ -206,6 +219,7 @@ export default function ManagerDashboard() {
         .from('orders')
         .select('payment_method')
         .eq('payment_status', 'paid')
+        .eq('tenant_id', user?.tenant_id)
         .gte('created_at', monthStart)
 
       const paymentCounts: { [key: string]: number } = {}
@@ -229,6 +243,7 @@ export default function ManagerDashboard() {
           .from('orders')
           .select('total')
           .eq('payment_status', 'paid')
+          .eq('tenant_id', user?.tenant_id)
           .gte('created_at', weekStart.toISOString())
           .lte('created_at', weekEnd.toISOString())
         
