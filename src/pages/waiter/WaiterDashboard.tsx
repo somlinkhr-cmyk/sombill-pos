@@ -456,7 +456,7 @@ export default function WaiterDashboard() {
                   <div>
                     <p className="font-medium text-gray-900">Table {table.number}</p>
                     <p className="text-xs text-gray-500">
-                      {table.call_bell_requested_at && new Date(table.call_bell_requested_at).toLocaleTimeString()}
+                      {table.call_bell_requested_at ? new Date(table.call_bell_requested_at).toLocaleTimeString() : 'N/A'}
                     </p>
                   </div>
                   <Button
@@ -583,7 +583,7 @@ export default function WaiterDashboard() {
                         Table {(order as any).tables?.number || 'N/A'}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {new Date(order.created_at).toLocaleTimeString()}
+                        {order.created_at ? new Date(order.created_at).toLocaleTimeString() : 'N/A'}
                       </p>
                     </div>
                     <div className="flex items-center gap-4">

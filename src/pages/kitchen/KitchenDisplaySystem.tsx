@@ -279,6 +279,7 @@ export default function KitchenDisplaySystem() {
 
   function getOrderElapsedTime(order: Order): string {
     const startTime = order.preparing_started_at || order.created_at
+    if (!startTime) return 'N/A'
     const elapsed = Date.now() - new Date(startTime).getTime()
     const minutes = Math.floor(elapsed / 60000)
     const seconds = Math.floor((elapsed % 60000) / 1000)
@@ -287,6 +288,7 @@ export default function KitchenDisplaySystem() {
 
   function getItemElapsedTime(item: OrderItem): string {
     const startTime = item.preparing_started_at || new Date().toISOString()
+    if (!startTime) return 'N/A'
     const elapsed = Date.now() - new Date(startTime).getTime()
     const minutes = Math.floor(elapsed / 60000)
     const seconds = Math.floor((elapsed % 60000) / 1000)
@@ -294,6 +296,7 @@ export default function KitchenDisplaySystem() {
   }
 
   function isOrderDelayed(order: Order): boolean {
+    if (!order.created_at) return false
     const elapsed = Date.now() - new Date(order.created_at).getTime()
     return elapsed > 15 * 60 * 1000 // 15 minutes
   }
