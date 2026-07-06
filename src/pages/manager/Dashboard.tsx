@@ -14,6 +14,7 @@ import Staff from './Staff'
 import Customers from './Customers'
 import Reports from './Reports'
 import Expenses from './Expenses'
+import SubscriptionPanel from './SubscriptionPanel'
 import {
   DollarSign,
   ShoppingCart,
@@ -29,6 +30,7 @@ import {
   CreditCard,
   UserCheck,
   PackageSearch,
+  Crown,
 } from 'lucide-react'
 
 export default function ManagerDashboard() {
@@ -316,6 +318,7 @@ export default function ManagerDashboard() {
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'reports', label: 'Reports', icon: FileText },
     { id: 'expenses', label: 'Expenses', icon: CreditCard },
+    { id: 'subscription', label: 'Subscription', icon: Crown },
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
 
@@ -570,7 +573,8 @@ export default function ManagerDashboard() {
         {activeTab === 'customers' && <Customers />}
         {activeTab === 'reports' && <Reports />}
         {activeTab === 'expenses' && <Expenses />}
-        {activeTab !== 'dashboard' && activeTab !== 'orders' && activeTab !== 'menu' && activeTab !== 'inventory' && activeTab !== 'tables' && activeTab !== 'staff' && activeTab !== 'customers' && activeTab !== 'reports' && activeTab !== 'expenses' && (
+        {activeTab === 'subscription' && <SubscriptionPanel />}
+        {activeTab !== 'dashboard' && activeTab !== 'orders' && activeTab !== 'menu' && activeTab !== 'inventory' && activeTab !== 'tables' && activeTab !== 'staff' && activeTab !== 'customers' && activeTab !== 'reports' && activeTab !== 'expenses' && activeTab !== 'subscription' && (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <p className="text-gray-500 text-lg">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} module</p>
