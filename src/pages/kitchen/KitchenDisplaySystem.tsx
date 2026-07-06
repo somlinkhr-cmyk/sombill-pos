@@ -185,7 +185,7 @@ export default function KitchenDisplaySystem() {
     const ordersFilter = user?.tenant_id ? `tenant_id=eq.${user.tenant_id}` : undefined
     
     const ordersSubscription = supabase
-      .channel('kitchen-orders')
+      .channel(`kitchen-orders-${Date.now()}`)
       .on(
         'postgres_changes',
         {
@@ -208,7 +208,7 @@ export default function KitchenDisplaySystem() {
     const orderItemsFilter = user?.tenant_id ? `tenant_id=eq.${user.tenant_id}` : undefined
     
     const orderItemsSubscription = supabase
-      .channel('kitchen-order-items')
+      .channel(`kitchen-order-items-${Date.now()}`)
       .on(
         'postgres_changes',
         {

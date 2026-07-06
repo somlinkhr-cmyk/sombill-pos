@@ -47,14 +47,22 @@ export default function KitchenDisplay() {
 
   function setupRealtimeSubscription() {
     const subscription = supabase
-      .channel('kitchen-orders')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
-        if (payload.new && 'status' in payload.new && ['new', 'preparing', 'ready'].includes(payload.new.status as string)) {
-          loadOrders()
-        } else if (payload.old && 'status' in payload.old && ['new', 'preparing', 'ready'].includes(payload.old.status as string)) {
-          loadOrders()
+      .channel(`kitchen-orders-${Date.now()}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          if (payload.new && 'status' in payload.new && ['new', 'preparing', 'ready'].includes(payload.new.status as string)) {
+            loadOrders()
+          } else if (payload.old && 'status' in payload.old && ['new', 'preparing', 'ready'].includes(payload.old.status as string)) {
+            loadOrders()
+          }
         }
-      })
+      )
       .subscribe()
 
     return () => subscription.unsubscribe()

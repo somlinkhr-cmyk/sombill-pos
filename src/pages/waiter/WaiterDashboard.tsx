@@ -192,7 +192,7 @@ export default function WaiterDashboard() {
     const tablesFilter = user?.tenant_id ? `tenant_id=eq.${user.tenant_id}` : undefined
     
     const tablesSubscription = supabase
-      .channel('tables-changes')
+      .channel(`tables-changes-${Date.now()}`)
       .on(
         'postgres_changes',
         {
@@ -215,7 +215,7 @@ export default function WaiterDashboard() {
     const ordersFilter = user?.tenant_id ? `tenant_id=eq.${user.tenant_id}` : undefined
     
     const ordersSubscription = supabase
-      .channel('orders-changes')
+      .channel(`orders-changes-${Date.now()}`)
       .on(
         'postgres_changes',
         {
