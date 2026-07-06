@@ -325,16 +325,6 @@ export default function LoginPage() {
         <p className="text-center mt-6" style={{ fontSize: '11.5px', color: '#8880AC' }}>
           Not your station? Ask your manager for access.
         </p>
-
-        {/* Demo credentials info */}
-        <div className="mt-5 text-center rounded-xl p-3" style={{
-          fontSize: '11px', color: '#B6AFD6', background: 'rgba(255,255,255,.05)'
-        }}>
-          <p className="font-semibold mb-1">Demo credentials:</p>
-          <p>Manager: manager@gmail.com</p>
-          <p>Cashier: cashier@gmail.com</p>
-          <p>Password: 1133 or 1144</p>
-        </div>
       </div>
     </div>
   )
