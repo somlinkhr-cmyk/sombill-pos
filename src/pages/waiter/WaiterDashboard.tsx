@@ -454,7 +454,7 @@ export default function WaiterDashboard() {
         {/* Logout */}
         <div className="mt-auto mb-4">
           <div 
-            className="w-[56px] h-[56px] rounded-[14px] flex flex-col items-center justify-center gap-1 cursor-pointer transition-all text-[#E1505C] hover:bg-white/8 hover:text-[#E1505C]"
+            className="w-[56px] h-[56px] rounded-[14px] flex flex-col items-center justify-center gap-1 cursor-pointer transition-all text-[#B4B7C0] hover:bg-white/8 hover:text-white"
             onClick={() => logout()}
           >
             <LogOut className="w-5 h-5" />
