@@ -66,7 +66,7 @@ export default function Customers() {
     try {
       setLoading(true)
       
-      let query = supabase.from('customers').select('*').order('name')
+      let query = supabase.from('customers').select('*').eq('tenant_id', user?.tenant_id).order('name')
       
       if (searchQuery) {
         query = query.ilike('name', `%${searchQuery}%`)
@@ -91,6 +91,7 @@ export default function Customers() {
         ...data,
         loyalty_points: 0,
         total_spending: 0,
+        tenant_id: user?.tenant_id,
       }).select()
       if (error) {
         console.error('Supabase error:', error)

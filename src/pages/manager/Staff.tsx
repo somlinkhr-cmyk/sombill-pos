@@ -82,7 +82,7 @@ export default function Staff() {
       setLoading(true)
       
       if (activeTab === 'staff') {
-        let query = supabase.from('users').select('*').order('name')
+        let query = supabase.from('users').select('*').eq('tenant_id', user?.tenant_id).order('name')
         if (searchQuery) {
           query = query.ilike('name', `%${searchQuery}%`)
         }
@@ -93,6 +93,7 @@ export default function Staff() {
         const { data, error } = await supabase
           .from('attendance')
           .select('*, users(name)')
+          .eq('tenant_id', user?.tenant_id)
           .order('date', { ascending: false })
         if (error) throw error
         setAttendance(data || [])
@@ -100,6 +101,7 @@ export default function Staff() {
         const { data, error } = await supabase
           .from('shifts')
           .select('*, users(name)')
+          .eq('tenant_id', user?.tenant_id)
           .order('date', { ascending: false })
         if (error) throw error
         setShifts(data || [])
@@ -121,6 +123,7 @@ export default function Staff() {
       const { error, data: result } = await supabase.from('users').insert({
         ...data,
         salary: parseFloat(data.salary),
+        tenant_id: user?.tenant_id,
       }).select()
       if (error) {
         console.error('Supabase error:', error)

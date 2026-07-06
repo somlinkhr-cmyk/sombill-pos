@@ -63,8 +63,8 @@ export default function Tables() {
       setLoading(true)
       
       const [tablesData, waitersData] = await Promise.all([
-        supabase.from('tables').select('*').order('number'),
-        supabase.from('users').select('id, name, email').eq('role', 'waiter'),
+        supabase.from('tables').select('*').eq('tenant_id', user?.tenant_id).order('number'),
+        supabase.from('users').select('id, name, email').eq('role', 'waiter').eq('tenant_id', user?.tenant_id),
       ])
 
       if (tablesData.error) throw tablesData.error
@@ -92,6 +92,7 @@ export default function Tables() {
         .from('tables')
         .select('id')
         .eq('number', tableNumber)
+        .eq('tenant_id', user?.tenant_id)
         .single()
       
       if (existingTable) {
@@ -107,6 +108,7 @@ export default function Tables() {
         status: data.status || 'available',
         position_x: parseInt(data.position_x) || 0,
         position_y: parseInt(data.position_y) || 0,
+        tenant_id: user?.tenant_id,
       }
       
       // Only include room_id if it's a valid UUID (not a number or empty string)
