@@ -450,6 +450,17 @@ export default function WaiterDashboard() {
           <Receipt className="w-5 h-5" />
           <span className="text-[9.5px] font-semibold">Bill</span>
         </div>
+
+        {/* Logout */}
+        <div className="mt-auto mb-4">
+          <div 
+            className="w-[56px] h-[56px] rounded-[14px] flex flex-col items-center justify-center gap-1 cursor-pointer transition-all text-[#E1505C] hover:bg-white/8 hover:text-[#E1505C]"
+            onClick={() => logout()}
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="text-[9.5px] font-semibold">Logout</span>
+          </div>
+        </div>
       </div>
 
       {/* Main Content */}
