@@ -159,7 +159,7 @@ export default function ManagerDashboard() {
         table: order.tables?.number ? `Table ${order.tables.number}` : 'N/A',
         amount: order.total || 0,
         status: order.status || 'new',
-        time: new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        time: order.created_at ? new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A',
       })) || []
 
       // Top selling items

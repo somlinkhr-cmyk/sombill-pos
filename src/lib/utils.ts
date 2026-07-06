@@ -12,7 +12,8 @@ export function formatCurrency(amount: number, currency = 'USD'): string {
   }).format(amount)
 }
 
-export function formatDate(date: string | Date): string {
+export function formatDate(date: string | Date | null | undefined): string {
+  if (!date) return 'N/A'
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
@@ -20,7 +21,8 @@ export function formatDate(date: string | Date): string {
   }).format(new Date(date))
 }
 
-export function formatDateTime(date: string | Date): string {
+export function formatDateTime(date: string | Date | null | undefined): string {
+  if (!date) return 'N/A'
   return new Intl.DateTimeFormat('en-US', {
     year: 'numeric',
     month: 'short',
@@ -30,7 +32,8 @@ export function formatDateTime(date: string | Date): string {
   }).format(new Date(date))
 }
 
-export function formatTime(date: string | Date): string {
+export function formatTime(date: string | Date | null | undefined): string {
+  if (!date) return 'N/A'
   return new Intl.DateTimeFormat('en-US', {
     hour: '2-digit',
     minute: '2-digit',

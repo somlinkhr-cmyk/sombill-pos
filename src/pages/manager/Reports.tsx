@@ -104,6 +104,7 @@ export default function Reports() {
       // Calculate daily sales
       const dailyMap = new Map()
       orders.forEach(order => {
+        if (!order.created_at) return
         const date = new Date(order.created_at).toLocaleDateString('en-US', { weekday: 'short' })
         const current = dailyMap.get(date) || { sales: 0, orders: 0 }
         dailyMap.set(date, {
