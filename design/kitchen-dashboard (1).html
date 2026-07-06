@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SomBill — Kitchen Display</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --purple-950:#190a42;
+    --purple-900:#22105c;
+    --purple-800:#3d0f91;
+    --purple-700:#4e1cab;
+    --purple-100:#efeafc;
+    --blue-400:#86abc9;
+    --blue-500:#6d97b8;
+    --blue-100:#eaf2f7;
+    --gray-300:#d7d9dc;
+    --gray-200:#e7e8ea;
+    --gray-100:#f5f6f8;
+    --ink-900:#1c1530;
+    --ink-600:#5c5570;
+    --white:#ffffff;
+    --green-500:#1a9a56;
+    --green-100:#e6f6ec;
+    --amber-500:#d97706;
+    --amber-100:#fdf1e2;
+    --red-500:#dc2626;
+    --red-100:#fce9e8;
+    --radius:14px;
+    --shadow-card:0 1px 2px rgba(28,21,48,0.04), 0 8px 24px -12px rgba(28,21,48,0.12);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--white);
+    color:var(--ink-900);
+    display:flex;
+    overflow:hidden;
+  }
+  h1,h2,h3,.display{font-family:'Sora',sans-serif;}
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:236px;
+    min-width:236px;
+    height:100vh;
+    background:linear-gradient(185deg, var(--purple-950) 0%, var(--purple-900) 60%, var(--purple-800) 130%);
+    color:var(--white);
+    display:flex;
+    flex-direction:column;
+    padding:26px 18px;
+    position:relative;
+    overflow:hidden;
+  }
+  .sidebar::after{
+    content:"";
+    position:absolute;
+    right:-70px; bottom:-70px;
+    width:230px; height:230px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(134,171,201,0.18) 0%, rgba(134,171,201,0) 70%);
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:4px 6px 28px 6px;
+  }
+  .brand svg{flex-shrink:0;}
+  .brand-name{font-family:'Sora',sans-serif; font-weight:700; font-size:19px; letter-spacing:-0.01em;}
+  .brand-name span{color:var(--blue-400);}
+  .brand-sub{font-size:10.5px; color:rgba(255,255,255,0.5); letter-spacing:0.04em; text-transform:uppercase; margin-top:1px;}
+
+  .nav-label{
+    font-size:10.5px; font-weight:600; letter-spacing:0.09em; text-transform:uppercase;
+    color:rgba(255,255,255,0.38); padding:16px 10px 8px;
+  }
+  .nav{list-style:none; display:flex; flex-direction:column; gap:2px; z-index:1;}
+  .nav a{
+    display:flex; align-items:center; gap:11px;
+    padding:9px 12px; border-radius:10px;
+    color:rgba(255,255,255,0.72);
+    text-decoration:none; font-size:13.5px; font-weight:500;
+    transition:background .15s ease, color .15s ease;
+  }
+  .nav a:hover{background:rgba(255,255,255,0.06); color:#fff;}
+  .nav a.active{
+    background:rgba(255,255,255,0.1);
+    color:#fff;
+    box-shadow:inset 3px 0 0 var(--blue-400);
+  }
+  .nav svg{width:17px; height:17px; flex-shrink:0;}
+
+  .sidebar-footer{
+    margin-top:auto; z-index:1;
+    border-top:1px solid rgba(255,255,255,0.1);
+    padding-top:16px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .avatar-sm{
+    width:34px; height:34px; border-radius:9px;
+    background:var(--blue-400); color:var(--purple-950);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Sora'; font-weight:700; font-size:13px;
+  }
+  .sf-name{font-size:13px; font-weight:600;}
+  .sf-role{font-size:11px; color:rgba(255,255,255,0.45);}
+
+  /* ---------- MAIN ---------- */
+  .main{flex:1; height:100vh; overflow-y:auto; background:var(--gray-100);}
+  .header{
+    background:var(--white);
+    border-bottom:1px solid var(--gray-200);
+    padding:18px 30px;
+    display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; z-index:10;
+  }
+  .header-left h1{font-size:19px; font-weight:700; letter-spacing:-0.01em;}
+  .header-left p{font-size:12.5px; color:var(--ink-600); margin-top:2px;}
+  .header-right{display:flex; align-items:center; gap:14px;}
+  .clock-pill{
+    display:flex; flex-direction:column; align-items:flex-end;
+    padding-right:14px; border-right:1px solid var(--gray-200);
+  }
+  .clock-time{font-family:'Sora'; font-weight:700; font-size:15px;}
+  .clock-date{font-size:11px; color:var(--ink-600);}
+  .icon-btn{
+    width:38px; height:38px; border-radius:10px;
+    border:1px solid var(--gray-200); background:var(--white);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; position:relative; color:var(--ink-900);
+  }
+  .icon-btn .dot{
+    position:absolute; top:7px; right:7px;
+    width:7px; height:7px; border-radius:50%;
+    background:var(--red-500); border:1.5px solid #fff;
+  }
+  .avatar{
+    width:38px; height:38px; border-radius:10px;
+    background:var(--purple-800); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Sora'; font-weight:700; font-size:13px;
+  }
+
+  /* station tabs */
+  .station-tabs{
+    display:flex; gap:8px; padding:16px 30px 0 30px; flex-wrap:wrap;
+  }
+  .station-tab{
+    padding:8px 16px; border-radius:100px; font-size:13px; font-weight:600;
+    background:var(--white); border:1px solid var(--gray-200); color:var(--ink-600);
+    cursor:pointer; display:flex; align-items:center; gap:7px;
+    transition:all .15s ease;
+  }
+  .station-tab .count{
+    font-size:11px; background:var(--gray-100); color:var(--ink-600);
+    padding:1px 7px; border-radius:100px;
+  }
+  .station-tab.active{background:var(--purple-800); border-color:var(--purple-800); color:#fff;}
+  .station-tab.active .count{background:rgba(255,255,255,0.2); color:#fff;}
+
+  /* stats */
+  .stats{
+    display:grid; grid-template-columns:repeat(4,1fr);
+    gap:16px; padding:20px 30px 6px 30px;
+  }
+  .stat-card{
+    background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius);
+    padding:16px 18px; box-shadow:var(--shadow-card);
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .stat-top{display:flex; align-items:center; justify-content:space-between;}
+  .stat-label{font-size:12px; font-weight:600; color:var(--ink-600);}
+  .stat-icon{
+    width:30px; height:30px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .stat-value{font-family:'Sora'; font-size:26px; font-weight:700; letter-spacing:-0.01em;}
+  .stat-trend{font-size:11.5px; font-weight:600;}
+  .up{color:var(--green-500);} .down{color:var(--red-500);} .flat{color:var(--ink-600);}
+
+  /* board */
+  .board{
+    display:flex; gap:18px;
+    padding:22px 30px 30px 30px;
+    align-items:flex-start;
+  }
+  .column{
+    flex:1; min-width:320px;
+    background:var(--white);
+    border:1px solid var(--gray-200);
+    border-radius:18px;
+    display:flex; flex-direction:column;
+    max-height:calc(100vh - 260px);
+  }
+  .column-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 18px; border-bottom:1px solid var(--gray-200);
+  }
+  .col-title{display:flex; align-items:center; gap:9px;}
+  .col-dot{width:9px; height:9px; border-radius:50%;}
+  .col-title h2{font-size:14.5px; font-weight:700;}
+  .col-count{
+    font-size:12px; font-weight:700; color:var(--ink-600);
+    background:var(--gray-100); padding:2px 10px; border-radius:100px;
+  }
+  .col-body{padding:14px; display:flex; flex-direction:column; gap:12px; overflow-y:auto;}
+
+  .col-new .col-dot{background:var(--purple-800);}
+  .col-prep .col-dot{background:var(--blue-500);}
+  .col-ready .col-dot{background:var(--green-500);}
+
+  /* ticket card */
+  .ticket{
+    border:1px solid var(--gray-200);
+    border-radius:12px;
+    padding:14px 14px 12px 14px;
+    position:relative;
+    background:var(--white);
+  }
+  .ticket::before{
+    content:""; position:absolute; left:0; top:12px; bottom:12px; width:3px;
+    border-radius:3px; background:var(--accent);
+  }
+  .ticket-top{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; padding-left:8px;}
+  .ticket-id{font-family:'Sora'; font-weight:700; font-size:15px;}
+  .ticket-meta{display:flex; align-items:center; gap:6px; margin-top:3px;}
+  .ticket-type{
+    font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;
+    padding:2px 7px; border-radius:5px;
+  }
+  .type-dinein{background:var(--purple-100); color:var(--purple-800);}
+  .type-takeaway{background:var(--blue-100); color:var(--blue-500);}
+  .type-delivery{background:var(--amber-100); color:var(--amber-500);}
+  .table-no{font-size:11.5px; color:var(--ink-600); font-weight:600;}
+
+  .timer-ring{
+    width:46px; height:46px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    position:relative; flex-shrink:0;
+  }
+  .timer-ring .ring-bg{
+    position:absolute; inset:0; border-radius:50%;
+  }
+  .timer-ring span{
+    font-family:'Sora'; font-size:11.5px; font-weight:700; z-index:1; background:#fff;
+    width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  }
+
+  .item-list{padding-left:8px; display:flex; flex-direction:column; gap:7px; margin-bottom:11px;}
+  .item-row{display:flex; gap:8px; font-size:13px;}
+  .item-qty{font-weight:700; color:var(--purple-800); min-width:22px;}
+  .item-name{font-weight:600; color:var(--ink-900);}
+  .item-mod{display:block; font-size:11.5px; color:var(--ink-600); font-style:italic; margin-top:1px;}
+
+  .ticket-footer{display:flex; align-items:center; justify-content:space-between; padding-left:8px; gap:8px;}
+  .chips{display:flex; gap:5px; flex-wrap:wrap;}
+  .chip{
+    font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;
+    padding:3px 7px; border-radius:5px; background:var(--gray-100); color:var(--ink-600);
+  }
+  .btn{
+    border:none; border-radius:8px; padding:8px 14px; font-size:12.5px; font-weight:700;
+    cursor:pointer; white-space:nowrap; font-family:'Inter';
+    transition:filter .15s ease;
+  }
+  .btn:hover{filter:brightness(0.94);}
+  .btn-purple{background:var(--purple-800); color:#fff;}
+  .btn-blue{background:var(--blue-500); color:#fff;}
+  .btn-green{background:var(--green-500); color:#fff;}
+
+  .col-scroll::-webkit-scrollbar, .main::-webkit-scrollbar{width:8px;}
+  .col-scroll::-webkit-scrollbar-thumb, .main::-webkit-scrollbar-thumb{background:var(--gray-300); border-radius:8px;}
+
+  @media (max-width:1180px){
+    .board{flex-direction:column;}
+    .column{width:100%; max-height:none;}
+    .stats{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= SIDEBAR ================= -->
+<aside class="sidebar">
+  <div class="brand">
+    <svg width="34" height="34" viewBox="0 0 100 100" fill="none">
+      <path d="M25 30 L55 30 Q70 30 70 42 Q70 54 55 54 L35 54 Q22 54 22 66 Q22 78 35 78 L65 78" stroke="#d7d9dc" stroke-width="13" stroke-linecap="round" fill="none"/>
+      <path d="M25 30 L55 54 L35 78" stroke="#86abc9" stroke-width="13" stroke-linecap="round" fill="none"/>
+      <circle cx="70" cy="42" r="9" fill="#86abc9"/>
+      <circle cx="22" cy="78" r="9" fill="#d7d9dc"/>
+    </svg>
+    <div>
+      <div class="brand-name">Som<span>Bill</span></div>
+      <div class="brand-sub">Kitchen Display</div>
+    </div>
+  </div>
+
+  <div class="nav-label">Operations</div>
+  <ul class="nav">
+    <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</a></li>
+    <li><a href="#" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 3v10a2 2 0 0 0 2 2h1"/><path d="M7 3v6"/><path d="M4 3h3"/><path d="M15 3c-2 0-3 2-3 4s1 3 2 3v11"/><circle cx="19" cy="19" r="0"/></svg>Kitchen Display</a></li>
+    <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h12l2 5H4l2-5Z"/><path d="M4 7v13a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V7"/><path d="M9 12h6"/></svg>Orders</a></li>
+    <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Menu</a></li>
+  </ul>
+
+  <div class="nav-label">Management</div>
+  <ul class="nav">
+    <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2"/><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 13h18"/></svg>Inventory</a></li>
+    <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2"/><path d="M17 3.5a4 4 0 0 1 0 7"/></svg>Staff</a></li>
+    <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m7 15 4-6 3 3 5-7"/></svg>Reports</a></li>
+    <li><a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.36.5.98.83 1.51 1H21a2 2 0 0 1 0 4h-.09c-.66 0-1.25.4-1.51 1z"/></svg>Settings</a></li>
+  </ul>
+
+  <div class="sidebar-footer">
+    <div class="avatar-sm">HD</div>
+    <div>
+      <div class="sf-name">Hodan Diriye</div>
+      <div class="sf-role">Head Chef · Line 1</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ================= MAIN ================= -->
+<main class="main">
+  <header class="header">
+    <div class="header-left">
+      <h1>Kitchen Display — Main Line</h1>
+      <p>Hargeisa Branch · 14 open orders · avg prep 11m 20s</p>
+    </div>
+    <div class="header-right">
+      <div class="clock-pill">
+        <div class="clock-time" id="clock">--:--:--</div>
+        <div class="clock-date" id="clockDate">Loading…</div>
+      </div>
+      <div class="icon-btn"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="dot"></span></div>
+      <div class="avatar">HD</div>
+    </div>
+  </header>
+
+  <div class="station-tabs">
+    <div class="station-tab active">All Stations <span class="count">14</span></div>
+    <div class="station-tab">Grill <span class="count">5</span></div>
+    <div class="station-tab">Fry Station <span class="count">3</span></div>
+    <div class="station-tab">Salad &amp; Cold <span class="count">2</span></div>
+    <div class="station-tab">Dessert &amp; Bar <span class="count">4</span></div>
+  </div>
+
+  <section class="stats">
+    <div class="stat-card">
+      <div class="stat-top">
+        <span class="stat-label">Active Orders</span>
+        <div class="stat-icon" style="background:var(--purple-100); color:var(--purple-800);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>
+        </div>
+      </div>
+      <div class="stat-value">14</div>
+      <div class="stat-trend up">▲ 3 vs last hour</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top">
+        <span class="stat-label">Avg Prep Time</span>
+        <div class="stat-icon" style="background:var(--blue-100); color:var(--blue-500);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        </div>
+      </div>
+      <div class="stat-value">11m 20s</div>
+      <div class="stat-trend down">▼ 1m 05s faster</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top">
+        <span class="stat-label">Ready for Pickup</span>
+        <div class="stat-icon" style="background:var(--green-100); color:var(--green-500);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+      </div>
+      <div class="stat-value">4</div>
+      <div class="stat-trend flat">Awaiting server pickup</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-top">
+        <span class="stat-label">Delayed Orders</span>
+        <div class="stat-icon" style="background:var(--red-100); color:var(--red-500);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 2.7 17a2 2 0 0 0 1.8 3h15a2 2 0 0 0 1.8-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        </div>
+      </div>
+      <div class="stat-value">2</div>
+      <div class="stat-trend down">Past 15 min target</div>
+    </div>
+  </section>
+
+  <!-- ================= BOARD ================= -->
+  <section class="board">
+
+    <!-- NEW ORDERS -->
+    <div class="column col-new">
+      <div class="column-head">
+        <div class="col-title"><span class="col-dot"></span><h2>New Orders</h2></div>
+        <span class="col-count">5</span>
+      </div>
+      <div class="col-body col-scroll">
+
+        <div class="ticket" data-target="720" data-start="60" style="--accent:var(--purple-800)">
+          <div class="ticket-top">
+            <div>
+              <div class="ticket-id">#1042</div>
+              <div class="ticket-meta"><span class="ticket-type type-dinein">Dine-in</span><span class="table-no">Table 6</span></div>
+            </div>
+            <div class="timer-ring"><span class="ring-time">01:00</span></div>
+          </div>
+          <div class="item-list">
+            <div class="item-row"><span class="item-qty">2×</span><div><span class="item-name">Suqaar (Beef)</span><span class="item-mod">no onion, extra chili</span></div></div>
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Bariis Iskukaris</span></div></div>
+            <div class="item-row"><span class="item-qty">2×</span><div><span class="item-name">Fresh Lime Juice</span></div></div>
+          </div>
+          <div class="ticket-footer">
+            <div class="chips"><span class="chip">Grill</span><span class="chip">Bar</span></div>
+            <button class="btn btn-purple">Start Preparing</button>
+          </div>
+        </div>
+
+        <div class="ticket" data-target="600" data-start="30" style="--accent:var(--purple-800)">
+          <div class="ticket-top">
+            <div>
+              <div class="ticket-id">#1043</div>
+              <div class="ticket-meta"><span class="ticket-type type-takeaway">Takeaway</span><span class="table-no">Pickup 2:15</span></div>
+            </div>
+            <div class="timer-ring"><span class="ring-time">00:30</span></div>
+          </div>
+          <div class="item-list">
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Sambuus (5 pcs)</span><span class="item-mod">beef filling</span></div></div>
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Malawah Wrap</span></div></div>
+          </div>
+          <div class="ticket-footer">
+            <div class="chips"><span class="chip">Fry</span></div>
+            <button class="btn btn-purple">Start Preparing</button>
+          </div>
+        </div>
+
+        <div class="ticket" data-target="720" data-start="15" style="--accent:var(--purple-800)">
+          <div class="ticket-top">
+            <div>
+              <div class="ticket-id">#1044</div>
+              <div class="ticket-meta"><span class="ticket-type type-delivery">Delivery</span><span class="table-no">Rider: Ayaan</span></div>
+            </div>
+            <div class="timer-ring"><span class="ring-time">00:15</span></div>
+          </div>
+          <div class="item-list">
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Camel Burger</span><span class="item-mod">medium, add cheese</span></div></div>
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Spiced Fries</span></div></div>
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Mango Smoothie</span></div></div>
+          </div>
+          <div class="ticket-footer">
+            <div class="chips"><span class="chip">Grill</span><span class="chip">Fry</span></div>
+            <button class="btn btn-purple">Start Preparing</button>
+          </div>
+        </div>
+
+        <div class="ticket" data-target="600" data-start="5" style="--accent:var(--purple-800)">
+          <div class="ticket-top">
+            <div>
+              <div class="ticket-id">#1045</div>
+              <div class="ticket-meta"><span class="ticket-type type-dinein">Dine-in</span><span class="table-no">Table 11</span></div>
+            </div>
+            <div class="timer-ring"><span class="ring-time">00:05</span></div>
+          </div>
+          <div class="item-list">
+            <div class="item-row"><span class="item-qty">3×</span><div><span class="item-name">Grilled Chicken Skewers</span></div></div>
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Caesar Salad</span><span class="item-mod">dressing on side</span></div></div>
+          </div>
+          <div class="ticket-footer">
+            <div class="chips"><span class="chip">Grill</span><span class="chip">Salad</span></div>
+            <button class="btn btn-purple">Start Preparing</button>
+          </div>
+        </div>
+
+        <div class="ticket" data-target="480" data-start="2" style="--accent:var(--purple-800)">
+          <div class="ticket-top">
+            <div>
+              <div class="ticket-id">#1046</div>
+              <div class="ticket-meta"><span class="ticket-type type-dinein">Dine-in</span><span class="table-no">Table 3</span></div>
+            </div>
+            <div class="timer-ring"><span class="ring-time">00:02</span></div>
+          </div>
+          <div class="item-list">
+            <div class="item-row"><span class="item-qty">2×</span><div><span class="item-name">Falafel Wrap</span></div></div>
+          </div>
+          <div class="ticket-footer">
+            <div class="chips"><span class="chip">Fry</span></div>
+            <button class="btn btn-purple">Start Preparing</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- PREPARING -->
+    <div class="column col-prep">
+      <div class="column-head">
+        <div class="col-title"><span class="col-dot"></span><h2>Preparing</h2></div>
+        <span class="col-count">6</span>
+      </div>
+      <div class="col-body col-scroll">
+
+        <div class="ticket" data-target="720" data-start="410" style="--accent:var(--blue-500)">
+          <div class="ticket-top">
+            <div>
+              <div class="ticket-id">#1038</div>
+              <div class="ticket-meta"><span class="ticket-type type-dinein">Dine-in</span><span class="table-no">Table 9</span></div>
+            </div>
+            <div class="timer-ring"><span class="ring-time">06:50</span></div>
+          </div>
+          <div class="item-list">
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Hilib Ari Grill (Goat)</span><span class="item-mod">well done</span></div></div>
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Bariis Iskukaris</span></div></div>
+            <div class="item-row"><span class="item-qty">2×</span><div><span class="item-name">Fresh Lime Juice</span></div></div>
+          </div>
+          <div class="ticket-footer">
+            <div class="chips"><span class="chip">Grill</span></div>
+            <button class="btn btn-blue">Mark Ready</button>
+          </div>
+        </div>
+
+        <div class="ticket" data-target="600" data-start="560" style="--accent:var(--blue-500)">
+          <div class="ticket-top">
+            <div>
+              <div class="ticket-id">#1039</div>
+              <div class="ticket-meta"><span class="ticket-type type-takeaway">Takeaway</span><span class="table-no">Pickup 1:55</span></div>
+            </div>
+            <div class="timer-ring"><span class="ring-time">09:20</span></div>
+          </div>
+          <div class="item-list">
+            <div class="item-row"><span class="item-qty">2×</span><div><span class="item-name">Sambuus (5 pcs)</span></div></div>
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Grilled Salmon</span><span class="item-mod">lemon butter</span></div></div>
+          </div>
+          <div class="ticket-footer">
+            <div class="chips"><span class="chip">Fry</span><span class="chip">Grill</span></div>
+            <button class="btn btn-blue">Mark Ready</button>
+          </div>
+        </div>
+
+        <div class="ticket" data-target="480" data-start="470" style="--accent:var(--blue-500)">
+          <div class="ticket-top">
+            <div>
+              <div class="ticket-id">#1040</div>
+              <div class="ticket-meta"><span class="ticket-type type-delivery">Delivery</span><span class="table-no">Rider: Yasin</span></div>
+            </div>
+            <div class="timer-ring"><span class="ring-time">07:50</span></div>
+          </div>
+          <div class="item-list">
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Lamb Kofta Plate</span></div></div>
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Garlic Naan</span></div></div>
+          </div>
+          <div class="ticket-footer">
+            <div class="chips"><span class="chip">Grill</span></div>
+            <button class="btn btn-blue">Mark Ready</button>
+          </div>
+        </div>
+
+        <div class="ticket" data-target="600" data-start="180" style="--accent:var(--blue-500)">
+          <div class="ticket-top">
+            <div>
+              <div class="ticket-id">#1041</div>
+              <div class="ticket-meta"><span class="ticket-type type-dinein">Dine-in</span><span class="table-no">Table 4</span></div>
+            </div>
+            <div class="timer-ring"><span class="ring-time">03:00</span></div>
+          </div>
+          <div class="item-list">
+            <div class="item-row"><span class="item-qty">2×</span><div><span class="item-name">Chicken Biryani</span></div></div>
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Cucumber Raita</span></div></div>
+          </div>
+          <div class="ticket-footer">
+            <div class="chips"><span class="chip">Grill</span></div>
+            <button class="btn btn-blue">Mark Ready</button>
+          </div>
+        </div>
+
+        <div class="ticket" data-target="480" data-start="120" style="--accent:var(--blue-500)">
+          <div class="ticket-top">
+            <div>
+              <div class="ticket-id">#1047</div>
+              <div class="ticket-meta"><span class="ticket-type type-dinein">Dine-in</span><span class="table-no">Table 2</span></div>
+            </div>
+            <div class="timer-ring"><span class="ring-time">02:00</span></div>
+          </div>
+          <div class="item-list">
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Beef Shawarma Plate</span></div></div>
+          </div>
+          <div class="ticket-footer">
+            <div class="chips"><span class="chip">Grill</span></div>
+            <button class="btn btn-blue">Mark Ready</button>
+          </div>
+        </div>
+
+        <div class="ticket" data-target="420" data-start="60" style="--accent:var(--blue-500)">
+          <div class="ticket-top">
+            <div>
+              <div class="ticket-id">#1048</div>
+              <div class="ticket-meta"><span class="ticket-type type-takeaway">Takeaway</span><span class="table-no">Pickup 2:30</span></div>
+            </div>
+            <div class="timer-ring"><span class="ring-time">01:00</span></div>
+          </div>
+          <div class="item-list">
+            <div class="item-row"><span class="item-qty">2×</span><div><span class="item-name">Sabaayad &amp; Suqaar</span></div></div>
+          </div>
+          <div class="ticket-footer">
+            <div class="chips"><span class="chip">Grill</span></div>
+            <button class="btn btn-blue">Mark Ready</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- READY -->
+    <div class="column col-ready">
+      <div class="column-head">
+        <div class="col-title"><span class="col-dot"></span><h2>Ready for Pickup</h2></div>
+        <span class="col-count">4</span>
+      </div>
+      <div class="col-body col-scroll">
+
+        <div class="ticket" data-target="0" data-start="0" style="--accent:var(--green-500)">
+          <div class="ticket-top">
+            <div>
+              <div class="ticket-id">#1034</div>
+              <div class="ticket-meta"><span class="ticket-type type-dinein">Dine-in</span><span class="table-no">Table 7</span></div>
+            </div>
+            <div class="timer-ring" style="background:var(--green-100);"><span class="ring-time" style="color:var(--green-500);">✓</span></div>
+          </div>
+          <div class="item-list">
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Grilled Salmon</span></div></div>
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Caesar Salad</span></div></div>
+          </div>
+          <div class="ticket-footer">
+            <div class="chips"><span class="chip">Grill</span></div>
+            <button class="btn btn-green">Served</button>
+          </div>
+        </div>
+
+        <div class="ticket" data-target="0" data-start="0" style="--accent:var(--green-500)">
+          <div class="ticket-top">
+            <div>
+              <div class="ticket-id">#1035</div>
+              <div class="ticket-meta"><span class="ticket-type type-takeaway">Takeaway</span><span class="table-no">Waiting 4m</span></div>
+            </div>
+            <div class="timer-ring" style="background:var(--green-100);"><span class="ring-time" style="color:var(--green-500);">✓</span></div>
+          </div>
+          <div class="item-list">
+            <div class="item-row"><span class="item-qty">2×</span><div><span class="item-name">Sambuus (5 pcs)</span></div></div>
+          </div>
+          <div class="ticket-footer">
+            <div class="chips"><span class="chip">Fry</span></div>
+            <button class="btn btn-green">Served</button>
+          </div>
+        </div>
+
+        <div class="ticket" data-target="0" data-start="0" style="--accent:var(--green-500)">
+          <div class="ticket-top">
+            <div>
+              <div class="ticket-id">#1036</div>
+              <div class="ticket-meta"><span class="ticket-type type-delivery">Delivery</span><span class="table-no">Rider en route</span></div>
+            </div>
+            <div class="timer-ring" style="background:var(--green-100);"><span class="ring-time" style="color:var(--green-500);">✓</span></div>
+          </div>
+          <div class="item-list">
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Camel Burger</span></div></div>
+            <div class="item-row"><span class="item-qty">1×</span><div><span class="item-name">Spiced Fries</span></div></div>
+          </div>
+          <div class="ticket-footer">
+            <div class="chips"><span class="chip">Grill</span></div>
+            <button class="btn btn-green">Served</button>
+          </div>
+        </div>
+
+        <div class="ticket" data-target="0" data-start="0" style="--accent:var(--green-500)">
+          <div class="ticket-top">
+            <div>
+              <div class="ticket-id">#1037</div>
+              <div class="ticket-meta"><span class="ticket-type type-dinein">Dine-in</span><span class="table-no">Table 1</span></div>
+            </div>
+            <div class="timer-ring" style="background:var(--green-100);"><span class="ring-time" style="color:var(--green-500);">✓</span></div>
+          </div>
+          <div class="item-list">
+            <div class="item-row"><span class="item-qty">2×</span><div><span class="item-name">Chicken Biryani</span></div></div>
+          </div>
+          <div class="ticket-footer">
+            <div class="chips"><span class="chip">Grill</span></div>
+            <button class="btn btn-green">Served</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<script>
+  // live clock
+  function updateClock(){
+    const now = new Date();
+    const time = now.toLocaleTimeString('en-GB');
+    const date = now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+    document.getElementById('clock').textContent = time;
+    document.getElementById('clockDate').textContent = date;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ticket timers: color-coded conic-gradient ring based on elapsed vs target
+  function fmt(s){
+    const m = Math.floor(s/60).toString().padStart(2,'0');
+    const sec = Math.floor(s%60).toString().padStart(2,'0');
+    return m+':'+sec;
+  }
+
+  function renderTicket(ticket){
+    const target = parseInt(ticket.dataset.target,10);
+    if(!target){ return; } // ready column, static checkmark
+    let elapsed = parseInt(ticket.dataset.start,10);
+    ticket.dataset.start = elapsed + 1;
+    const ring = ticket.querySelector('.timer-ring');
+    const label = ticket.querySelector('.ring-time');
+    const ratio = Math.min(elapsed/target, 1.2);
+    let color = '#1a9a56'; // green
+    if(ratio > 0.6 && ratio <= 0.9) color = '#d97706'; // amber
+    if(ratio > 0.9) color = '#dc2626'; // red
+    const deg = Math.min(ratio,1) * 360;
+    ring.style.background = `conic-gradient(${color} ${deg}deg, #e7e8ea 0deg)`;
+    label.style.color = color;
+    label.textContent = fmt(elapsed);
+  }
+
+  const tickets = document.querySelectorAll('.ticket[data-target]');
+  tickets.forEach(renderTicket);
+  setInterval(()=> tickets.forEach(renderTicket), 1000);
+</script>
+</body>
+</html>
