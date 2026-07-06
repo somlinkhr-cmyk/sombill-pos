@@ -1,14 +1,18 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { User, UserRole } from '../types'
+import { User, UserRole, Tenant, Subscription, SubscriptionPlan } from '../types'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
 
 interface AuthContextType {
   user: User | null
+  tenant: Tenant | null
+  subscription: Subscription | null
+  plan: SubscriptionPlan | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   hasPermission: (permission: string) => boolean
+  hasModuleAccess: (module: string) => boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -73,6 +77,9 @@ const PERMISSIONS: Record<UserRole, string[]> = {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [tenant, setTenant] = useState<Tenant | null>(null)
+  const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const [plan, setPlan] = useState<SubscriptionPlan | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -84,6 +91,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await loadUserProfile(session.user.id)
         } else if (event === 'SIGNED_OUT') {
           setUser(null)
+          setTenant(null)
+          setSubscription(null)
+          setPlan(null)
           setLoading(false)
         }
       }
@@ -117,6 +127,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error
       if (data && data.is_active) {
         setUser(data)
+        
+        // Load tenant data
+        if (data.tenant_id) {
+          await loadTenantData(data.tenant_id)
+        }
       } else {
         await supabase.auth.signOut()
         toast.error('Account is inactive')
@@ -126,6 +141,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut()
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function loadTenantData(tenantId: string) {
+    try {
+      // Load tenant
+      const { data: tenantData, error: tenantError } = await supabase
+        .from('tenants')
+        .select('*')
+        .eq('id', tenantId)
+        .single()
+
+      if (tenantError) throw tenantError
+      setTenant(tenantData)
+
+      // Load subscription
+      const { data: subscriptionData, error: subscriptionError } = await supabase
+        .from('subscriptions')
+        .select('*, subscription_plans(*)')
+        .eq('tenant_id', tenantId)
+        .eq('status', 'active')
+        .single()
+
+      if (!subscriptionError && subscriptionData) {
+        setSubscription(subscriptionData)
+        setPlan(subscriptionData.subscription_plans as any)
+      }
+    } catch (error) {
+      console.error('Error loading tenant data:', error)
     }
   }
 
@@ -156,6 +200,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await supabase.auth.signOut()
       setUser(null)
+      setTenant(null)
+      setSubscription(null)
+      setPlan(null)
       toast.success('Logged out successfully')
     } catch (error) {
       toast.error('Logout failed')
@@ -168,8 +215,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return userPermissions.includes(permission)
   }
 
+  function hasModuleAccess(module: string): boolean {
+    if (!plan) return false
+    
+    const moduleAccess: Record<string, keyof SubscriptionPlan> = {
+      'cashier': 'allow_cashier',
+      'manager': 'allow_manager',
+      'waiter': 'allow_waiter',
+      'kitchen_display': 'allow_kitchen_display',
+      'customer_menu': 'allow_customer_menu',
+      'multi_branch': 'allow_multi_branch',
+    }
+    
+    const accessKey = moduleAccess[module]
+    return accessKey ? plan[accessKey] : false
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, hasPermission }}>
+    <AuthContext.Provider value={{ user, tenant, subscription, plan, loading, login, logout, hasPermission, hasModuleAccess }}>
       {children}
     </AuthContext.Provider>
   )
