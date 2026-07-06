@@ -148,7 +148,7 @@ export default function Menu() {
       setLoading(true)
       
       if (activeTab === 'products') {
-        let query = supabase.from('products').select('*, categories(name)').order('name')
+        let query = supabase.from('products').select('*, categories(name)').eq('tenant_id', user?.tenant_id).order('name')
         
         if (selectedCategory !== 'all') {
           query = query.eq('category_id', selectedCategory)
@@ -162,7 +162,7 @@ export default function Menu() {
         if (error) throw error
         setProducts(data || [])
       } else if (activeTab === 'categories') {
-        let query = supabase.from('categories').select('*').order('name')
+        let query = supabase.from('categories').select('*').eq('tenant_id', user?.tenant_id).order('name')
         
         if (searchQuery) {
           query = query.ilike('name', `%${searchQuery}%`)
@@ -175,6 +175,7 @@ export default function Menu() {
         const { data, error } = await supabase
           .from('toppings')
           .select('*')
+          .eq('tenant_id', user?.tenant_id)
           .order('name')
         if (error) throw error
         setModifiers(data || [])
@@ -200,6 +201,7 @@ export default function Menu() {
           .from('products')
           .select('id')
           .eq('barcode', data.barcode)
+          .eq('tenant_id', user?.tenant_id)
           .single()
         if (existingBarcode) {
           toast.error('A product with this barcode already exists')
@@ -214,6 +216,7 @@ export default function Menu() {
           .from('products')
           .select('id')
           .eq('sku', data.sku)
+          .eq('tenant_id', user?.tenant_id)
           .single()
         if (existingSKU) {
           toast.error('A product with this SKU already exists')
@@ -240,6 +243,7 @@ export default function Menu() {
         image_url: data.image_url,
         is_available: data.status === 'active',
         kitchen_printer: data.kitchen_printer,
+        tenant_id: user?.tenant_id,
         // Inventory fields
         track_inventory: data.track_inventory || false,
         current_stock: parseInt(data.current_stock) || 0,
@@ -416,7 +420,10 @@ export default function Menu() {
   async function handleCreateCategory(data: any) {
     try {
       setFormLoading(true)
-      const { error } = await supabase.from('categories').insert(data)
+      const { error } = await supabase.from('categories').insert({
+        ...data,
+        tenant_id: user?.tenant_id,
+      })
       if (error) throw error
       setShowModal(false)
       loadData()

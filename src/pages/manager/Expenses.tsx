@@ -79,6 +79,7 @@ export default function Expenses() {
         const { data: categoriesData, error: categoriesError } = await supabase
           .from('expense_categories')
           .select('*')
+          .eq('tenant_id', user?.tenant_id)
           .order('name')
         if (categoriesError) {
           console.error('Error loading expense_categories:', categoriesError)
@@ -125,6 +126,7 @@ export default function Expenses() {
       let query = supabase
         .from('expenses')
         .select('*, expense_categories(name, color)')
+        .eq('tenant_id', user?.tenant_id)
         .gte('expense_date', startDate)
         .order('expense_date', { ascending: false })
       
@@ -220,6 +222,9 @@ export default function Expenses() {
       if (user?.id) {
         expenseData.created_by = user.id
       }
+      
+      // Add tenant_id
+      expenseData.tenant_id = user?.tenant_id
       
       console.log('Prepared expense data:', expenseData)
       

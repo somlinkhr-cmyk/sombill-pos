@@ -73,6 +73,7 @@ export default function Orders() {
       let query = supabase
         .from('orders')
         .select('*, tables(number), customers(name)')
+        .eq('tenant_id', user?.tenant_id)
         .order('created_at', { ascending: false })
 
       if (statusFilter !== 'all') {
@@ -527,6 +528,8 @@ export default function Orders() {
                         payment_status: 'pending',
                         payment_method: formData.payment_method,
                         notes: formData.notes,
+                        tenant_id: user?.tenant_id,
+                        source: 'manager',
                       }).select()
                       if (error) {
                         console.error('Supabase error:', error)

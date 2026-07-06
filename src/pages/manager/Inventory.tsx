@@ -93,7 +93,7 @@ export default function Inventory() {
       setLoading(true)
       
       if (activeTab === 'ingredients') {
-        let query = supabase.from('ingredients').select('*, suppliers(name)').order('name')
+        let query = supabase.from('ingredients').select('*, suppliers(name)').eq('tenant_id', user?.tenant_id).order('name')
         
         if (searchQuery) {
           query = query.ilike('name', `%${searchQuery}%`)
@@ -103,7 +103,7 @@ export default function Inventory() {
         if (error) throw error
         setIngredients(data || [])
       } else if (activeTab === 'suppliers') {
-        let query = supabase.from('suppliers').select('*').order('name')
+        let query = supabase.from('suppliers').select('*').eq('tenant_id', user?.tenant_id).order('name')
         
         if (searchQuery) {
           query = query.ilike('name', `%${searchQuery}%`)
@@ -116,6 +116,7 @@ export default function Inventory() {
         const { data, error } = await supabase
           .from('purchase_orders')
           .select('*, suppliers(*)')
+          .eq('tenant_id', user?.tenant_id)
           .order('order_date', { ascending: false })
         if (error) throw error
         setPurchaseOrders(data || [])
@@ -124,6 +125,7 @@ export default function Inventory() {
           .from('audit_logs')
           .select('*')
           .eq('table_name', 'ingredients')
+          .eq('tenant_id', user?.tenant_id)
           .order('created_at', { ascending: false })
           .limit(50)
         if (error) throw error
@@ -149,6 +151,7 @@ export default function Inventory() {
         current_stock: parseFloat(data.current_stock),
         min_stock: parseFloat(data.min_stock),
         cost_per_unit: parseFloat(data.cost_per_unit),
+        tenant_id: user?.tenant_id,
       }).select()
       if (error) {
         console.error('Supabase error:', error)
