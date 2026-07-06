@@ -31,7 +31,13 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to={`/${user.role}`} replace />
+    const roleRoutes: Record<string, string> = {
+      manager: '/manager',
+      cashier: '/cashier',
+      waiter: '/waiter/dashboard',
+      kitchen: '/kitchen/system',
+    }
+    return <Navigate to={roleRoutes[user.role] || '/login'} replace />
   }
 
   return <>{children}</>

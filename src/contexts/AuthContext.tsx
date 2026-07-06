@@ -223,6 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       'cashier': 'allow_cashier',
       'manager': 'allow_manager',
       'waiter': 'allow_waiter',
+      'waiter_dashboard': 'allow_waiter',
       'kitchen_display': 'allow_kitchen_display',
       'customer_menu': 'allow_customer_menu',
       'multi_branch': 'allow_multi_branch',
