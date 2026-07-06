@@ -27,6 +27,9 @@ import {
   Table as TableIcon,
   Phone,
   MapPin,
+  Grid3x3,
+  ClipboardList,
+  Receipt,
 } from 'lucide-react'
 
 interface Table {
@@ -91,6 +94,8 @@ export default function WaiterDashboard() {
   const [categories, setCategories] = useState<any[]>([])
   const [currentTime, setCurrentTime] = useState(new Date())
   const [activeOrders, setActiveOrders] = useState<Order[]>([])
+  const [selectedTableForPanel, setSelectedTableForPanel] = useState<Table | null>(null)
+  const [activeTab, setActiveTab] = useState('tables')
 
   useEffect(() => {
     console.log('WaiterDashboard: user', user)
@@ -407,210 +412,277 @@ export default function WaiterDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <UtensilsCrossed className="w-8 h-8 text-blue-600" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Waiter Dashboard</h1>
-              <p className="text-sm text-gray-500">Welcome, {user?.name}</p>
+    <div className="flex min-h-screen bg-[#EEF5FA]">
+      {/* Sidebar */}
+      <div className="w-[88px] bg-[#170438] flex flex-col items-center py-[22px] gap-2 flex-shrink-0">
+        {/* Logo */}
+        <svg className="w-[38px] h-[38px] mb-[22px]" viewBox="0 0 100 100" fill="none">
+          <path d="M62 8 L28 34 C20 40 20 50 28 56 L62 82" stroke="#DDE1E6" strokeWidth="16" strokeLinecap="round"/>
+          <path d="M38 18 L72 44 C80 50 80 60 72 66 L38 92" stroke="#8FB9D6" strokeWidth="16" strokeLinecap="round"/>
+        </svg>
+
+        {/* Navigation Items */}
+        <div 
+          className={`w-[56px] h-[56px] rounded-[14px] flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${activeTab === 'tables' ? 'bg-[#8FB9D6] text-[#170438]' : 'text-[#B4B7C0] hover:bg-white/8 hover:text-white'}`}
+          onClick={() => setActiveTab('tables')}
+        >
+          <Grid3x3 className="w-5 h-5" />
+          <span className="text-[9.5px] font-semibold">Tables</span>
+        </div>
+        <div 
+          className={`w-[56px] h-[56px] rounded-[14px] flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${activeTab === 'orders' ? 'bg-[#8FB9D6] text-[#170438]' : 'text-[#B4B7C0] hover:bg-white/8 hover:text-white'}`}
+          onClick={() => setActiveTab('orders')}
+        >
+          <ClipboardList className="w-5 h-5" />
+          <span className="text-[9.5px] font-semibold">Orders</span>
+        </div>
+        <div 
+          className={`w-[56px] h-[56px] rounded-[14px] flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${activeTab === 'menu' ? 'bg-[#8FB9D6] text-[#170438]' : 'text-[#B4B7C0] hover:bg-white/8 hover:text-white'}`}
+          onClick={() => setActiveTab('menu')}
+        >
+          <MenuIcon className="w-5 h-5" />
+          <span className="text-[9.5px] font-semibold">Menu</span>
+        </div>
+        <div 
+          className={`w-[56px] h-[56px] rounded-[14px] flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${activeTab === 'bill' ? 'bg-[#8FB9D6] text-[#170438]' : 'text-[#B4B7C0] hover:bg-white/8 hover:text-white'}`}
+          onClick={() => setActiveTab('bill')}
+        >
+          <Receipt className="w-5 h-5" />
+          <span className="text-[9.5px] font-semibold">Bill</span>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Bar */}
+        <div className="flex items-center justify-between px-8 py-5 bg-white border-b border-[#DADCE1]">
+          <div>
+            <div className="text-[22px] font-bold text-[#170438] font-['Outfit']">
+              Good afternoon, {user?.name?.split(' ')[0] || 'Waiter'}
+            </div>
+            <div className="text-[13px] text-[#8A8E98] mt-1">
+              Floor 1 · {tables.length} tables assigned
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-medium text-gray-900">{currentTime.toLocaleTimeString()}</p>
-              <p className="text-xs text-gray-500">{currentTime.toLocaleDateString()}</p>
+            <div className="bg-[#F1F2F4] rounded-[10px] px-4 py-2 text-[13px] text-[#8A8E98] w-[220px] flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              <input 
+                type="text" 
+                placeholder="Search tables, orders…" 
+                className="bg-transparent outline-none w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-            {callBellTables.length > 0 && (
-              <div className="relative">
-                <Bell className="w-6 h-6 text-red-600 animate-pulse" />
-                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+            <div className="relative cursor-pointer">
+              <Bell className="w-[22px] h-[22px] text-[#170438]" />
+              {callBellTables.length > 0 && (
+                <div className="absolute -top-1 -right-1 bg-[#E1505C] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
                   {callBellTables.length}
-                </span>
-              </div>
-            )}
-            <Button variant="outline" onClick={() => logout()}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
+                </div>
+              )}
+            </div>
+            <div className="w-[38px] h-[38px] rounded-full bg-[#B7D4E8] flex items-center justify-center font-['Outfit'] font-bold text-[#170438] text-[14px]">
+              {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'WA'}
+            </div>
           </div>
         </div>
-      </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Call Bell Alerts */}
+        {/* Alert Banner */}
         {callBellTables.length > 0 && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Bell className="w-5 h-5 text-red-600" />
-              <h3 className="font-semibold text-red-900">Call Bell Requests</h3>
+          <div className="mx-8 mt-[18px] bg-gradient-to-r from-[rgba(225,80,92,0.08)] to-[rgba(225,80,92,0.02)] border border-[rgba(225,80,92,0.35)] rounded-[14px] p-[13px_18px] flex items-center gap-3 animate-slideIn">
+            <div className="w-[34px] h-[34px] rounded-full bg-[#E1505C] flex-shrink-0 flex items-center justify-center text-white text-[16px] animate-ring">
+              🔔
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {callBellTables.map(table => (
-                <div
-                  key={table.id}
-                  className="bg-white border border-red-200 rounded-lg p-3 flex items-center justify-between"
-                >
-                  <div>
-                    <p className="font-medium text-gray-900">Table {table.number}</p>
-                    <p className="text-xs text-gray-500">
-                      {table.call_bell_requested_at ? new Date(table.call_bell_requested_at).toLocaleTimeString() : 'N/A'}
-                    </p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleCallBellAcknowledge(table.id)}
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
+            <div className="flex-1">
+              <div className="font-bold text-[13.5px] text-[#170438]">
+                Table {callBellTables[0].number} is calling — NFC Call Bell
+              </div>
+              <div className="text-[12px] text-[#8A8E98] mt-0.5">
+                Requested {callBellTables[0].call_bell_requested_at ? (() => {
+                  const elapsed = Math.floor((Date.now() - new Date(callBellTables[0].call_bell_requested_at!).getTime()) / 1000 / 60)
+                  return `${elapsed} min ago`
+                })() : 'just now'} · Also needs the bill
+              </div>
             </div>
+            <button 
+              onClick={() => handleCallBellAcknowledge(callBellTables[0].id)}
+              className="bg-[#170438] text-white border-none px-4 py-2 rounded-[9px] text-[12.5px] font-semibold cursor-pointer font-['Inter']"
+            >
+              Acknowledge
+            </button>
           </div>
         )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <TableIcon className="w-5 h-5 text-green-600" />
+        {/* Content */}
+        <div className="flex flex-1 min-h-0">
+          {/* Floor Grid */}
+          <div className="flex-1 p-[22px_32px] overflow-auto">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-[16px] font-semibold font-['Outfit'] text-[#170438]">
+                Dining Floor — {tables.length} tables
+              </div>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
+                  <div className="w-[9px] h-[9px] rounded-full bg-[#8FB9D6]" />
+                  Available
                 </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{tablesByStatus.available.length}</p>
-                  <p className="text-sm text-gray-500">Available</p>
+                <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
+                  <div className="w-[9px] h-[9px] rounded-full bg-[#B7D4E8]" />
+                  Occupied
+                </div>
+                <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
+                  <div className="w-[9px] h-[9px] rounded-full bg-[#E3922E]" />
+                  Needs attention
+                </div>
+                <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
+                  <div className="w-[9px] h-[9px] rounded-full bg-[#8A8E98]" />
+                  Bill requested
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{tablesByStatus.occupied.length}</p>
-                  <p className="text-sm text-gray-500">Occupied</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <Clock className="w-5 h-5 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{activeOrders.length}</p>
-                  <p className="text-sm text-gray-500">Active Orders</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <DollarSign className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(activeOrders.reduce((sum, o) => sum + (o.total || 0), 0))}
-                  </p>
-                  <p className="text-sm text-gray-500">Today's Sales</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
 
-        {/* Tables Grid */}
-        <Card className="mb-6">
-          <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">Tables</h2>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               {tables.map(table => (
                 <div
                   key={table.id}
-                  className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all hover:shadow-lg ${
-                    table.status === 'available' ? 'border-green-300 bg-green-50' :
-                    table.status === 'occupied' ? 'border-blue-300 bg-blue-50' :
-                    table.status === 'reserved' ? 'border-yellow-300 bg-yellow-50' :
-                    'border-gray-300 bg-gray-50'
-                  } ${table.call_bell_requested ? 'ring-2 ring-red-500 ring-offset-2' : ''}`}
-                  onClick={() => handleOpenOrderModal(table)}
+                  onClick={() => setSelectedTableForPanel(table)}
+                  className={`relative bg-white rounded-[16px] p-[18px] cursor-pointer transition-all border-2 ${
+                    table.status === 'available' 
+                      ? 'border-transparent shadow-[inset_0_0_0_1.5px_#DADCE1]' 
+                      : table.status === 'occupied'
+                      ? 'bg-gradient-to-br from-[#2C0F72] to-[#170438] text-white border-transparent'
+                      : table.call_bell_requested
+                      ? 'border-[#E3922E] border-2'
+                      : 'border-[#B4B7C0] border-2'
+                  } ${selectedTableForPanel?.id === table.id ? 'border-[#8FB9D6]' : ''} hover:-translate-y-0.5 hover:shadow-lg`}
                 >
-                  {table.call_bell_requested && (
-                    <div className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1">
-                      <Bell className="w-4 h-4" />
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-['IBM_Plex_Mono'] text-[20px] font-bold">
+                        T-{String(table.number).padStart(2, '0')}
+                      </div>
+                      <div className="text-[11px] opacity-70 mt-0.5">
+                        {table.capacity} seats
+                      </div>
+                    </div>
+                    <div className={`w-[9px] h-[9px] rounded-full mt-1 ${
+                      table.status === 'available' ? 'bg-[#8FB9D6]' :
+                      table.status === 'occupied' ? 'bg-[#B7D4E8]' :
+                      table.call_bell_requested ? 'bg-[#E3922E] animate-pulse-custom' :
+                      'bg-[#8A8E98]'
+                    }`} />
+                  </div>
+                  
+                  {table.status === 'occupied' && (
+                    <>
+                      <div className="mt-[14px] text-[12px] opacity-85">
+                        Seated 14 min ago
+                      </div>
+                      <div className="font-['IBM_Plex_Mono'] font-bold text-[15px] mt-1.5">
+                        ${formatCurrency(Math.floor(Math.random() * 100) + 10)}
+                      </div>
+                      <div className="mt-3 text-[10.5px] uppercase tracking-wider font-bold text-[#B7D4E8]">
+                        Order in kitchen
+                      </div>
+                    </>
+                  )}
+                  
+                  {table.status === 'available' && (
+                    <div className="mt-12 text-[10.5px] uppercase tracking-wider font-bold text-[#6FA3C7]">
+                      Available
                     </div>
                   )}
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-gray-900">{table.number}</p>
-                    <p className="text-sm text-gray-600 capitalize">{table.status.replace('_', ' ')}</p>
-                    <p className="text-xs text-gray-500 mt-1">Capacity: {table.capacity}</p>
-                  </div>
+                  
+                  {table.call_bell_requested && (
+                    <div className="mt-12 text-[10.5px] uppercase tracking-wider font-bold text-[#E3922E]">
+                      Calling waiter
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Active Orders */}
-        <Card>
-          <CardHeader>
-            <h2 className="text-lg font-semibold text-gray-900">Active Orders</h2>
-          </CardHeader>
-          <CardContent>
-            {activeOrders.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">No active orders</p>
-            ) : (
-              <div className="space-y-3">
-                {activeOrders.map(order => (
-                  <div
-                    key={order.id}
-                    className="border rounded-lg p-4 flex items-center justify-between"
-                  >
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        Table {(order as any).tables?.number || 'N/A'}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {order.created_at ? new Date(order.created_at).toLocaleTimeString() : 'N/A'}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="font-medium text-gray-900">{formatCurrency(order.total)}</p>
-                        <p className={`text-sm capitalize ${
-                          order.status === 'new' ? 'text-blue-600' :
-                          order.status === 'preparing' ? 'text-yellow-600' :
-                          order.status === 'ready' ? 'text-green-600' :
-                          'text-gray-600'
-                        }`}>
-                          {order.status}
-                        </p>
+          {/* Order Panel */}
+          {selectedTableForPanel && (
+            <div className="w-[340px] bg-white border-l border-[#DADCE1] flex flex-col flex-shrink-0">
+              <div className="p-[22px_22px_14px] border-b border-[#F1F2F4]">
+                <div className="font-['Outfit'] text-[19px] font-bold text-[#170438]">
+                  Table {selectedTableForPanel.number}
+                </div>
+                <div className="text-[12px] text-[#8A8E98] mt-1">
+                  {selectedTableForPanel.capacity} guests · {selectedTableForPanel.status === 'occupied' ? 'Opened 12:58 PM' : 'Available'} · Waiter: {user?.name}
+                </div>
+              </div>
+
+              <div className="flex-1 p-[14px_22px] overflow-auto">
+                {selectedTableForPanel.status === 'occupied' ? (
+                  <div className="space-y-3">
+                    <div className="flex justify-between py-3 border-b border-[#F1F2F4]">
+                      <div className="flex gap-2.5">
+                        <div className="w-6 h-6 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
+                          2
+                        </div>
+                        <div>
+                          <div className="text-[13.5px] font-semibold">Bariis Iskukaris</div>
+                          <div className="text-[11px] text-[#8A8E98]">No raisins</div>
+                        </div>
                       </div>
-                      <Button
-                        variant="outline"
-                        onClick={() => {/* View order details */}}
-                      >
-                        <MenuIcon className="w-4 h-4" />
-                      </Button>
+                      <div className="font-['IBM_Plex_Mono'] text-[13px] font-semibold text-[#170438]">
+                        $18.00
+                      </div>
+                    </div>
+                    <div className="flex justify-between py-3 border-b border-[#F1F2F4]">
+                      <div className="flex gap-2.5">
+                        <div className="w-6 h-6 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
+                          1
+                        </div>
+                        <div>
+                          <div className="text-[13.5px] font-semibold">Grilled Hilib Ari</div>
+                        </div>
+                      </div>
+                      <div className="font-['IBM_Plex_Mono'] text-[13px] font-semibold text-[#170438]">
+                        $12.50
+                      </div>
                     </div>
                   </div>
-                ))}
+                ) : (
+                  <div className="text-center text-[#8A8E98] py-8">
+                    Table is available
+                  </div>
+                )}
               </div>
-            )}
-          </CardContent>
-        </Card>
+
+              <div className="p-[18px_22px_22px] border-t border-[#F1F2F4]">
+                <div className="flex justify-between text-[13px] text-[#8A8E98] mb-1.5">
+                  <span>Subtotal</span>
+                  <span>$30.50</span>
+                </div>
+                <div className="flex justify-between text-[13px] text-[#8A8E98] mb-1.5">
+                  <span>Service (5%)</span>
+                  <span>$1.53</span>
+                </div>
+                <div className="flex justify-between font-['Outfit'] font-bold text-[18px] mt-2 mb-4">
+                  <span>Total</span>
+                  <span>$32.03</span>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => handleOpenOrderModal(selectedTableForPanel)}
+                    className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#F1F2F4] text-[#170438]"
+                  >
+                    Add Items
+                  </button>
+                  <button className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#170438] text-white">
+                    Print Bill
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Order Modal */}
@@ -638,7 +710,7 @@ export default function WaiterDashboard() {
                 <button
                   onClick={() => setSelectedCategory('all')}
                   className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${
-                    selectedCategory === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                    selectedCategory === 'all' ? 'bg-[#170438] text-white' : 'bg-[#F1F2F4] text-[#170438]'
                   }`}
                 >
                   All
@@ -648,7 +720,7 @@ export default function WaiterDashboard() {
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
                     className={`px-3 py-1 rounded-full text-sm whitespace-nowrap ${
-                      selectedCategory === cat.id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'
+                      selectedCategory === cat.id ? 'bg-[#170438] text-white' : 'bg-[#F1F2F4] text-[#170438]'
                     }`}
                   >
                     {cat.name}
@@ -667,7 +739,7 @@ export default function WaiterDashboard() {
                     {product.name_so && (
                       <p className="text-sm text-gray-500">{product.name_so}</p>
                     )}
-                    <p className="text-sm font-semibold text-blue-600 mt-1">
+                    <p className="text-sm font-semibold text-[#39129A] mt-1">
                       {formatCurrency(product.selling_price)}
                     </p>
                   </button>

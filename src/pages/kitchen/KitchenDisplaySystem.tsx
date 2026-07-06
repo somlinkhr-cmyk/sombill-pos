@@ -330,321 +330,276 @@ export default function KitchenDisplaySystem() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <ChefHat className="w-8 h-8 text-orange-500" />
-            <div>
-              <h1 className="text-2xl font-bold">Kitchen Display System</h1>
-              <p className="text-sm text-gray-400">Welcome, {user?.name}</p>
+    <div className="min-h-screen text-white" style={{
+      background: 'radial-gradient(circle at 15% 0%, rgba(143,185,214,0.10), transparent 40%), radial-gradient(circle at 85% 100%, rgba(75,31,190,0.25), transparent 50%), #170438'
+    }}>
+      {/* Top Bar */}
+      <div className="flex items-center justify-between px-8 py-[18px] border-b border-[rgba(143,185,214,0.18)] bg-[rgba(23,4,56,0.6)] backdrop-blur-[6px] sticky top-0 z-20">
+        <div className="flex items-center gap-3">
+          <svg className="w-[34px] h-[34px]" viewBox="0 0 100 100" fill="none">
+            <path d="M62 8 L28 34 C20 40 20 50 28 56 L62 82" stroke="#DDE1E6" strokeWidth="16" strokeLinecap="round"/>
+            <path d="M38 18 L72 44 C80 50 80 60 72 66 L38 92" stroke="#8FB9D6" strokeWidth="16" strokeLinecap="round"/>
+          </svg>
+          <div>
+            <div className="font-['Outfit'] font-bold text-[20px] tracking-[0.2px]">
+              Som<span className="text-[#8FB9D6]">Bill</span>
+            </div>
+            <div className="text-[11px] text-[#C7CAD2] font-medium tracking-[0.6px] uppercase mt-0.5">
+              Kitchen Display
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-lg font-medium">{currentTime.toLocaleTimeString()}</p>
-              <p className="text-xs text-gray-400">{currentTime.toLocaleDateString()}</p>
-            </div>
-            <Button variant="outline" onClick={() => logout()} className="border-gray-600 text-white hover:bg-gray-700">
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Stats Bar */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-900 rounded-lg">
-                  <Clock className="w-5 h-5 text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.new}</p>
-                  <p className="text-sm text-gray-400">New Orders</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-900 rounded-lg">
-                  <Flame className="w-5 h-5 text-yellow-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.preparing}</p>
-                  <p className="text-sm text-gray-400">Preparing</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-900 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.ready}</p>
-                  <p className="text-sm text-gray-400">Ready</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-900 rounded-lg">
-                  <UtensilsCrossed className="w-5 h-5 text-purple-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                  <p className="text-sm text-gray-400">Total Active</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
-        {/* Station Filter */}
-        <div className="mb-6 flex items-center gap-4">
-          <Filter className="w-5 h-5 text-gray-400" />
-          <div className="flex gap-2">
+        {/* Station Tabs */}
+        <div className="flex gap-1.5 bg-white/5 p-1.5 rounded-[12px] border border-white/8">
+          <button
+            onClick={() => setSelectedStation('all')}
+            className={`px-4.5 py-2 rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all whitespace-nowrap ${
+              selectedStation === 'all' ? 'bg-[#8FB9D6] text-[#170438]' : 'text-[#C7CAD2] hover:bg-white/8 hover:text-white'
+            }`}
+          >
+            All Stations
+          </button>
+          {stations.map(station => (
             <button
-              onClick={() => setSelectedStation('all')}
-              className={`px-4 py-2 rounded-lg ${
-                selectedStation === 'all' ? 'bg-orange-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              key={station.id}
+              onClick={() => setSelectedStation(station.id)}
+              className={`px-4.5 py-2 rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all whitespace-nowrap ${
+                selectedStation === station.id ? 'bg-[#8FB9D6] text-[#170438]' : 'text-[#C7CAD2] hover:bg-white/8 hover:text-white'
               }`}
             >
-              All Stations
+              {station.name}
             </button>
-            {stations.map(station => (
-              <button
-                key={station.id}
-                onClick={() => setSelectedStation(station.id)}
-                className={`px-4 py-2 rounded-lg ${
-                  selectedStation === station.id ? 'bg-orange-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                }`}
-              >
-                {station.name}
-              </button>
+          ))}
+        </div>
+
+        <div className="text-right">
+          <div className="font-['IBM_Plex_Mono'] text-[22px] font-semibold text-[#B7D4E8]">
+            {currentTime.toLocaleTimeString()}
+          </div>
+          <div className="text-[11px] text-[#9EA2AC] mt-0.5">
+            {currentTime.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Strip */}
+      <div className="flex gap-0 px-8 py-[14px] border-b border-[rgba(143,185,214,0.12)]">
+        <div className="flex-1 pr-6 border-r border-white/8">
+          <div className="text-[11px] uppercase tracking-[0.7px] text-[#9EA2AC] font-semibold">
+            Orders in queue
+          </div>
+          <div className="font-['IBM_Plex_Mono'] text-[26px] font-semibold mt-1">
+            {stats.new}
+          </div>
+        </div>
+        <div className="flex-1 pr-6 border-r border-white/8">
+          <div className="text-[11px] uppercase tracking-[0.7px] text-[#9EA2AC] font-semibold">
+            Avg. prep time
+          </div>
+          <div className="font-['IBM_Plex_Mono'] text-[26px] font-semibold mt-1">
+            11m 40s
+          </div>
+        </div>
+        <div className="flex-1 pr-6 border-r border-white/8">
+          <div className="text-[11px] uppercase tracking-[0.7px] text-[#9EA2AC] font-semibold">
+            Running late
+          </div>
+          <div className="font-['IBM_Plex_Mono'] text-[26px] font-semibold mt-1 text-[#F0A93E]">
+            {orders.filter(o => isOrderDelayed(o)).length}
+          </div>
+        </div>
+        <div className="flex-1">
+          <div className="text-[11px] uppercase tracking-[0.7px] text-[#9EA2AC] font-semibold">
+            Completed today
+          </div>
+          <div className="font-['IBM_Plex_Mono'] text-[26px] font-semibold mt-1 text-[#3FD08F]">
+            86
+          </div>
+        </div>
+      </div>
+
+      {/* Board */}
+      <div className="grid grid-cols-3 gap-5 p-6 align-start">
+        {/* New Orders */}
+        <div>
+          <div className="flex items-center justify-between mb-3.5 px-1">
+            <div className="font-['Outfit'] text-[15px] font-semibold tracking-[0.3px] flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#8FB9D6]" />
+              New Orders
+            </div>
+            <div className="font-['IBM_Plex_Mono'] text-[12px] bg-white/8 px-2 py-0.5 rounded-[20px] text-[#E8E9ED]">
+              {ordersByStatus.new.length}
+            </div>
+          </div>
+          <div className="flex flex-col gap-3.5">
+            {ordersByStatus.new.map(order => (
+              <div key={order.id} className="relative bg-gradient-to-br from-white/5 to-white/1.5 border border-white/9 rounded-[16px] p-[18px_18px_16px_22px] overflow-hidden">
+                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#8FB9D6]" />
+                <div className="flex justify-between items-start mb-2.5">
+                  <div>
+                    <div className="font-['IBM_Plex_Mono'] text-[19px] font-bold tracking-[0.3px]">
+                      #{order.id.slice(-4)}
+                    </div>
+                    <div className="text-[11px] font-semibold text-[#170438] bg-[#B7D4E8] px-2.5 py-0.5 rounded-[20px] mt-1.5 inline-block">
+                      {order.order_type === 'dine_in' ? `Table ${order.table_number || 'N/A'}` : 'Takeaway'}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`font-['IBM_Plex_Mono'] text-[20px] font-bold ${isOrderDelayed(order) ? 'text-[#F0555F]' : 'text-[#3FD08F]'}`}>
+                      {getOrderElapsedTime(order)}
+                    </div>
+                    <div className="text-[10px] uppercase text-[#9EA2AC] tracking-[0.5px] mt-0.5">
+                      elapsed
+                    </div>
+                  </div>
+                </div>
+                <div className="my-3 flex flex-col gap-1.5">
+                  {order.items?.map(item => (
+                    <div key={item.id} className="flex justify-between text-[14px] font-medium">
+                      <span>
+                        <span className="font-['IBM_Plex_Mono'] text-[#B7D4E8] mr-2">{item.quantity}×</span>
+                        {item.product_name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2 mt-3.5">
+                  <button
+                    onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}
+                    className="flex-1 py-2.5 rounded-[10px] font-semibold text-[13px] border-none cursor-pointer font-['Inter'] bg-white/7 text-white border border-white/14 hover:bg-white/12 transition-all active:scale-95"
+                  >
+                    Hold
+                  </button>
+                  <button
+                    onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}
+                    className="flex-1 py-2.5 rounded-[10px] font-semibold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#8FB9D6] text-[#170438] hover:bg-[#B7D4E8] transition-all active:scale-95"
+                  >
+                    Start Preparing
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         </div>
 
-        {/* Orders Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* New Orders */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-blue-400" />
-              New Orders ({ordersByStatus.new.length})
-            </h2>
-            <div className="space-y-4">
-              {ordersByStatus.new.map(order => (
-                <Card key={order.id} className="bg-gray-800 border-blue-500 border-2">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-bold text-lg">Table {order.table_number || 'N/A'}</p>
-                        <p className="text-sm text-gray-400">
-                          {order.order_type === 'dine_in' ? 'Dine In' : order.order_type === 'takeaway' ? 'Takeaway' : 'Delivery'}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-400">{formatDateTime(order.created_at)}</p>
-                        {isOrderDelayed(order) && (
-                          <p className="text-xs text-red-400 flex items-center gap-1">
-                            <AlertTriangle className="w-3 h-3" />
-                            Delayed
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 mb-4">
-                      {order.items?.map(item => (
-                        <div key={item.id} className="flex items-start gap-2 bg-gray-700 rounded p-2">
-                          <span className="font-bold text-blue-400">{item.quantity}x</span>
-                          <div className="flex-1">
-                            <p className="font-medium">{item.product_name}</p>
-                            {item.notes && (
-                              <p className="text-xs text-yellow-400 mt-1">Note: {item.notes}</p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    {order.notes && (
-                      <div className="mb-4 p-2 bg-yellow-900/30 border border-yellow-600 rounded">
-                        <p className="text-sm text-yellow-400">Order Note: {order.notes}</p>
-                      </div>
-                    )}
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700"
-                      >
-                        <Flame className="w-4 h-4 mr-2" />
-                        Start Preparing
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {ordersByStatus.new.length === 0 && (
-                <Card className="bg-gray-800 border-gray-700">
-                  <CardContent className="p-8 text-center text-gray-400">
-                    No new orders
-                  </CardContent>
-                </Card>
-              )}
+        {/* Preparing */}
+        <div>
+          <div className="flex items-center justify-between mb-3.5 px-1">
+            <div className="font-['Outfit'] text-[15px] font-semibold tracking-[0.3px] flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#F0A93E]" />
+              Preparing
+            </div>
+            <div className="font-['IBM_Plex_Mono'] text-[12px] bg-white/8 px-2 py-0.5 rounded-[20px] text-[#E8E9ED]">
+              {ordersByStatus.preparing.length}
             </div>
           </div>
+          <div className="flex flex-col gap-3.5">
+            {ordersByStatus.preparing.map(order => (
+              <div key={order.id} className="relative bg-gradient-to-br from-white/5 to-white/1.5 border border-white/9 rounded-[16px] p-[18px_18px_16px_22px] overflow-hidden">
+                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#F0A93E]" />
+                {isOrderDelayed(order) && (
+                  <div className="absolute top-3.5 right-4 w-2 h-2 rounded-full bg-[#F0555F] animate-pulse-custom" />
+                )}
+                <div className="flex justify-between items-start mb-2.5">
+                  <div>
+                    <div className="font-['IBM_Plex_Mono'] text-[19px] font-bold tracking-[0.3px]">
+                      #{order.id.slice(-4)}
+                    </div>
+                    <div className="text-[11px] font-semibold text-[#170438] bg-[#B7D4E8] px-2.5 py-0.5 rounded-[20px] mt-1.5 inline-block">
+                      {order.order_type === 'dine_in' ? `Table ${order.table_number || 'N/A'}` : 'Takeaway'}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`font-['IBM_Plex_Mono'] text-[20px] font-bold ${isOrderDelayed(order) ? 'text-[#F0555F]' : 'text-[#F0A93E]'}`}>
+                      {getOrderElapsedTime(order)}
+                    </div>
+                    <div className="text-[10px] uppercase text-[#9EA2AC] tracking-[0.5px] mt-0.5">
+                      elapsed
+                    </div>
+                  </div>
+                </div>
+                <div className="my-3 flex flex-col gap-1.5">
+                  {order.items?.map(item => (
+                    <div key={item.id} className="flex justify-between text-[14px] font-medium">
+                      <span>
+                        <span className="font-['IBM_Plex_Mono'] text-[#B7D4E8] mr-2">{item.quantity}×</span>
+                        {item.product_name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2 mt-3.5">
+                  <button
+                    className="flex-1 py-2.5 rounded-[10px] font-semibold text-[13px] border-none cursor-pointer font-['Inter'] bg-white/7 text-white border border-white/14 hover:bg-white/12 transition-all active:scale-95"
+                  >
+                    Notify Waiter
+                  </button>
+                  <button
+                    onClick={() => handleUpdateOrderStatus(order.id, 'ready')}
+                    className="flex-1 py-2.5 rounded-[10px] font-semibold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#3FD08F] text-[#170438] hover:opacity-90 transition-all active:scale-95"
+                  >
+                    Mark Ready
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
-          {/* Preparing Orders */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Flame className="w-5 h-5 text-yellow-400" />
-              Preparing ({ordersByStatus.preparing.length})
-            </h2>
-            <div className="space-y-4">
-              {ordersByStatus.preparing.map(order => (
-                <Card key={order.id} className="bg-gray-800 border-yellow-500 border-2">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-bold text-lg">Table {order.table_number || 'N/A'}</p>
-                        <p className="text-sm text-gray-400">
-                          {order.order_type === 'dine_in' ? 'Dine In' : order.order_type === 'takeaway' ? 'Takeaway' : 'Delivery'}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-yellow-400">{getOrderElapsedTime(order)}</p>
-                        {isOrderDelayed(order) && (
-                          <p className="text-xs text-red-400 flex items-center gap-1">
-                            <AlertTriangle className="w-3 h-3" />
-                            Delayed
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 mb-4">
-                      {order.items?.map(item => (
-                        <div key={item.id} className="flex items-start gap-2 bg-gray-700 rounded p-2">
-                          <span className="font-bold text-yellow-400">{item.quantity}x</span>
-                          <div className="flex-1">
-                            <p className="font-medium">{item.product_name}</p>
-                            {item.notes && (
-                              <p className="text-xs text-yellow-400 mt-1">Note: {item.notes}</p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Timer className="w-3 h-3 text-gray-400" />
-                            <span className="text-xs text-gray-400">{getItemElapsedTime(item)}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    {order.notes && (
-                      <div className="mb-4 p-2 bg-yellow-900/30 border border-yellow-600 rounded">
-                        <p className="text-sm text-yellow-400">Order Note: {order.notes}</p>
-                      </div>
-                    )}
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleUpdateOrderStatus(order.id, 'ready')}
-                        className="flex-1 bg-green-600 hover:bg-green-700"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Mark Ready
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {ordersByStatus.preparing.length === 0 && (
-                <Card className="bg-gray-800 border-gray-700">
-                  <CardContent className="p-8 text-center text-gray-400">
-                    No orders preparing
-                  </CardContent>
-                </Card>
-              )}
+        {/* Ready */}
+        <div>
+          <div className="flex items-center justify-between mb-3.5 px-1">
+            <div className="font-['Outfit'] text-[15px] font-semibold tracking-[0.3px] flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#3FD08F]" />
+              Ready to Serve
+            </div>
+            <div className="font-['IBM_Plex_Mono'] text-[12px] bg-white/8 px-2 py-0.5 rounded-[20px] text-[#E8E9ED]">
+              {ordersByStatus.ready.length}
             </div>
           </div>
-
-          {/* Ready Orders */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-green-400" />
-              Ready ({ordersByStatus.ready.length})
-            </h2>
-            <div className="space-y-4">
-              {ordersByStatus.ready.map(order => (
-                <Card key={order.id} className="bg-gray-800 border-green-500 border-2">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-bold text-lg">Table {order.table_number || 'N/A'}</p>
-                        <p className="text-sm text-gray-400">
-                          {order.order_type === 'dine_in' ? 'Dine In' : order.order_type === 'takeaway' ? 'Takeaway' : 'Delivery'}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-400">
-                          Ready: {order.ready_at ? formatDateTime(order.ready_at) : 'N/A'}
-                        </p>
-                      </div>
+          <div className="flex flex-col gap-3.5">
+            {ordersByStatus.ready.map(order => (
+              <div key={order.id} className="relative bg-gradient-to-br from-white/5 to-white/1.5 border border-white/9 rounded-[16px] p-[18px_18px_16px_22px] overflow-hidden">
+                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#3FD08F]" />
+                <div className="flex justify-between items-start mb-2.5">
+                  <div>
+                    <div className="font-['IBM_Plex_Mono'] text-[19px] font-bold tracking-[0.3px]">
+                      #{order.id.slice(-4)}
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 mb-4">
-                      {order.items?.map(item => (
-                        <div key={item.id} className="flex items-start gap-2 bg-gray-700 rounded p-2">
-                          <span className="font-bold text-green-400">{item.quantity}x</span>
-                          <div className="flex-1">
-                            <p className="font-medium">{item.product_name}</p>
-                            {item.notes && (
-                              <p className="text-xs text-yellow-400 mt-1">Note: {item.notes}</p>
-                            )}
-                          </div>
-                          <CheckCircle className="w-4 h-4 text-green-400" />
-                        </div>
-                      ))}
+                    <div className="text-[11px] font-semibold text-[#170438] bg-[#B7D4E8] px-2.5 py-0.5 rounded-[20px] mt-1.5 inline-block">
+                      {order.order_type === 'dine_in' ? `Table ${order.table_number || 'N/A'}` : 'Takeaway'}
                     </div>
-                    {order.notes && (
-                      <div className="mb-4 p-2 bg-yellow-900/30 border border-yellow-600 rounded">
-                        <p className="text-sm text-yellow-400">Order Note: {order.notes}</p>
-                      </div>
-                    )}
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleUpdateOrderStatus(order.id, 'served')}
-                        className="flex-1 bg-green-600 hover:bg-green-700"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-2" />
-                        Mark Served
-                      </Button>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-['IBM_Plex_Mono'] text-[20px] font-bold text-[#3FD08F]">
+                      Ready
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {ordersByStatus.ready.length === 0 && (
-                <Card className="bg-gray-800 border-gray-700">
-                  <CardContent className="p-8 text-center text-gray-400">
-                    No orders ready
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                    <div className="text-[10px] uppercase text-[#9EA2AC] tracking-[0.5px] mt-0.5">
+                      {order.ready_at ? `${Math.floor((Date.now() - new Date(order.ready_at).getTime()) / 60000)}m ago` : 'Just now'}
+                    </div>
+                  </div>
+                </div>
+                <div className="my-3 flex flex-col gap-1.5">
+                  {order.items?.map(item => (
+                    <div key={item.id} className="flex justify-between text-[14px] font-medium">
+                      <span>
+                        <span className="font-['IBM_Plex_Mono'] text-[#B7D4E8] mr-2">{item.quantity}×</span>
+                        {item.product_name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2 mt-3.5">
+                  <button
+                    onClick={() => handleUpdateOrderStatus(order.id, 'served')}
+                    className="flex-none w-full py-2.5 rounded-[10px] font-semibold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#8FB9D6] text-[#170438] hover:bg-[#B7D4E8] transition-all active:scale-95"
+                  >
+                    Bump — Order Served
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

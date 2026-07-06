@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -21,5 +23,58 @@
   }
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     @apply bg-gray-400;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes ring {
+    0%, 100% {
+      transform: rotate(0);
+    }
+    20% {
+      transform: rotate(-14deg);
+    }
+    40% {
+      transform: rotate(12deg);
+    }
+    60% {
+      transform: rotate(-8deg);
+    }
+    80% {
+      transform: rotate(6deg);
+    }
+  }
+
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(227, 146, 46, 0.5);
+    }
+    70% {
+      box-shadow: 0 0 0 8px rgba(227, 146, 46, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(227, 146, 46, 0);
+    }
+  }
+
+  .animate-slideIn {
+    animation: slideIn 0.4s ease;
+  }
+
+  .animate-ring {
+    animation: ring 1.2s infinite;
+  }
+
+  .animate-pulse-custom {
+    animation: pulse 1.3s infinite;
   }
 }
