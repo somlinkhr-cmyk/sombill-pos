@@ -117,19 +117,19 @@ export default function CashierPOS() {
       let productsRes, categoriesRes, tablesRes, paymentMethodsRes, customersRes
       
       try {
-        productsRes = await supabase.from('products').select('*')
+        productsRes = await supabase.from('products').select('*').eq('tenant_id', user?.tenant_id)
       } catch (e) {
         productsRes = { error: e }
       }
       
       try {
-        categoriesRes = await supabase.from('categories').select('*').order('display_order')
+        categoriesRes = await supabase.from('categories').select('*').eq('tenant_id', user?.tenant_id).order('display_order')
       } catch (e) {
         categoriesRes = { error: e }
       }
       
       try {
-        tablesRes = await supabase.from('tables').select('*').order('number')
+        tablesRes = await supabase.from('tables').select('*').eq('tenant_id', user?.tenant_id).order('number')
       } catch (e) {
         tablesRes = { error: e }
       }
@@ -141,7 +141,7 @@ export default function CashierPOS() {
       }
       
       try {
-        customersRes = await supabase.from('customers').select('*').order('name')
+        customersRes = await supabase.from('customers').select('*').eq('tenant_id', user?.tenant_id).order('name')
       } catch (e) {
         customersRes = { error: e }
       }
@@ -196,6 +196,7 @@ export default function CashierPOS() {
         .select('total')
         .gte('created_at', today)
         .eq('status', 'completed')
+        .eq('tenant_id', user?.tenant_id)
       
       if (orders) {
         setTodayOrders(orders.length)
@@ -425,6 +426,8 @@ export default function CashierPOS() {
         table_id: selectedTable?.id || null,
         cashier_id: user?.id,
         order_type: selectedTable ? 'dine_in' : 'takeaway',
+        tenant_id: user?.tenant_id,
+        source: 'cashier',
         status: 'completed',
         subtotal: cartTotal,
         tax,
@@ -440,6 +443,7 @@ export default function CashierPOS() {
           order_id: order.id,
           payment_method_id: paymentData.payment_method_id,
           amount: paymentData.amount,
+          tenant_id: user?.tenant_id,
           status: 'paid',
           transaction_id: paymentData.transaction_id,
           reference_number: paymentData.reference_number,
@@ -453,6 +457,7 @@ export default function CashierPOS() {
           order_id: order.id,
           receipt_number: receiptNumber,
           receipt_type: 'sale',
+          tenant_id: user?.tenant_id,
           receipt_data: {
             restaurant_name: 'SomBill Restaurant',
             restaurant_address: 'Hargeisa, Somaliland',
@@ -502,6 +507,7 @@ export default function CashierPOS() {
             quantity: item.quantity,
             unit_price: item.product.selling_price,
             total_price: item.product.selling_price * item.quantity,
+            tenant_id: user?.tenant_id,
           })
         }
 
@@ -513,6 +519,7 @@ export default function CashierPOS() {
           type: 'kitchen_ready',
           title: `New Order #${order.id.slice(0, 8)}`,
           message: `Order for ${selectedTable ? `Table ${selectedTable.number}` : orderType} with ${cart.length} items`,
+          tenant_id: user?.tenant_id,
           is_read: false,
           data: {
             order_id: order.id,
