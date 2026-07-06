@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SomBill — Customer Smart Menu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --purple-950:#170438;
+    --purple-800:#2C0F72;
+    --purple-700:#39129A;
+    --ice-500:#6FA3C7;
+    --ice-400:#8FB9D6;
+    --ice-300:#B7D4E8;
+    --ice-100:#F1F7FB;
+    --silver-300:#C6C9D1;
+    --silver-200:#E1E3E8;
+    --silver-100:#F3F4F6;
+    --white:#FFFFFF;
+    --gold:#D8B26B;
+    --font-display:'Outfit',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:#0D0221;
+    font-family:var(--font-body);
+    min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    padding:40px 16px;
+  }
+  .phone{
+    width:390px; height:844px; background:var(--white); border-radius:44px;
+    box-shadow:0 40px 90px rgba(0,0,0,0.5), 0 0 0 10px #050113;
+    overflow:hidden; position:relative; display:flex; flex-direction:column;
+  }
+  .notch{
+    position:absolute; top:0; left:50%; transform:translateX(-50%);
+    width:120px; height:26px; background:#050113; border-radius:0 0 16px 16px; z-index:50;
+  }
+  .scroll{flex:1; overflow-y:auto;}
+  .scroll::-webkit-scrollbar{display:none;}
+
+  /* ---- HERO ---- */
+  .hero{
+    background:
+      radial-gradient(circle at 20% 0%, rgba(143,185,214,0.28), transparent 45%),
+      radial-gradient(circle at 100% 100%, rgba(75,31,190,0.4), transparent 55%),
+      linear-gradient(160deg, var(--purple-950), #10022C);
+    padding:44px 24px 22px;
+    color:white;
+    position:relative;
+  }
+  .hero-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:26px;}
+  .hero-logo{display:flex; align-items:center; gap:9px;}
+  .hero-logo svg{width:26px; height:26px;}
+  .hero-logo-text{font-family:var(--font-display); font-weight:700; font-size:15px;}
+  .hero-logo-text span{color:var(--ice-400);}
+  .lang-toggle{
+    display:flex; background:rgba(255,255,255,0.1); border-radius:20px; padding:3px; font-size:11px; font-weight:700;
+  }
+  .lang-opt{padding:5px 11px; border-radius:16px; cursor:pointer; color:rgba(255,255,255,0.6);}
+  .lang-opt.active{background:var(--ice-400); color:var(--purple-950);}
+
+  .hero-title{font-family:var(--font-display); font-size:26px; font-weight:700; line-height:1.15;}
+  .hero-tagline{font-size:12.5px; color:var(--ice-300); margin-top:6px; letter-spacing:0.3px;}
+  .hero-meta{display:flex; gap:14px; margin-top:16px;}
+  .hero-pill{
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:20px;
+    padding:6px 12px; font-size:11px; display:flex; align-items:center; gap:5px; color:var(--silver-200);
+  }
+
+  /* ---- CATEGORY TABS ---- */
+  .cats{
+    display:flex; gap:8px; padding:16px 20px; overflow-x:auto; background:var(--white);
+    border-bottom:1px solid var(--silver-100); position:sticky; top:0; z-index:20;
+  }
+  .cats::-webkit-scrollbar{display:none;}
+  .cat{
+    flex-shrink:0; padding:9px 16px; border-radius:24px; font-size:12.5px; font-weight:600;
+    background:var(--silver-100); color:var(--purple-950); cursor:pointer; white-space:nowrap;
+  }
+  .cat.active{background:var(--purple-950); color:var(--ice-300);}
+
+  /* ---- SECTION ---- */
+  .section{padding:20px 20px 6px;}
+  .section-head{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
+  .section-curve{width:22px; height:22px; flex-shrink:0;}
+  .section-title{font-family:var(--font-display); font-weight:700; font-size:16px; color:var(--purple-950);}
+  .section-sub{font-size:11px; color:#9497A2; margin-left:32px; margin-top:-10px; margin-bottom:14px;}
+
+  .dish{
+    display:flex; gap:12px; padding:12px 0; border-bottom:1px solid var(--silver-100);
+  }
+  .dish-img{
+    width:76px; height:76px; border-radius:14px; flex-shrink:0; object-fit:cover;
+    background:linear-gradient(150deg, var(--ice-300), var(--ice-100));
+  }
+  .dish-body{flex:1; min-width:0;}
+  .dish-top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .dish-name{font-weight:700; font-size:14px; color:var(--purple-950);}
+  .dish-name-so{font-size:11px; color:#9497A2; margin-top:1px;}
+  .dish-desc{font-size:11.5px; color:#8B8E99; margin-top:5px; line-height:1.4;}
+  .dish-bottom{display:flex; justify-content:space-between; align-items:center; margin-top:9px;}
+  .dish-price{font-family:var(--font-mono); font-weight:600; font-size:14px; color:var(--purple-950);}
+  .add-btn{
+    width:28px; height:28px; border-radius:9px; background:var(--purple-950); color:var(--ice-400);
+    display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; cursor:pointer; border:none;
+  }
+  .add-btn:active{transform:scale(0.9);}
+  .tag-spicy{font-size:9px; background:#FCEAEA; color:#D24E4E; padding:2px 6px; border-radius:6px; font-weight:700; margin-left:6px;}
+  .tag-popular{font-size:9px; background:#FFF3E0; color:var(--gold); padding:2px 6px; border-radius:6px; font-weight:700; margin-left:6px;}
+
+  /* ---- STICKY CART BAR ---- */
+  .cartbar{
+    position:sticky; bottom:0; margin:14px 16px 16px; background:var(--purple-950); border-radius:18px;
+    padding:14px 16px; display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 12px 28px rgba(23,4,56,0.35); z-index:30;
+  }
+  .cart-left{display:flex; align-items:center; gap:10px; color:white;}
+  .cart-count{
+    background:var(--ice-400); color:var(--purple-950); width:24px; height:24px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; font-family:var(--font-mono);
+  }
+  .cart-total{font-family:var(--font-mono); font-weight:700; font-size:14px;}
+  .cart-btn{
+    background:var(--ice-400); color:var(--purple-950); border:none; padding:10px 18px; border-radius:12px;
+    font-weight:700; font-size:12.5px; cursor:pointer; display:flex; align-items:center; gap:6px;
+  }
+
+  .call-waiter{
+    margin:6px 20px 4px; display:flex; align-items:center; justify-content:center; gap:8px;
+    border:1.5px dashed var(--silver-300); border-radius:14px; padding:12px; font-size:12px; font-weight:600;
+    color:var(--purple-950); cursor:pointer;
+  }
+  .call-waiter:hover{border-color:var(--ice-400); background:var(--ice-100);}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+  <div class="scroll">
+
+    <div class="hero">
+      <div class="hero-top">
+        <div class="hero-logo">
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M62 8 L28 34 C20 40 20 50 28 56 L62 82" stroke="#DDE1E6" stroke-width="16" stroke-linecap="round"/>
+            <path d="M38 18 L72 44 C80 50 80 60 72 66 L38 92" stroke="#8FB9D6" stroke-width="16" stroke-linecap="round"/>
+          </svg>
+          <div class="hero-logo-text">Xamar<span>Grill</span></div>
+        </div>
+        <div class="lang-toggle">
+          <div class="lang-opt active">EN</div>
+          <div class="lang-opt">SO</div>
+        </div>
+      </div>
+      <div class="hero-title">Welcome to<br>Xamar Grill House</div>
+      <div class="hero-tagline">Powered by SomBill · Trusted Hospitality Partner</div>
+      <div class="hero-meta">
+        <div class="hero-pill">🪑 Table 04</div>
+        <div class="hero-pill">⏱ Kitchen: ~15 min</div>
+      </div>
+    </div>
+
+    <div class="cats">
+      <div class="cat active">All</div>
+      <div class="cat">Starters</div>
+      <div class="cat">Somali Specials</div>
+      <div class="cat">Grills</div>
+      <div class="cat">Drinks</div>
+      <div class="cat">Desserts</div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <svg class="section-curve" viewBox="0 0 24 24" fill="none"><path d="M16 3 C9 3 9 10 15 10 C21 10 21 17 14 17" stroke="#8FB9D6" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="section-title">Somali Specials</div>
+      </div>
+      <div class="section-sub">Our signature dishes, made the traditional way</div>
+
+      <div class="dish">
+        <div class="dish-img"></div>
+        <div class="dish-body">
+          <div class="dish-top">
+            <div><div class="dish-name">Bariis Iskukaris <span class="tag-popular">Popular</span></div><div class="dish-name-so">Bariis Iskukaris</div></div>
+          </div>
+          <div class="dish-desc">Fragrant spiced rice with raisins, served with a side of goat suqaar.</div>
+          <div class="dish-bottom"><div class="dish-price">$9.00</div><button class="add-btn">＋</button></div>
+        </div>
+      </div>
+
+      <div class="dish">
+        <div class="dish-img"></div>
+        <div class="dish-body">
+          <div class="dish-top">
+            <div><div class="dish-name">Grilled Hilib Ari <span class="tag-spicy">Spicy</span></div><div class="dish-name-so">Hilib Ari la Dubay</div></div>
+          </div>
+          <div class="dish-desc">Charcoal-grilled goat meat, marinated in Somali xawaash spice blend.</div>
+          <div class="dish-bottom"><div class="dish-price">$12.50</div><button class="add-btn">＋</button></div>
+        </div>
+      </div>
+
+      <div class="dish">
+        <div class="dish-img"></div>
+        <div class="dish-body">
+          <div class="dish-top">
+            <div><div class="dish-name">Sambuus (Beef)</div><div class="dish-name-so">Sambuusad Hilib</div></div>
+          </div>
+          <div class="dish-desc">Crispy pastry filled with spiced beef, onions and herbs. Set of 3.</div>
+          <div class="dish-bottom"><div class="dish-price">$5.00</div><button class="add-btn">＋</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <svg class="section-curve" viewBox="0 0 24 24" fill="none"><path d="M16 3 C9 3 9 10 15 10 C21 10 21 17 14 17" stroke="#8FB9D6" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="section-title">Grills</div>
+      </div>
+      <div class="section-sub">From the open flame</div>
+
+      <div class="dish">
+        <div class="dish-img"></div>
+        <div class="dish-body">
+          <div class="dish-top">
+            <div><div class="dish-name">Chicken Suqaar</div><div class="dish-name-so">Suqaar Digaag</div></div>
+          </div>
+          <div class="dish-desc">Diced chicken sautéed with peppers, onion and fresh tomato.</div>
+          <div class="dish-bottom"><div class="dish-price">$8.50</div><button class="add-btn">＋</button></div>
+        </div>
+      </div>
+
+      <div class="dish">
+        <div class="dish-img"></div>
+        <div class="dish-body">
+          <div class="dish-top">
+            <div><div class="dish-name">Camel Meat Grill <span class="tag-popular">Popular</span></div><div class="dish-name-so">Hilib Geel</div></div>
+          </div>
+          <div class="dish-desc">Tender grilled camel meat, a Somaliland classic, served with rice.</div>
+          <div class="dish-bottom"><div class="dish-price">$14.00</div><button class="add-btn">＋</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <svg class="section-curve" viewBox="0 0 24 24" fill="none"><path d="M16 3 C9 3 9 10 15 10 C21 10 21 17 14 17" stroke="#8FB9D6" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="section-title">Drinks</div>
+      </div>
+      <div class="section-sub">Fresh, cold and traditional</div>
+
+      <div class="dish">
+        <div class="dish-img"></div>
+        <div class="dish-body">
+          <div class="dish-top">
+            <div><div class="dish-name">Fresh Lime Juice</div><div class="dish-name-so">Casiir Liin</div></div>
+          </div>
+          <div class="dish-desc">Freshly squeezed lime, lightly sweetened, served over ice.</div>
+          <div class="dish-bottom"><div class="dish-price">$2.00</div><button class="add-btn">＋</button></div>
+        </div>
+      </div>
+
+      <div class="dish">
+        <div class="dish-img"></div>
+        <div class="dish-body">
+          <div class="dish-top">
+            <div><div class="dish-name">Somali Tea</div><div class="dish-name-so">Shaah</div></div>
+          </div>
+          <div class="dish-desc">Spiced black tea with cardamom, cinnamon and cloves.</div>
+          <div class="dish-bottom"><div class="dish-price">$1.50</div><button class="add-btn">＋</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="call-waiter">🔔 Tap to call your waiter</div>
+
+    <div class="cartbar">
+      <div class="cart-left">
+        <div class="cart-count">3</div>
+        <div class="cart-total">$25.50 total</div>
+      </div>
+      <button class="cart-btn">View Order →</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.cat').forEach(c=>{
+    c.addEventListener('click', ()=>{
+      document.querySelectorAll('.cat').forEach(x=>x.classList.remove('active'));
+      c.classList.add('active');
+    });
+  });
+  document.querySelectorAll('.lang-opt').forEach(l=>{
+    l.addEventListener('click', ()=>{
+      document.querySelectorAll('.lang-opt').forEach(x=>x.classList.remove('active'));
+      l.classList.add('active');
+    });
+  });
+  let count = 3, total = 25.50;
+  document.querySelectorAll('.add-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      count++;
+      document.querySelector('.cart-count').textContent = count;
+      btn.style.transform = 'scale(0.8)';
+      setTimeout(()=>btn.style.transform='scale(1)', 150);
+    });
+  });
+</script>
+</body>
+</html>
