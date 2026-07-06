@@ -36,7 +36,7 @@ export default function WaiterPanel() {
     try {
       const [tablesRes, productsRes, categoriesRes] = await Promise.all([
         supabase.from('tables').select('*, current_order:orders(*)').order('number'),
-        supabase.from('products').select('*, category(*)').eq('is_available', true),
+        supabase.from('products').select('*, categories(*)').eq('is_available', true),
         supabase.from('categories').select('*').eq('is_active', true).order('display_order'),
       ])
 
@@ -52,14 +52,14 @@ export default function WaiterPanel() {
 
   function setupRealtimeSubscriptions() {
     const tablesSubscription = supabase
-      .channel('tables-changes')
+      .channel(`tables-changes-${Date.now()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tables' }, () => {
         loadData()
       })
       .subscribe()
 
     const ordersSubscription = supabase
-      .channel('orders-changes')
+      .channel(`orders-changes-${Date.now()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
         loadData()
       })
