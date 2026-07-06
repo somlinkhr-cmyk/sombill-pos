@@ -216,7 +216,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   function hasModuleAccess(module: string): boolean {
-    if (!plan) return false
+    // For demo purposes, return true if no plan is set
+    if (!plan) return true
     
     const moduleAccess: Record<string, keyof SubscriptionPlan> = {
       'cashier': 'allow_cashier',
@@ -228,7 +229,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     
     const accessKey = moduleAccess[module]
-    return accessKey ? (plan as any)[accessKey] : false
+    return accessKey ? (plan as any)[accessKey] : true
   }
 
   return (

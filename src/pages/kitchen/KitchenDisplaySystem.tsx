@@ -100,25 +100,28 @@ export default function KitchenDisplaySystem() {
   async function loadData() {
     setLoading(true)
     try {
-      // Load kitchen stations
-      const { data: stationsData } = await supabase
-        .from('kitchen_stations')
-        .select('*')
-        .eq('tenant_id', user?.tenant_id)
-        .eq('is_active', true)
-        .order('display_order')
+      // Load kitchen stations - filter by tenant_id if available, otherwise load all
+      let stationsQuery = supabase.from('kitchen_stations').select('*').eq('is_active', true).order('display_order')
+      if (user?.tenant_id) {
+        stationsQuery = stationsQuery.eq('tenant_id', user.tenant_id)
+      }
+      
+      const { data: stationsData } = await stationsQuery
       
       if (stationsData) {
         setStations(stationsData)
       }
 
-      // Load orders
+      // Load orders - filter by tenant_id if available, otherwise load all
       let query = supabase
         .from('orders')
         .select('*, tables(number), users(name)')
-        .eq('tenant_id', user?.tenant_id)
         .in('status', ['new', 'preparing', 'ready'])
         .order('created_at', { ascending: false })
+
+      if (user?.tenant_id) {
+        query = query.eq('tenant_id', user.tenant_id)
+      }
 
       if (selectedStation !== 'all') {
         query = query.eq('kitchen_station', selectedStation)
@@ -130,11 +133,12 @@ export default function KitchenDisplaySystem() {
         // Load order items for each order
         const ordersWithItems = await Promise.all(
           ordersData.map(async (order: any) => {
-            const { data: items } = await supabase
-              .from('order_items')
-              .select('*')
-              .eq('order_id', order.id)
-              .eq('tenant_id', user?.tenant_id)
+            let itemsQuery = supabase.from('order_items').select('*').eq('order_id', order.id)
+            if (user?.tenant_id) {
+              itemsQuery = itemsQuery.eq('tenant_id', user.tenant_id)
+            }
+            
+            const { data: items } = await itemsQuery
             
             return {
               ...order,

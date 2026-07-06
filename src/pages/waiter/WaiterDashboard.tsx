@@ -113,24 +113,25 @@ export default function WaiterDashboard() {
   async function loadData() {
     setLoading(true)
     try {
-      // Load tables
-      const { data: tablesData } = await supabase
-        .from('tables')
-        .select('*')
-        .eq('tenant_id', user?.tenant_id)
-        .order('number')
+      // Load tables - filter by tenant_id if available, otherwise load all
+      let tablesQuery = supabase.from('tables').select('*').order('number')
+      if (user?.tenant_id) {
+        tablesQuery = tablesQuery.eq('tenant_id', user.tenant_id)
+      }
+      
+      const { data: tablesData } = await tablesQuery
       
       if (tablesData) {
         setTables(tablesData)
       }
 
-      // Load products
-      const { data: productsData } = await supabase
-        .from('products')
-        .select('*, categories(name)')
-        .eq('tenant_id', user?.tenant_id)
-        .eq('is_available', true)
-        .order('name')
+      // Load products - filter by tenant_id if available, otherwise load all
+      let productsQuery = supabase.from('products').select('*, categories(name)').eq('is_available', true).order('name')
+      if (user?.tenant_id) {
+        productsQuery = productsQuery.eq('tenant_id', user.tenant_id)
+      }
+      
+      const { data: productsData } = await productsQuery
       
       if (productsData) {
         setProducts(productsData)
