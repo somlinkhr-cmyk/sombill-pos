@@ -300,7 +300,13 @@ export default function Staff() {
       render: (record: AttendanceRecord) => (
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-gray-400" />
-          <span>{new Date(record.date).toLocaleDateString()}</span>
+          <span>{(() => {
+            try {
+              return new Date(record.date).toLocaleDateString()
+            } catch {
+              return 'N/A'
+            }
+          })()}</span>
         </div>
       ),
     },
@@ -345,7 +351,13 @@ export default function Staff() {
       render: (shift: Shift) => (
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-gray-400" />
-          <span>{new Date(shift.date).toLocaleDateString()}</span>
+          <span>{(() => {
+            try {
+              return new Date(shift.date).toLocaleDateString()
+            } catch {
+              return 'N/A'
+            }
+          })()}</span>
         </div>
       ),
     },
@@ -557,7 +569,13 @@ export default function Staff() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-600">Hire Date</label>
-                  <p className="text-gray-900">{new Date((selectedItem as StaffMember).hire_date).toLocaleDateString()}</p>
+                  <p className="text-gray-900">{(() => {
+                    try {
+                      return new Date((selectedItem as StaffMember).hire_date).toLocaleDateString()
+                    } catch {
+                      return 'N/A'
+                    }
+                  })()}</p>
                 </div>
               </div>
               

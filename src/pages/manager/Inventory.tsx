@@ -436,7 +436,13 @@ export default function Inventory() {
       key: 'order_date',
       header: 'Order Date',
       render: (order: PurchaseOrder) => (
-        <span>{new Date(order.order_date).toLocaleDateString()}</span>
+        <span>{(() => {
+          try {
+            return new Date(order.order_date).toLocaleDateString()
+          } catch {
+            return 'N/A'
+          }
+        })()}</span>
       ),
     },
     {
@@ -510,7 +516,13 @@ export default function Inventory() {
       key: 'recorded_at',
       header: 'Date',
       render: (waste: WasteRecord) => (
-        <span>{new Date(waste.recorded_at).toLocaleDateString()}</span>
+        <span>{(() => {
+          try {
+            return new Date(waste.recorded_at).toLocaleDateString()
+          } catch {
+            return 'N/A'
+          }
+        })()}</span>
       ),
     },
   ]
@@ -741,7 +753,13 @@ export default function Inventory() {
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-600">Order Date</label>
-                      <p className="text-lg font-semibold">{new Date((selectedItem as PurchaseOrder).order_date).toLocaleDateString()}</p>
+                      <p className="text-lg font-semibold">{(() => {
+                        try {
+                          return new Date((selectedItem as PurchaseOrder).order_date).toLocaleDateString()
+                        } catch {
+                          return 'N/A'
+                        }
+                      })()}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-600">Total Amount</label>

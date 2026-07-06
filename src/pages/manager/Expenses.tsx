@@ -466,7 +466,13 @@ export default function Expenses() {
       render: (expense: Expense) => (
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-gray-400" />
-          <span>{new Date(expense.expense_date).toLocaleDateString()}</span>
+          <span>{(() => {
+            try {
+              return new Date(expense.expense_date).toLocaleDateString()
+            } catch {
+              return 'N/A'
+            }
+          })()}</span>
         </div>
       ),
     },
@@ -685,7 +691,13 @@ export default function Expenses() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-600">Date</label>
-                  <p className="text-gray-900">{new Date(selectedExpense.expense_date).toLocaleDateString()}</p>
+                  <p className="text-gray-900">{(() => {
+                    try {
+                      return new Date(selectedExpense.expense_date).toLocaleDateString()
+                    } catch {
+                      return 'N/A'
+                    }
+                  })()}</p>
                 </div>
               </div>
               

@@ -235,7 +235,13 @@ export default function SubscriptionPanel() {
                 <span className="text-sm font-normal text-gray-500">/month</span>
               </p>
               <p className="text-sm text-gray-500">
-                Renews: {(subscription as any)?.renewal_date ? new Date((subscription as any).renewal_date).toLocaleDateString() : 'N/A'}
+                Renews: {(subscription as any)?.renewal_date ? (() => {
+                  try {
+                    return new Date((subscription as any).renewal_date).toLocaleDateString()
+                  } catch {
+                    return 'N/A'
+                  }
+                })() : 'N/A'}
               </p>
             </div>
           </div>
@@ -366,10 +372,22 @@ export default function SubscriptionPanel() {
                     <tr key={invoice.id} className="border-b border-gray-100">
                       <td className="py-3 px-4 font-medium">{invoice.invoice_number}</td>
                       <td className="py-3 px-4 text-gray-600">
-                        {new Date(invoice.billing_date).toLocaleDateString()}
+                        {(() => {
+                          try {
+                            return new Date(invoice.billing_date).toLocaleDateString()
+                          } catch {
+                            return 'N/A'
+                          }
+                        })()}
                       </td>
                       <td className="py-3 px-4 text-gray-600">
-                        {new Date(invoice.due_date).toLocaleDateString()}
+                        {(() => {
+                          try {
+                            return new Date(invoice.due_date).toLocaleDateString()
+                          } catch {
+                            return 'N/A'
+                          }
+                        })()}
                       </td>
                       <td className="py-3 px-4 font-semibold">{formatCurrency(invoice.amount)}</td>
                       <td className="py-3 px-4">

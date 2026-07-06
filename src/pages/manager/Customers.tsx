@@ -254,7 +254,13 @@ export default function Customers() {
       render: (customer: Customer) => (
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-gray-400" />
-          <span>{customer.last_visit ? new Date(customer.last_visit).toLocaleDateString() : 'Never'}</span>
+          <span>{customer.last_visit ? (() => {
+            try {
+              return new Date(customer.last_visit).toLocaleDateString()
+            } catch {
+              return 'N/A'
+            }
+          })() : 'Never'}</span>
         </div>
       ),
     },
@@ -400,7 +406,13 @@ export default function Customers() {
                 <div>
                   <label className="text-sm font-medium text-gray-600">Last Visit</label>
                   <p className="text-gray-900">
-                    {selectedCustomer.last_visit ? new Date(selectedCustomer.last_visit).toLocaleDateString() : 'Never'}
+                    {selectedCustomer.last_visit ? (() => {
+                      try {
+                        return new Date(selectedCustomer.last_visit).toLocaleDateString()
+                      } catch {
+                        return 'N/A'
+                      }
+                    })() : 'Never'}
                   </p>
                 </div>
               </div>
