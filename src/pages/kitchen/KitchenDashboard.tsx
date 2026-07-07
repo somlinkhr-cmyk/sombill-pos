@@ -55,32 +55,40 @@ export default function KitchenDashboard() {
       const today = new Date().toISOString().split('T')[0]
       const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString()
 
-      // Load all stats in parallel - only select needed columns
-      const [
-        { count: activeOrders },
-        { count: waitingOrders },
-        { count: cookingOrders },
-        { count: readyOrders },
-        { count: completedOrders },
-        { data: orderItems },
-        { data: allOrders },
-        { data: prepTimeOrders },
-        { count: delayedCount },
-        { data: busyStations },
-        { count: staffCount },
-      ] = await Promise.all([
-        supabase.from('orders').select('*', { count: 'exact', head: true }).in('status', ['new', 'preparing', 'ready']),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'new'),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'preparing'),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'ready'),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'completed').gte('created_at', today),
-        supabase.from('order_items').select('product_name').gte('created_at', today).limit(1000),
-        supabase.from('orders').select('created_at, status').gte('created_at', today).limit(500),
-        supabase.from('orders').select('preparing_started_at, ready_at').eq('status', 'completed').gte('created_at', today).limit(500),
-        supabase.from('orders').select('*', { count: 'exact', head: true }).in('status', ['new', 'preparing']).lt('created_at', fifteenMinutesAgo),
-        supabase.from('orders').select('kitchen_station').in('status', ['new', 'preparing']).not('kitchen_station', 'is', null).limit(100),
-        supabase.from('kitchen_sessions').select('*', { count: 'exact', head: true }).is('active', true),
-      ])
+      // Load all stats in parallel with error handling
+      let activeOrders = 0, waitingOrders = 0, cookingOrders = 0, readyOrders = 0
+      let completedOrders = 0, delayedCount = 0, staffCount = 0
+      let orderItems: any[] = [], allOrders: any[] = [], prepTimeOrders: any[] = [], busyStations: any[] = []
+
+      try {
+        const results = await Promise.all([
+          supabase.from('orders').select('*', { count: 'exact', head: true }).in('status', ['new', 'preparing', 'ready']),
+          supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'new'),
+          supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'preparing'),
+          supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'ready'),
+          supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'completed').gte('created_at', today),
+          supabase.from('order_items').select('product_name').gte('created_at', today).limit(1000),
+          supabase.from('orders').select('created_at, status').gte('created_at', today).limit(500),
+          supabase.from('orders').select('preparing_started_at, ready_at').eq('status', 'completed').gte('created_at', today).limit(500),
+          supabase.from('orders').select('*', { count: 'exact', head: true }).in('status', ['new', 'preparing']).lt('created_at', fifteenMinutesAgo),
+          supabase.from('orders').select('kitchen_station').in('status', ['new', 'preparing']).not('kitchen_station', 'is', null).limit(100),
+          supabase.from('kitchen_sessions').select('*', { count: 'exact', head: true }).eq('active', true),
+        ])
+
+        activeOrders = results[0].count || 0
+        waitingOrders = results[1].count || 0
+        cookingOrders = results[2].count || 0
+        readyOrders = results[3].count || 0
+        completedOrders = results[4].count || 0
+        orderItems = results[5].data || []
+        allOrders = results[6].data || []
+        prepTimeOrders = results[7].data || []
+        delayedCount = results[8].count || 0
+        busyStations = results[9].data || []
+        staffCount = results[10].count || 0
+      } catch (e) {
+        console.error('Error loading dashboard stats:', e)
+      }
 
       // Calculate average prep time
       const prepTimes = (prepTimeOrders || [])

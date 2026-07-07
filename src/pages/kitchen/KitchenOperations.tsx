@@ -54,28 +54,36 @@ export default function KitchenOperations() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      // Load active kitchen sessions
-      const { data: sessionsData, error: sessionsError } = await supabase
-        .from('kitchen_sessions')
-        .select('*, kitchen_stations(name), users(name)')
-        .is('active', true)
-        .order('started_at', { ascending: false })
+      // Load active kitchen sessions - handle missing table gracefully
+      let sessionsData: KitchenSession[] = []
+      try {
+        const { data: sessionsDataResult, error: sessionsError } = await supabase
+          .from('kitchen_sessions')
+          .select('*, kitchen_stations(name), users(name)')
+          .eq('active', true)
+          .order('started_at', { ascending: false })
 
-      if (sessionsError) {
-        console.error('Error loading sessions:', sessionsError)
-      } else {
-        const formattedSessions = (sessionsData || []).map((session: any) => ({
-          id: session.id,
-          chef_id: session.chef_id,
-          chef_name: session.users?.name || 'Unknown',
-          station_id: session.station_id,
-          station_name: session.kitchen_stations?.name || 'Unassigned',
-          started_at: session.started_at,
-          orders_completed: session.orders_completed || 0,
-          active_orders: session.active_orders || 0,
-        }))
-        setSessions(formattedSessions)
+        if (sessionsError) {
+          // Suppress 404 errors for missing tables
+          if (sessionsError.code !== '404' && sessionsError.code !== '42P01') {
+            console.error('Error loading sessions:', sessionsError)
+          }
+        } else {
+          sessionsData = (sessionsDataResult || []).map((session: any) => ({
+            id: session.id,
+            chef_id: session.chef_id,
+            chef_name: session.users?.name || 'Unknown',
+            station_id: session.station_id,
+            station_name: session.kitchen_stations?.name || 'Unassigned',
+            started_at: session.started_at,
+            orders_completed: session.orders_completed || 0,
+            active_orders: session.active_orders || 0,
+          }))
+        }
+      } catch (e) {
+        console.error('Error loading sessions:', e)
       }
+      setSessions(sessionsData)
 
       // Load stats
       const today = new Date().toISOString().split('T')[0]
