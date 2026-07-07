@@ -77,7 +77,10 @@ export default function KitchenDisplaySystem() {
     preparing: 0,
     ready: 0,
     total: 0,
+    avgPrepTime: 0,
+    completedToday: 0,
   })
+  const [previousOrderCount, setPreviousOrderCount] = useState(0)
 
   useEffect(() => {
     console.log('KitchenDisplaySystem: user', user)
@@ -137,6 +140,19 @@ export default function KitchenDisplaySystem() {
 
       const { data: ordersData, error: ordersError } = await query
 
+      // Load completed orders for stats
+      let completedQuery = supabase
+        .from('orders')
+        .select('*')
+        .eq('status', 'completed')
+        .gte('created_at', new Date(new Date().setHours(0,0,0,0)).toISOString())
+
+      if (user?.tenant_id) {
+        completedQuery = completedQuery.eq('tenant_id', user.tenant_id)
+      }
+
+      const { data: completedOrders } = await completedQuery
+
       if (ordersError) {
         console.error('KitchenDisplaySystem: Orders error', ordersError)
       } else {
@@ -163,13 +179,38 @@ export default function KitchenDisplaySystem() {
         
         setOrders(ordersWithItems)
         
+        // Calculate average prep time from completed orders
+        const prepTimes = (completedOrders || [])
+          .filter(o => o.preparing_started_at && o.ready_at)
+          .map(o => {
+            const start = new Date(o.preparing_started_at!).getTime()
+            const end = new Date(o.ready_at!).getTime()
+            return (end - start) / 60000 // Convert to minutes
+          })
+        
+        const avgPrepTime = prepTimes.length > 0 
+          ? prepTimes.reduce((a, b) => a + b, 0) / prepTimes.length 
+          : 0
+        
         // Update stats
-        setStats({
+        const newStats = {
           new: ordersWithItems.filter(o => o.status === 'new').length,
           preparing: ordersWithItems.filter(o => o.status === 'preparing').length,
           ready: ordersWithItems.filter(o => o.status === 'ready').length,
           total: ordersWithItems.length,
-        })
+          avgPrepTime: Math.round(avgPrepTime),
+          completedToday: (completedOrders || []).length,
+        }
+        
+        setStats(newStats)
+        
+        // Play notification sound if new orders increased
+        if (newStats.new > previousOrderCount && previousOrderCount >= 0) {
+          playNotificationSound()
+          toast.success('New order received!')
+        }
+        
+        setPreviousOrderCount(newStats.new)
       }
     } catch (error) {
       console.error('KitchenDisplaySystem: Error loading data:', error)
@@ -305,6 +346,28 @@ export default function KitchenDisplaySystem() {
     if (!item.preparing_started_at) return false
     const elapsed = Date.now() - new Date(item.preparing_started_at).getTime()
     return elapsed > 10 * 60 * 1000 // 10 minutes
+  }
+
+  function playNotificationSound() {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+      
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+      
+      oscillator.frequency.value = 800
+      oscillator.type = 'sine'
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5)
+      
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + 0.5)
+    } catch (error) {
+      console.error('Error playing notification sound:', error)
+    }
   }
 
   const filteredOrders = orders.filter(order => {
@@ -480,8 +543,8 @@ export default function KitchenDisplaySystem() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
               </div>
             </div>
-            <div className="font-['Sora'] text-[26px] font-bold tracking-[-0.01em]">11m 20s</div>
-            <div className="text-[11.5px] font-semibold text-[#dc2626]">▼ 1m 05s faster</div>
+            <div className="font-['Sora'] text-[26px] font-bold tracking-[-0.01em]">{stats.avgPrepTime > 0 ? `${stats.avgPrepTime}m` : '--'}</div>
+            <div className="text-[11.5px] font-semibold text-[#5c5570]">Average today</div>
           </div>
           <div className="bg-white border border-[#e7e8ea] rounded-[14px] p-[16px_18px] shadow-[0_1px_2px_rgba(28,21,48,0.04),0_8px_24px_-12px_rgba(28,21,48,0.12)] flex flex-col gap-2.5">
             <div className="flex items-center justify-between">
@@ -517,54 +580,60 @@ export default function KitchenDisplaySystem() {
               <span className="text-[12px] font-bold text-[#1c1530] bg-[#f5f6f8] px-2.5 py-0.5 rounded-[100px]">{ordersByStatus.new.length}</span>
             </div>
             <div className="p-3.5 flex flex-col gap-3 overflow-y-auto">
-              {ordersByStatus.new.map(order => (
-                <div key={order.id} className="border border-[#e7e8ea] rounded-[12px] p-[14px_14px_12px_14px] relative bg-white">
-                  <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-[3px] bg-[#3d0f91]" />
-                  <div className="flex justify-between items-start mb-2.5 pl-2">
-                    <div>
-                      <div className="font-['Sora'] font-bold text-[15px]">#{order.id.slice(-4)}</div>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className={`text-[10.5px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] ${
-                          order.order_type === 'dine_in' ? 'bg-[#efeafc] text-[#3d0f91]' : order.order_type === 'takeaway' ? 'bg-[#eaf2f7] text-[#6d97b8]' : 'bg-[#fdf1e2] text-[#d97706]'
-                        }`}>
-                          {order.order_type === 'dine_in' ? 'Dine-in' : order.order_type === 'takeaway' ? 'Takeaway' : 'Delivery'}
-                        </span>
-                        <span className="text-[11.5px] text-[#1c1530] font-semibold">
-                          {order.order_type === 'dine_in' ? `Table ${order.table_number || 'N/A'}` : 'Pickup 2:15'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="w-[46px] h-[46px] rounded-full flex items-center justify-center relative flex-shrink-0">
-                      <span className="font-['Sora'] text-[11.5px] font-bold bg-white w-[36px] h-[36px] rounded-full flex items-center justify-center">
-                        {getOrderElapsedTime(order)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="pl-2 flex flex-col gap-1.5 mb-2.5">
-                    {order.items?.map(item => (
-                      <div key={item.id} className="flex gap-2 text-[13px]">
-                        <span className="font-bold text-[#3d0f91] min-w-[22px]">{item.quantity}×</span>
-                        <div>
-                          <span className="font-semibold text-[#1c1530]">{item.product_name}</span>
-                          {item.notes && <span className="block text-[11.5px] text-[#5c5570] italic mt-0.5">{item.notes}</span>}
+              {ordersByStatus.new.length === 0 ? (
+                <div className="text-center py-8 text-[#5c5570] text-[13px]">
+                  No new orders
+                </div>
+              ) : (
+                ordersByStatus.new.map(order => (
+                  <div key={order.id} className="border border-[#e7e8ea] rounded-[12px] p-[14px_14px_12px_14px] relative bg-white">
+                    <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-[3px] bg-[#3d0f91]" />
+                    <div className="flex justify-between items-start mb-2.5 pl-2">
+                      <div>
+                        <div className="font-['Sora'] font-bold text-[15px]">#{order.id.slice(-4)}</div>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span className={`text-[10.5px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] ${
+                            order.order_type === 'dine_in' ? 'bg-[#efeafc] text-[#3d0f91]' : order.order_type === 'takeaway' ? 'bg-[#eaf2f7] text-[#6d97b8]' : 'bg-[#fdf1e2] text-[#d97706]'
+                          }`}>
+                            {order.order_type === 'dine_in' ? 'Dine-in' : order.order_type === 'takeaway' ? 'Takeaway' : 'Delivery'}
+                          </span>
+                          <span className="text-[11.5px] text-[#1c1530] font-semibold">
+                            {order.order_type === 'dine_in' ? `Table ${order.table_number || 'N/A'}` : 'Pickup 2:15'}
+                          </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between pl-2 gap-2">
-                    <div className="flex gap-1 flex-wrap">
-                      <span className="text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] bg-[#f5f6f8] text-[#1c1530]">Grill</span>
-                      <span className="text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] bg-[#f5f6f8] text-[#1c1530]">Bar</span>
+                      <div className="w-[46px] h-[46px] rounded-full flex items-center justify-center relative flex-shrink-0">
+                        <span className="font-['Sora'] text-[11.5px] font-bold bg-white w-[36px] h-[36px] rounded-full flex items-center justify-center">
+                          {getOrderElapsedTime(order)}
+                        </span>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}
-                      className="rounded-[8px] px-3.5 py-2 text-[12.5px] font-bold border-none cursor-pointer font-['Inter'] bg-[#3d0f91] text-white hover:brightness-0.94"
-                    >
-                      Start Preparing
-                    </button>
+                    <div className="pl-2 flex flex-col gap-1.5 mb-2.5">
+                      {order.items?.map(item => (
+                        <div key={item.id} className="flex gap-2 text-[13px]">
+                          <span className="font-bold text-[#3d0f91] min-w-[22px]">{item.quantity}×</span>
+                          <div>
+                            <span className="font-semibold text-[#1c1530]">{item.product_name}</span>
+                            {item.notes && <span className="block text-[11.5px] text-[#5c5570] italic mt-0.5">{item.notes}</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between pl-2 gap-2">
+                      <div className="flex gap-1 flex-wrap">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] bg-[#f5f6f8] text-[#1c1530]">Grill</span>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] bg-[#f5f6f8] text-[#1c1530]">Bar</span>
+                      </div>
+                      <button
+                        onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}
+                        className="rounded-[8px] px-3.5 py-2 text-[12.5px] font-bold border-none cursor-pointer font-['Inter'] bg-[#3d0f91] text-white hover:brightness-0.94"
+                      >
+                        Start Preparing
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
@@ -578,53 +647,59 @@ export default function KitchenDisplaySystem() {
               <span className="text-[12px] font-bold text-[#1c1530] bg-[#f5f6f8] px-2.5 py-0.5 rounded-[100px]">{ordersByStatus.preparing.length}</span>
             </div>
             <div className="p-3.5 flex flex-col gap-3 overflow-y-auto">
-              {ordersByStatus.preparing.map(order => (
-                <div key={order.id} className="border border-[#e7e8ea] rounded-[12px] p-[14px_14px_12px_14px] relative bg-white">
-                  <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-[3px] bg-[#6d97b8]" />
-                  <div className="flex justify-between items-start mb-2.5 pl-2">
-                    <div>
-                      <div className="font-['Sora'] font-bold text-[15px]">#{order.id.slice(-4)}</div>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className={`text-[10.5px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] ${
-                          order.order_type === 'dine_in' ? 'bg-[#efeafc] text-[#3d0f91]' : order.order_type === 'takeaway' ? 'bg-[#eaf2f7] text-[#6d97b8]' : 'bg-[#fdf1e2] text-[#d97706]'
-                        }`}>
-                          {order.order_type === 'dine_in' ? 'Dine-in' : order.order_type === 'takeaway' ? 'Takeaway' : 'Delivery'}
-                        </span>
-                        <span className="text-[11.5px] text-[#1c1530] font-semibold">
-                          {order.order_type === 'dine_in' ? `Table ${order.table_number || 'N/A'}` : 'Pickup 2:15'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="w-[46px] h-[46px] rounded-full flex items-center justify-center relative flex-shrink-0">
-                      <span className="font-['Sora'] text-[11.5px] font-bold bg-white w-[36px] h-[36px] rounded-full flex items-center justify-center">
-                        {getOrderElapsedTime(order)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="pl-2 flex flex-col gap-1.5 mb-2.5">
-                    {order.items?.map(item => (
-                      <div key={item.id} className="flex gap-2 text-[13px]">
-                        <span className="font-bold text-[#3d0f91] min-w-[22px]">{item.quantity}×</span>
-                        <div>
-                          <span className="font-semibold text-[#1c1530]">{item.product_name}</span>
-                          {item.notes && <span className="block text-[11.5px] text-[#5c5570] italic mt-0.5">{item.notes}</span>}
+              {ordersByStatus.preparing.length === 0 ? (
+                <div className="text-center py-8 text-[#5c5570] text-[13px]">
+                  No orders preparing
+                </div>
+              ) : (
+                ordersByStatus.preparing.map(order => (
+                  <div key={order.id} className="border border-[#e7e8ea] rounded-[12px] p-[14px_14px_12px_14px] relative bg-white">
+                    <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-[3px] bg-[#6d97b8]" />
+                    <div className="flex justify-between items-start mb-2.5 pl-2">
+                      <div>
+                        <div className="font-['Sora'] font-bold text-[15px]">#{order.id.slice(-4)}</div>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span className={`text-[10.5px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] ${
+                            order.order_type === 'dine_in' ? 'bg-[#efeafc] text-[#3d0f91]' : order.order_type === 'takeaway' ? 'bg-[#eaf2f7] text-[#6d97b8]' : 'bg-[#fdf1e2] text-[#d97706]'
+                          }`}>
+                            {order.order_type === 'dine_in' ? 'Dine-in' : order.order_type === 'takeaway' ? 'Takeaway' : 'Delivery'}
+                          </span>
+                          <span className="text-[11.5px] text-[#1c1530] font-semibold">
+                            {order.order_type === 'dine_in' ? `Table ${order.table_number || 'N/A'}` : 'Pickup 2:15'}
+                          </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between pl-2 gap-2">
-                    <div className="flex gap-1 flex-wrap">
-                      <span className="text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] bg-[#f5f6f8] text-[#1c1530]">Grill</span>
+                      <div className="w-[46px] h-[46px] rounded-full flex items-center justify-center relative flex-shrink-0">
+                        <span className="font-['Sora'] text-[11.5px] font-bold bg-white w-[36px] h-[36px] rounded-full flex items-center justify-center">
+                          {getOrderElapsedTime(order)}
+                        </span>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => handleUpdateOrderStatus(order.id, 'ready')}
-                      className="rounded-[8px] px-3.5 py-2 text-[12.5px] font-bold border-none cursor-pointer font-['Inter'] bg-[#6d97b8] text-white hover:brightness-0.94"
-                    >
-                      Mark Ready
-                    </button>
+                    <div className="pl-2 flex flex-col gap-1.5 mb-2.5">
+                      {order.items?.map(item => (
+                        <div key={item.id} className="flex gap-2 text-[13px]">
+                          <span className="font-bold text-[#3d0f91] min-w-[22px]">{item.quantity}×</span>
+                          <div>
+                            <span className="font-semibold text-[#1c1530]">{item.product_name}</span>
+                            {item.notes && <span className="block text-[11.5px] text-[#5c5570] italic mt-0.5">{item.notes}</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between pl-2 gap-2">
+                      <div className="flex gap-1 flex-wrap">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] bg-[#f5f6f8] text-[#1c1530]">Grill</span>
+                      </div>
+                      <button
+                        onClick={() => handleUpdateOrderStatus(order.id, 'ready')}
+                        className="rounded-[8px] px-3.5 py-2 text-[12.5px] font-bold border-none cursor-pointer font-['Inter'] bg-[#6d97b8] text-white hover:brightness-0.94"
+                      >
+                        Mark Ready
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
@@ -638,51 +713,57 @@ export default function KitchenDisplaySystem() {
               <span className="text-[12px] font-bold text-[#1c1530] bg-[#f5f6f8] px-2.5 py-0.5 rounded-[100px]">{ordersByStatus.ready.length}</span>
             </div>
             <div className="p-3.5 flex flex-col gap-3 overflow-y-auto">
-              {ordersByStatus.ready.map(order => (
-                <div key={order.id} className="border border-[#e7e8ea] rounded-[12px] p-[14px_14px_12px_14px] relative bg-white">
-                  <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-[3px] bg-[#1a9a56]" />
-                  <div className="flex justify-between items-start mb-2.5 pl-2">
-                    <div>
-                      <div className="font-['Sora'] font-bold text-[15px]">#{order.id.slice(-4)}</div>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className={`text-[10.5px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] ${
-                          order.order_type === 'dine_in' ? 'bg-[#efeafc] text-[#3d0f91]' : order.order_type === 'takeaway' ? 'bg-[#eaf2f7] text-[#6d97b8]' : 'bg-[#fdf1e2] text-[#d97706]'
-                        }`}>
-                          {order.order_type === 'dine_in' ? 'Dine-in' : order.order_type === 'takeaway' ? 'Takeaway' : 'Delivery'}
-                        </span>
-                        <span className="text-[11.5px] text-[#1c1530] font-semibold">
-                          {order.order_type === 'dine_in' ? `Table ${order.table_number || 'N/A'}` : 'Waiting 4m'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="w-[46px] h-[46px] rounded-full flex items-center justify-center relative flex-shrink-0 bg-[#e6f6ec]">
-                      <span className="font-['Sora'] text-[11.5px] font-bold text-[#1a9a56]">✓</span>
-                    </div>
-                  </div>
-                  <div className="pl-2 flex flex-col gap-1.5 mb-2.5">
-                    {order.items?.map(item => (
-                      <div key={item.id} className="flex gap-2 text-[13px]">
-                        <span className="font-bold text-[#3d0f91] min-w-[22px]">{item.quantity}×</span>
-                        <div>
-                          <span className="font-semibold text-[#1c1530]">{item.product_name}</span>
-                          {item.notes && <span className="block text-[11.5px] text-[#5c5570] italic mt-0.5">{item.notes}</span>}
+              {ordersByStatus.ready.length === 0 ? (
+                <div className="text-center py-8 text-[#5c5570] text-[13px]">
+                  No orders ready
+                </div>
+              ) : (
+                ordersByStatus.ready.map(order => (
+                  <div key={order.id} className="border border-[#e7e8ea] rounded-[12px] p-[14px_14px_12px_14px] relative bg-white">
+                    <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-[3px] bg-[#1a9a56]" />
+                    <div className="flex justify-between items-start mb-2.5 pl-2">
+                      <div>
+                        <div className="font-['Sora'] font-bold text-[15px]">#{order.id.slice(-4)}</div>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span className={`text-[10.5px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] ${
+                            order.order_type === 'dine_in' ? 'bg-[#efeafc] text-[#3d0f91]' : order.order_type === 'takeaway' ? 'bg-[#eaf2f7] text-[#6d97b8]' : 'bg-[#fdf1e2] text-[#d97706]'
+                          }`}>
+                            {order.order_type === 'dine_in' ? 'Dine-in' : order.order_type === 'takeaway' ? 'Takeaway' : 'Delivery'}
+                          </span>
+                          <span className="text-[11.5px] text-[#1c1530] font-semibold">
+                            {order.order_type === 'dine_in' ? `Table ${order.table_number || 'N/A'}` : 'Waiting 4m'}
+                          </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between pl-2 gap-2">
-                    <div className="flex gap-1 flex-wrap">
-                      <span className="text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] bg-[#f5f6f8] text-[#1c1530]">Grill</span>
+                      <div className="w-[46px] h-[46px] rounded-full flex items-center justify-center relative flex-shrink-0 bg-[#e6f6ec]">
+                        <span className="font-['Sora'] text-[11.5px] font-bold text-[#1a9a56]">✓</span>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => handleUpdateOrderStatus(order.id, 'served')}
-                      className="rounded-[8px] px-3.5 py-2 text-[12.5px] font-bold border-none cursor-pointer font-['Inter'] bg-[#1a9a56] text-white hover:brightness-0.94"
-                    >
-                      Mark Served
-                    </button>
+                    <div className="pl-2 flex flex-col gap-1.5 mb-2.5">
+                      {order.items?.map(item => (
+                        <div key={item.id} className="flex gap-2 text-[13px]">
+                          <span className="font-bold text-[#3d0f91] min-w-[22px]">{item.quantity}×</span>
+                          <div>
+                            <span className="font-semibold text-[#1c1530]">{item.product_name}</span>
+                            {item.notes && <span className="block text-[11.5px] text-[#5c5570] italic mt-0.5">{item.notes}</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between pl-2 gap-2">
+                      <div className="flex gap-1 flex-wrap">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] bg-[#f5f6f8] text-[#1c1530]">Grill</span>
+                      </div>
+                      <button
+                        onClick={() => handleUpdateOrderStatus(order.id, 'served')}
+                        className="rounded-[8px] px-3.5 py-2 text-[12.5px] font-bold border-none cursor-pointer font-['Inter'] bg-[#1a9a56] text-white hover:brightness-0.94"
+                      >
+                        Mark Served
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </section>
