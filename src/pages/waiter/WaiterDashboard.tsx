@@ -52,13 +52,16 @@ interface Order {
   table_id: string
   status: 'new' | 'preparing' | 'ready' | 'served' | 'completed' | 'cancelled'
   total: number
+  subtotal: number
   payment_status: 'pending' | 'paid' | 'refunded'
   created_at: string
   items?: OrderItem[]
+  notes?: string
 }
 
 interface OrderItem {
   id: string
+  order_id?: string
   product_id: string
   product_name: string
   quantity: number
@@ -102,6 +105,32 @@ export default function WaiterDashboard() {
   const [discountReason, setDiscountReason] = useState('')
   const [splitType, setSplitType] = useState<'even' | 'items' | null>(null)
   const [splitGuests, setSplitGuests] = useState(2)
+  const [tableSearchQuery, setTableSearchQuery] = useState('')
+  const [tableStatusFilter, setTableStatusFilter] = useState<string>('all')
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>('active')
+  const [showMoveTableModal, setShowMoveTableModal] = useState(false)
+  const [showMergeTableModal, setShowMergeTableModal] = useState(false)
+  const [showEditOrderModal, setShowEditOrderModal] = useState(false)
+  const [selectedOrderForEdit, setSelectedOrderForEdit] = useState<Order | null>(null)
+  const [editOrderCart, setEditOrderCart] = useState<OrderItem[]>([])
+  const [orderNotes, setOrderNotes] = useState('')
+  const [completedOrders, setCompletedOrders] = useState<Order[]>([])
+  const [cancelledOrders, setCancelledOrders] = useState<Order[]>([])
+
+  // Filtered tables
+  const filteredTables = tables.filter(table => {
+    const matchesSearch = tableSearchQuery === '' || 
+      table.number.toString().includes(tableSearchQuery)
+    const matchesStatus = tableStatusFilter === 'all' || 
+      table.status === tableStatusFilter
+    return matchesSearch && matchesStatus
+  })
+
+  // Filtered orders based on status
+  const filteredOrders = orderStatusFilter === 'active' ? activeOrders :
+    orderStatusFilter === 'completed' ? completedOrders :
+    orderStatusFilter === 'cancelled' ? cancelledOrders :
+    activeOrders
 
   useEffect(() => {
     console.log('WaiterDashboard: user', user)
@@ -174,7 +203,7 @@ export default function WaiterDashboard() {
         .from('orders')
         .select('*, tables(number)')
         .eq('waiter_id', user?.id)
-        .in('status', ['new', 'preparing', 'ready'])
+        .in('status', ['new', 'preparing', 'ready', 'served'])
         .order('created_at', { ascending: false })
       
       if (user?.tenant_id) {
@@ -188,6 +217,48 @@ export default function WaiterDashboard() {
       } else {
         console.log('WaiterDashboard: Orders loaded', ordersData?.length)
         setActiveOrders(ordersData || [])
+      }
+
+      // Load completed orders
+      let completedOrdersQuery = supabase
+        .from('orders')
+        .select('*, tables(number)')
+        .eq('waiter_id', user?.id)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(50)
+      
+      if (user?.tenant_id) {
+        completedOrdersQuery = completedOrdersQuery.eq('tenant_id', user.tenant_id)
+      }
+      
+      const { data: completedData, error: completedError } = await completedOrdersQuery
+      
+      if (completedError) {
+        console.error('WaiterDashboard: Completed orders error', completedError)
+      } else {
+        setCompletedOrders(completedData || [])
+      }
+
+      // Load cancelled orders
+      let cancelledOrdersQuery = supabase
+        .from('orders')
+        .select('*, tables(number)')
+        .eq('waiter_id', user?.id)
+        .eq('status', 'cancelled')
+        .order('created_at', { ascending: false })
+        .limit(50)
+      
+      if (user?.tenant_id) {
+        cancelledOrdersQuery = cancelledOrdersQuery.eq('tenant_id', user.tenant_id)
+      }
+      
+      const { data: cancelledData, error: cancelledError } = await cancelledOrdersQuery
+      
+      if (cancelledError) {
+        console.error('WaiterDashboard: Cancelled orders error', cancelledError)
+      } else {
+        setCancelledOrders(cancelledData || [])
       }
     } catch (error) {
       console.error('WaiterDashboard: Error loading data:', error)
@@ -451,6 +522,155 @@ Thank you for dining with us!
     }
   }
 
+  async function handleMoveTable(targetTableId: string) {
+    if (!selectedTableForPanel) return
+
+    try {
+      // Update the order's table_id
+      await supabase
+        .from('orders')
+        .update({ table_id: targetTableId })
+        .eq('table_id', selectedTableForPanel.id)
+        .in('status', ['new', 'preparing', 'ready', 'served'])
+
+      // Mark original table as available
+      await supabase
+        .from('tables')
+        .update({ status: 'available' })
+        .eq('id', selectedTableForPanel.id)
+
+      // Mark target table as occupied
+      await supabase
+        .from('tables')
+        .update({ status: 'occupied' })
+        .eq('id', targetTableId)
+
+      toast.success('Table moved successfully')
+      setShowMoveTableModal(false)
+      loadData()
+    } catch (error) {
+      console.error('Error moving table:', error)
+      toast.error('Failed to move table')
+    }
+  }
+
+  async function handleMergeTables(targetTableId: string) {
+    if (!selectedTableForPanel) return
+
+    try {
+      // Get orders from source table
+      const { data: sourceOrders } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('table_id', selectedTableForPanel.id)
+        .in('status', ['new', 'preparing', 'ready', 'served'])
+
+      // Update all orders to target table
+      if (sourceOrders) {
+        for (const order of sourceOrders) {
+          await supabase
+            .from('orders')
+            .update({ table_id: targetTableId })
+            .eq('id', order.id)
+        }
+      }
+
+      // Mark source table as available
+      await supabase
+        .from('tables')
+        .update({ status: 'available' })
+        .eq('id', selectedTableForPanel.id)
+
+      toast.success('Tables merged successfully')
+      setShowMergeTableModal(false)
+      loadData()
+    } catch (error) {
+      console.error('Error merging tables:', error)
+      toast.error('Failed to merge tables')
+    }
+  }
+
+  async function handleEditOrder() {
+    if (!selectedOrderForEdit || editOrderCart.length === 0) {
+      toast.error('Please add items to the order')
+      return
+    }
+
+    try {
+      // Delete existing order items
+      await supabase
+        .from('order_items')
+        .delete()
+        .eq('order_id', selectedOrderForEdit.id)
+
+      // Insert new order items
+      for (const item of editOrderCart) {
+        await supabase.from('order_items').insert({
+          order_id: selectedOrderForEdit.id,
+          product_id: item.product_id,
+          product_name: item.product_name,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price,
+          notes: item.notes,
+          tenant_id: user?.tenant_id,
+        })
+      }
+
+      // Update order total
+      const total = editOrderCart.reduce((sum, item) => sum + item.total_price, 0)
+      await supabase
+        .from('orders')
+        .update({ 
+          subtotal: total,
+          total,
+          notes: orderNotes
+        })
+        .eq('id', selectedOrderForEdit.id)
+
+      toast.success('Order updated successfully')
+      setShowEditOrderModal(false)
+      setEditOrderCart([])
+      setOrderNotes('')
+      setSelectedOrderForEdit(null)
+      loadData()
+    } catch (error) {
+      console.error('Error editing order:', error)
+      toast.error('Failed to edit order')
+    }
+  }
+
+  function handleOpenEditOrderModal(order: Order) {
+    setSelectedOrderForEdit(order)
+    setOrderNotes((order as any).notes || '')
+    // Load order items
+    loadOrderItems(order.id)
+    setShowEditOrderModal(true)
+  }
+
+  async function loadOrderItems(orderId: string) {
+    try {
+      const { data: items } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', orderId)
+
+      if (items) {
+        setEditOrderCart(items.map(item => ({
+          id: item.id,
+          product_id: item.product_id,
+          product_name: item.product_name,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          total_price: item.total_price,
+          notes: item.notes,
+        })))
+      }
+    } catch (error) {
+      console.error('Error loading order items:', error)
+    }
+  }
+
   function handleOpenOrderModal(table: Table) {
     setSelectedTable(table)
     setCart([])
@@ -705,30 +925,54 @@ Thank you for dining with us!
               <div className="flex-1 p-[22px_32px] overflow-auto">
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-[16px] font-semibold font-['Outfit'] text-[#170438]">
-                    Dining Floor — {tables.length} tables
+                    Dining Floor — {filteredTables.length} tables
                   </div>
-                  <div className="flex gap-4">
-                    <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
-                      <div className="w-[9px] h-[9px] rounded-full bg-[#8FB9D6]" />
-                      Available
+                  <div className="flex gap-3">
+                    <div className="bg-[#F1F2F4] rounded-[10px] px-3 py-2 text-[13px] text-[#8A8E98] w-[180px] flex items-center gap-2">
+                      <Search className="w-4 h-4" />
+                      <input 
+                        type="text" 
+                        placeholder="Search tables..." 
+                        className="bg-transparent outline-none w-full"
+                        value={tableSearchQuery}
+                        onChange={(e) => setTableSearchQuery(e.target.value)}
+                      />
                     </div>
-                    <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
-                      <div className="w-[9px] h-[9px] rounded-full bg-[#B7D4E8]" />
-                      Occupied
-                    </div>
-                    <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
-                      <div className="w-[9px] h-[9px] rounded-full bg-[#E3922E]" />
-                      Needs attention
-                    </div>
-                    <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
-                      <div className="w-[9px] h-[9px] rounded-full bg-[#8A8E98]" />
-                      Bill requested
-                    </div>
+                    <select
+                      value={tableStatusFilter}
+                      onChange={(e) => setTableStatusFilter(e.target.value)}
+                      className="px-3 py-2 rounded-[10px] border border-[#DADCE1] text-[13px] text-[#170438] bg-white"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="available">Available</option>
+                      <option value="occupied">Occupied</option>
+                      <option value="reserved">Reserved</option>
+                      <option value="cleaning">Cleaning</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex gap-4 mb-4">
+                  <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
+                    <div className="w-[9px] h-[9px] rounded-full bg-[#8FB9D6]" />
+                    Available ({tablesByStatus.available.length})
+                  </div>
+                  <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
+                    <div className="w-[9px] h-[9px] rounded-full bg-[#B7D4E8]" />
+                    Occupied ({tablesByStatus.occupied.length})
+                  </div>
+                  <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
+                    <div className="w-[9px] h-[9px] rounded-full bg-[#E3922E]" />
+                    Reserved ({tablesByStatus.reserved.length})
+                  </div>
+                  <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
+                    <div className="w-[9px] h-[9px] rounded-full bg-[#8A8E98]" />
+                    Cleaning ({tablesByStatus.cleaning.length})
                   </div>
                 </div>
 
                 <div className="grid grid-cols-4 gap-4">
-                  {tables.map(table => (
+                  {filteredTables.map(table => (
                     <div
                       key={table.id}
                       onClick={() => {
@@ -742,8 +986,10 @@ Thank you for dining with us!
                           ? 'border-transparent shadow-[inset_0_0_0_1.5px_#DADCE1]' 
                           : table.status === 'occupied'
                           ? 'bg-gradient-to-br from-[#2C0F72] to-[#170438] text-white border-transparent'
-                          : table.call_bell_requested
+                          : table.status === 'reserved'
                           ? 'border-[#E3922E] border-2'
+                          : table.status === 'cleaning'
+                          ? 'border-[#8A8E98] border-2'
                           : 'border-[#B4B7C0] border-2'
                       } ${selectedTableForPanel?.id === table.id ? 'border-[#8FB9D6]' : ''} hover:-translate-y-0.5 hover:shadow-lg`}
                     >
@@ -767,13 +1013,10 @@ Thank you for dining with us!
                       {table.status === 'occupied' && (
                         <>
                           <div className="mt-[14px] text-[12px] opacity-85">
-                            Seated 14 min ago
-                          </div>
-                          <div className="font-['IBM_Plex_Mono'] font-bold text-[15px] mt-1.5">
-                            ${formatCurrency(Math.floor(Math.random() * 100) + 10)}
+                            Occupied
                           </div>
                           <div className="mt-3 text-[10.5px] uppercase tracking-wider font-bold text-[#B7D4E8]">
-                            Order in kitchen
+                            Active order
                           </div>
                         </>
                       )}
@@ -781,6 +1024,18 @@ Thank you for dining with us!
                       {table.status === 'available' && (
                         <div className="mt-12 text-[10.5px] uppercase tracking-wider font-bold text-[#6FA3C7]">
                           Available
+                        </div>
+                      )}
+                      
+                      {table.status === 'reserved' && (
+                        <div className="mt-12 text-[10.5px] uppercase tracking-wider font-bold text-[#E3922E]">
+                          Reserved
+                        </div>
+                      )}
+                      
+                      {table.status === 'cleaning' && (
+                        <div className="mt-12 text-[10.5px] uppercase tracking-wider font-bold text-[#8A8E98]">
+                          Cleaning
                         </div>
                       )}
                       
@@ -859,56 +1114,82 @@ Thank you for dining with us!
                   </div>
 
                   <div className="flex-1 p-[14px_22px] overflow-auto">
-                    {selectedTableForPanel.status === 'occupied' ? (
-                      <div className="space-y-3">
-                        <div className="flex justify-between py-3 border-b border-[#F1F2F4]">
-                          <div className="flex gap-2.5">
-                            <div className="w-6 h-6 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
-                              2
-                            </div>
-                            <div>
-                              <div className="text-[13.5px] font-semibold">Bariis Iskukaris</div>
-                              <div className="text-[11px] text-[#8A8E98]">No raisins</div>
-                            </div>
+                    {(() => {
+                      const tableOrders = activeOrders.filter(o => o.table_id === selectedTableForPanel.id)
+                      if (tableOrders.length === 0) {
+                        return (
+                          <div className="text-center text-[#8A8E98] py-8">
+                            {selectedTableForPanel.status === 'occupied' ? 'No active orders' : 'Table is available'}
                           </div>
-                          <div className="font-['IBM_Plex_Mono'] text-[13px] font-semibold text-[#170438]">
-                            $18.00
+                        )
+                      }
+                      return tableOrders.map(order => (
+                        <div key={order.id} className="space-y-3">
+                          <div className="text-[12px] font-semibold text-[#170438] uppercase tracking-wider">
+                            Order #{order.id.slice(0, 8)}
+                          </div>
+                          <div className="text-[11px] text-[#8A8E98]">
+                            {new Date(order.created_at).toLocaleTimeString()}
+                          </div>
+                          <div className="space-y-2">
+                            {(() => {
+                              const orderItems = cart.filter(item => item.order_id === order.id)
+                              if (orderItems.length === 0) {
+                                return <div className="text-[11px] text-[#8A8E98]">No items</div>
+                              }
+                              return orderItems.map(item => (
+                                <div key={item.id} className="flex justify-between py-2 border-b border-[#F1F2F4]">
+                                  <div className="flex gap-2.5">
+                                    <div className="w-6 h-6 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
+                                      {item.quantity}
+                                    </div>
+                                    <div>
+                                      <div className="text-[13.5px] font-semibold">{item.product_name}</div>
+                                      {item.notes && (
+                                        <div className="text-[11px] text-[#8A8E98]">{item.notes}</div>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="font-['IBM_Plex_Mono'] text-[13px] font-semibold text-[#170438]">
+                                    {formatCurrency(item.total_price)}
+                                  </div>
+                                </div>
+                              ))
+                            })()}
                           </div>
                         </div>
-                        <div className="flex justify-between py-3 border-b border-[#F1F2F4]">
-                          <div className="flex gap-2.5">
-                            <div className="w-6 h-6 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
-                              1
-                            </div>
-                            <div>
-                              <div className="text-[13.5px] font-semibold">Grilled Hilib Ari</div>
-                            </div>
-                          </div>
-                          <div className="font-['IBM_Plex_Mono'] text-[13px] font-semibold text-[#170438]">
-                            $12.50
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center text-[#8A8E98] py-8">
-                        Table is available
-                      </div>
-                    )}
+                      ))
+                    })()}
                   </div>
 
-                  <div className="p-[18px_22px_22px] border-t border-[#F1F2F4]">
-                    <div className="flex justify-between text-[13px] text-[#8A8E98] mb-1.5">
-                      <span>Subtotal</span>
-                      <span>$30.50</span>
-                    </div>
-                    <div className="flex justify-between text-[13px] text-[#8A8E98] mb-1.5">
-                      <span>Service (5%)</span>
-                      <span>$1.53</span>
-                    </div>
-                    <div className="flex justify-between font-['Outfit'] font-bold text-[18px] mt-2 mb-4">
-                      <span>Total</span>
-                      <span>$32.03</span>
-                    </div>
+                  <div className="p-[18px_22px_22px] border-t border-[#F1F2F4">
+                    {(() => {
+                      const tableOrders = activeOrders.filter(o => o.table_id === selectedTableForPanel.id)
+                      const subtotal = tableOrders.reduce((sum, order) => sum + order.subtotal, 0)
+                      const total = tableOrders.reduce((sum, order) => sum + order.total, 0)
+                      const serviceCharge = subtotal * 0.05
+                      
+                      if (tableOrders.length === 0) {
+                        return null
+                      }
+                      
+                      return (
+                        <>
+                          <div className="flex justify-between text-[13px] text-[#8A8E98] mb-1.5">
+                            <span>Subtotal</span>
+                            <span>{formatCurrency(subtotal)}</span>
+                          </div>
+                          <div className="flex justify-between text-[13px] text-[#8A8E98] mb-1.5">
+                            <span>Service (5%)</span>
+                            <span>{formatCurrency(serviceCharge)}</span>
+                          </div>
+                          <div className="flex justify-between font-['Outfit'] font-bold text-[18px] mt-2 mb-4">
+                            <span>Total</span>
+                            <span>{formatCurrency(total)}</span>
+                          </div>
+                        </>
+                      )
+                    })()}
                     <div className="flex gap-2">
                       <button 
                         onClick={() => handleOpenOrderModal(selectedTableForPanel)}
@@ -916,8 +1197,26 @@ Thank you for dining with us!
                       >
                         Add Items
                       </button>
-                      <button className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#170438] text-white">
-                        Print Bill
+                      <button 
+                        onClick={() => setShowMoveTableModal(true)}
+                        className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#F1F2F4] text-[#170438]"
+                      >
+                        Move
+                      </button>
+                      <button 
+                        onClick={() => setShowMergeTableModal(true)}
+                        className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#F1F2F4] text-[#170438]"
+                      >
+                        Merge
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setSelectedTableForPanel(tables.find(t => t.id === selectedTableForPanel.id))
+                          setActiveTab('bill')
+                        }}
+                        className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#170438] text-white"
+                      >
+                        Bill
                       </button>
                     </div>
                   </div>
@@ -929,10 +1228,38 @@ Thank you for dining with us!
           {activeTab === 'orders' && (
             <div className="flex-1 p-[22px_32px] overflow-auto">
               <div className="flex items-center justify-between mb-4">
-                <div className="text-[16px] font-semibold font-['Outfit'] text-[#170438]">
-                  Active Orders — {activeOrders.length}
+                <div className="flex items-center gap-4">
+                  <div className="text-[16px] font-semibold font-['Outfit'] text-[#170438]">
+                    Orders — {filteredOrders.length}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setOrderStatusFilter('active')}
+                      className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold ${
+                        orderStatusFilter === 'active' ? 'bg-[#170438] text-white' : 'bg-white border border-[#DADCE1] text-[#170438]'
+                      }`}
+                    >
+                      Active ({activeOrders.length})
+                    </button>
+                    <button
+                      onClick={() => setOrderStatusFilter('completed')}
+                      className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold ${
+                        orderStatusFilter === 'completed' ? 'bg-[#170438] text-white' : 'bg-white border border-[#DADCE1] text-[#170438]'
+                      }`}
+                    >
+                      Completed ({completedOrders.length})
+                    </button>
+                    <button
+                      onClick={() => setOrderStatusFilter('cancelled')}
+                      className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold ${
+                        orderStatusFilter === 'cancelled' ? 'bg-[#170438] text-white' : 'bg-white border border-[#DADCE1] text-[#170438]'
+                      }`}
+                    >
+                      Cancelled ({cancelledOrders.length})
+                    </button>
+                  </div>
                 </div>
-                {selectedTableForPanel && (
+                {selectedTableForPanel && orderStatusFilter === 'active' && (
                   <button
                     onClick={() => handleOpenOrderModal(selectedTableForPanel)}
                     className="flex items-center gap-2 px-4 py-2 rounded-[10px] bg-[#170438] text-white text-[13px] font-semibold hover:bg-[#2C0F72] transition-colors"
@@ -943,12 +1270,12 @@ Thank you for dining with us!
                 )}
               </div>
               <div className="space-y-3">
-                {activeOrders.length === 0 ? (
+                {filteredOrders.length === 0 ? (
                   <div className="text-center text-[#8A8E98] py-8">
-                    No active orders
+                    No {orderStatusFilter} orders
                   </div>
                 ) : (
-                  activeOrders.map(order => (
+                  filteredOrders.map(order => (
                     <div key={order.id} className="bg-white rounded-[16px] p-4 border border-[#DADCE1]">
                       <div className="flex justify-between items-start">
                         <div>
@@ -956,7 +1283,7 @@ Thank you for dining with us!
                             Table {(order as any).tables?.number || 'N/A'}
                           </div>
                           <div className="text-[12px] text-[#8A8E98] mt-1">
-                            {new Date(order.created_at).toLocaleTimeString()}
+                            {new Date(order.created_at).toLocaleString()}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -965,6 +1292,8 @@ Thank you for dining with us!
                             order.status === 'preparing' ? 'bg-[#39129A] text-white' :
                             order.status === 'ready' ? 'bg-[#2FAF7B] text-white' :
                             order.status === 'served' ? 'bg-[#6FA3C7] text-white' :
+                            order.status === 'completed' ? 'bg-[#8A8E98] text-white' :
+                            order.status === 'cancelled' ? 'bg-[#E1505C] text-white' :
                             'bg-[#8A8E98] text-white'
                           }`}>
                             {order.status}
@@ -982,6 +1311,14 @@ Thank you for dining with us!
                           >
                             <CheckCircle className="w-3.5 h-3.5" />
                             Mark Served
+                          </button>
+                        )}
+                        {(order.status === 'new' || order.status === 'preparing') && (
+                          <button
+                            onClick={() => handleOpenEditOrderModal(order)}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-[8px] bg-[#F1F2F4] text-[#170438] text-[12px] font-semibold hover:bg-[#E5E7EB] transition-colors"
+                          >
+                            Edit
                           </button>
                         )}
                         <button
@@ -1400,6 +1737,172 @@ Thank you for dining with us!
                     className="flex-1 py-2 rounded-lg text-[13px] font-semibold bg-[#170438] text-white"
                   >
                     Apply Discount
+                  </button>
+                </div>
+              </div>
+            </Modal>
+          )}
+
+          {/* Move Table Modal */}
+          {showMoveTableModal && selectedTableForPanel && (
+            <Modal
+              isOpen={showMoveTableModal}
+              onClose={() => setShowMoveTableModal(false)}
+              title="Move Table"
+              size="md"
+            >
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#170438] mb-2">
+                    Select Target Table
+                  </label>
+                  <select
+                    className="w-full px-4 py-2 rounded-lg border border-[#DADCE1] text-[13px]"
+                    onChange={(e) => handleMoveTable(e.target.value)}
+                  >
+                    <option value="">Select a table...</option>
+                    {tables.filter(t => t.id !== selectedTableForPanel.id && t.status === 'available').map(table => (
+                      <option key={table.id} value={table.id}>
+                        Table {table.number} ({table.capacity} seats)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowMoveTableModal(false)}
+                    className="flex-1 py-2 rounded-lg text-[13px] font-semibold bg-[#F1F2F4] text-[#170438]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </Modal>
+          )}
+
+          {/* Merge Table Modal */}
+          {showMergeTableModal && selectedTableForPanel && (
+            <Modal
+              isOpen={showMergeTableModal}
+              onClose={() => setShowMergeTableModal(false)}
+              title="Merge Tables"
+              size="md"
+            >
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#170438] mb-2">
+                    Select Target Table to Merge Into
+                  </label>
+                  <select
+                    className="w-full px-4 py-2 rounded-lg border border-[#DADCE1] text-[13px]"
+                    onChange={(e) => handleMergeTables(e.target.value)}
+                  >
+                    <option value="">Select a table...</option>
+                    {tables.filter(t => t.id !== selectedTableForPanel.id && t.status === 'occupied').map(table => (
+                      <option key={table.id} value={table.id}>
+                        Table {table.number} ({table.capacity} seats)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowMergeTableModal(false)}
+                    className="flex-1 py-2 rounded-lg text-[13px] font-semibold bg-[#F1F2F4] text-[#170438]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </Modal>
+          )}
+
+          {/* Edit Order Modal */}
+          {showEditOrderModal && selectedOrderForEdit && (
+            <Modal
+              isOpen={showEditOrderModal}
+              onClose={() => setShowEditOrderModal(false)}
+              title={`Edit Order - Table ${(selectedOrderForEdit as any).tables?.number}`}
+              size="xl"
+            >
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#170438] mb-2">
+                    Order Notes
+                  </label>
+                  <textarea
+                    value={orderNotes}
+                    onChange={(e) => setOrderNotes(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border border-[#DADCE1] text-[13px]"
+                    rows={2}
+                    placeholder="Add special instructions..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#170438] mb-2">
+                    Order Items
+                  </label>
+                  <div className="space-y-2 max-h-64 overflow-auto">
+                    {editOrderCart.map(item => (
+                      <div key={item.id} className="flex items-center justify-between bg-[#F1F2F4] rounded-lg p-2">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              const newCart = editOrderCart.map(i =>
+                                i.id === item.id ? { ...i, quantity: Math.max(1, i.quantity - 1), total_price: Math.max(1, i.quantity - 1) * i.unit_price } : i
+                              )
+                              setEditOrderCart(newCart)
+                            }}
+                            className="w-6 h-6 rounded bg-white flex items-center justify-center text-[#170438] font-bold"
+                          >
+                            -
+                          </button>
+                          <span className="font-['IBM_Plex_Mono'] font-bold text-[#170438]">{item.quantity}</span>
+                          <button
+                            onClick={() => {
+                              const newCart = editOrderCart.map(i =>
+                                i.id === item.id ? { ...i, quantity: i.quantity + 1, total_price: (i.quantity + 1) * i.unit_price } : i
+                              )
+                              setEditOrderCart(newCart)
+                            }}
+                            className="w-6 h-6 rounded bg-white flex items-center justify-center text-[#170438] font-bold"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <div className="flex-1 ml-2">
+                          <div className="text-[13px] font-semibold text-[#170438]">{item.product_name}</div>
+                        </div>
+                        <div className="font-['IBM_Plex_Mono'] font-bold text-[#170438]">
+                          {formatCurrency(item.total_price)}
+                        </div>
+                        <button
+                          onClick={() => setEditOrderCart(editOrderCart.filter(i => i.id !== item.id))}
+                          className="ml-2 text-[#E1505C]"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowEditOrderModal(false)
+                      setEditOrderCart([])
+                      setOrderNotes('')
+                      setSelectedOrderForEdit(null)
+                    }}
+                    className="flex-1 py-2 rounded-lg text-[13px] font-semibold bg-[#F1F2F4] text-[#170438]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleEditOrder}
+                    className="flex-1 py-2 rounded-lg text-[13px] font-semibold bg-[#170438] text-white"
+                  >
+                    Save Changes
                   </button>
                 </div>
               </div>
