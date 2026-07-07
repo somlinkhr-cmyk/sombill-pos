@@ -455,6 +455,13 @@ export default function KitchenDisplaySystem() {
             <div className="w-[38px] h-[38px] rounded-[10px] bg-[#3d0f91] text-white flex items-center justify-center font-['Sora'] font-bold text-[13px]">
               {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'KD'}
             </div>
+            <button
+              onClick={() => logout()}
+              className="flex items-center gap-2 px-4 py-2 rounded-[10px] border border-[#e7e8ea] bg-white text-[#1c1530] text-[13px] font-semibold hover:bg-[#f5f6f8] transition-all"
+            >
+              <LogOut width="16" height="16" />
+              Logout
+            </button>
           </div>
         </header>
 
