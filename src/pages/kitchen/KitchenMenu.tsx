@@ -69,11 +69,10 @@ export default function KitchenMenu() {
         const { data: itemsDataResult, error: itemsError } = await itemsQuery
 
         if (itemsError) {
-          console.error('Error loading menu items:', itemsError)
-          if (itemsError.code === '42P01') {
-            console.log('KitchenMenu: menu_items table does not exist')
+          // Suppress 404 errors for missing tables
+          if (itemsError.code !== '404' && itemsError.code !== '42P01') {
+            console.error('Error loading menu items:', itemsError)
           }
-          toast.error('Failed to load menu items')
         } else {
           itemsData = itemsDataResult || []
         }
@@ -92,9 +91,9 @@ export default function KitchenMenu() {
           .order('name', { ascending: true })
 
         if (categoriesError) {
-          console.error('Error loading categories:', categoriesError)
-          if (categoriesError.code === '42P01') {
-            console.log('KitchenMenu: menu_categories table does not exist')
+          // Suppress 404 errors for missing tables
+          if (categoriesError.code !== '404' && categoriesError.code !== '42P01') {
+            console.error('Error loading categories:', categoriesError)
           }
         } else {
           categoriesData = categoriesDataResult || []

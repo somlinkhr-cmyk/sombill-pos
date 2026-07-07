@@ -123,10 +123,9 @@ export default function KitchenDisplaySystem() {
         const { data: stationsDataResult, error: stationsError } = await stationsQuery
         
         if (stationsError) {
-          console.error('KitchenDisplaySystem: Stations error', stationsError)
-          // If table doesn't exist, use empty array
-          if (stationsError.code === '42P01') {
-            console.log('KitchenDisplaySystem: kitchen_stations table does not exist, using empty stations')
+          // Suppress 404 errors for missing tables
+          if (stationsError.code !== '404' && stationsError.code !== '42P01') {
+            console.error('KitchenDisplaySystem: Stations error', stationsError)
           }
         } else {
           console.log('KitchenDisplaySystem: Stations loaded', stationsDataResult?.length)
@@ -157,7 +156,10 @@ export default function KitchenDisplaySystem() {
         const { data: ordersDataResult, error: ordersError } = await query
         
         if (ordersError) {
-          console.error('KitchenDisplaySystem: Orders error', ordersError)
+          // Suppress 404 errors for missing tables
+          if (ordersError.code !== '404' && ordersError.code !== '42P01') {
+            console.error('KitchenDisplaySystem: Orders error', ordersError)
+          }
         } else {
           ordersData = ordersDataResult || []
         }

@@ -79,8 +79,11 @@ export default function KitchenOrders() {
         const { data: ordersDataResult, error } = await query
 
         if (error) {
-          console.error('Error loading orders:', error)
-          toast.error('Failed to load orders')
+          // Suppress 404 errors for missing tables
+          if (error.code !== '404' && error.code !== '42P01') {
+            console.error('Error loading orders:', error)
+            toast.error('Failed to load orders')
+          }
         } else {
           ordersData = ordersDataResult || []
         }
