@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
@@ -51,13 +51,7 @@ export default function KitchenMenu() {
   const [showItemDetail, setShowItemDetail] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
 
-  useEffect(() => {
-    loadData()
-    const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000)
-    return () => clearInterval(timeInterval)
-  }, [])
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true)
     try {
       // Load menu items
@@ -96,9 +90,15 @@ export default function KitchenMenu() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.tenant_id])
 
-  async function toggleAvailability(itemId: string, currentStatus: boolean) {
+  useEffect(() => {
+    loadData()
+    const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(timeInterval)
+  }, [loadData])
+
+  const toggleAvailability = useCallback(async (itemId: string, currentStatus: boolean) => {
     try {
       await supabase
         .from('menu_items')
@@ -111,21 +111,21 @@ export default function KitchenMenu() {
       console.error('Error updating availability:', error)
       toast.error('Failed to update availability')
     }
-  }
+  }, [loadData])
 
-  function getPrepTimeColor(minutes: number): string {
+  const getPrepTimeColor = useCallback((minutes: number): string => {
     if (minutes <= 5) return 'text-[#1a9a56]'
     if (minutes <= 10) return 'text-[#d97706]'
     return 'text-[#dc2626]'
-  }
+  }, [])
 
-  function getPrepTimeLabel(minutes: number): string {
+  const getPrepTimeLabel = useCallback((minutes: number): string => {
     if (minutes <= 5) return 'Fast'
     if (minutes <= 10) return 'Medium'
     return 'Long'
-  }
+  }, [])
 
-  const filteredItems = menuItems.filter(item => {
+  const filteredItems = useMemo(() => menuItems.filter(item => {
     const matchesSearch = 
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -133,15 +133,15 @@ export default function KitchenMenu() {
     const matchesCategory = selectedCategory === 'all' || item.category === selectedCategory
     
     return matchesSearch && matchesCategory
-  })
+  }), [menuItems, searchQuery, selectedCategory])
 
-  const categoryCounts = {
+  const categoryCounts = useMemo(() => ({
     all: menuItems.length,
     ...categories.reduce((acc, cat) => {
       acc[cat.name] = menuItems.filter(item => item.category === cat.name).length
       return acc
     }, {} as Record<string, number>),
-  }
+  }), [menuItems, categories])
 
   if (loading) {
     return (

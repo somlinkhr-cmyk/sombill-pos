@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
@@ -49,13 +49,7 @@ export default function KitchenDashboard() {
   })
   const [currentTime, setCurrentTime] = useState(new Date())
 
-  useEffect(() => {
-    loadData()
-    const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000)
-    return () => clearInterval(timeInterval)
-  }, [])
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true)
     try {
       const today = new Date().toISOString().split('T')[0]
@@ -169,7 +163,13 @@ export default function KitchenDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    loadData()
+    const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(timeInterval)
+  }, [loadData])
 
   if (loading) {
     return (
@@ -182,7 +182,7 @@ export default function KitchenDashboard() {
     )
   }
 
-  const maxHourlyOrders = Math.max(...stats.hourlyData.map(d => d.orders), 1)
+  const maxHourlyOrders = useMemo(() => Math.max(...stats.hourlyData.map(d => d.orders), 1), [stats.hourlyData])
 
   return (
     <div className="flex min-h-screen bg-[#f5f6f8] text-[#1c1530] font-['Inter']">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
@@ -60,13 +60,7 @@ export default function KitchenOrders() {
   const [showOrderDetail, setShowOrderDetail] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
 
-  useEffect(() => {
-    loadData()
-    const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000)
-    return () => clearInterval(timeInterval)
-  }, [])
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true)
     try {
       let query = supabase
@@ -107,9 +101,15 @@ export default function KitchenOrders() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.tenant_id])
 
-  async function handleUpdateOrderStatus(orderId: string, status: Order['status']) {
+  useEffect(() => {
+    loadData()
+    const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(timeInterval)
+  }, [loadData])
+
+  const handleUpdateOrderStatus = useCallback(async (orderId: string, status: Order['status']) => {
     try {
       const updateData: any = { status }
       
@@ -132,9 +132,9 @@ export default function KitchenOrders() {
       console.error('Error updating order status:', error)
       toast.error('Failed to update order status')
     }
-  }
+  }, [loadData])
 
-  async function handlePrintTicket(order: Order) {
+  const handlePrintTicket = useCallback(async (order: Order) => {
     try {
       toast.success('Printing kitchen ticket...')
       // In a real implementation, this would trigger a print dialog
@@ -143,24 +143,24 @@ export default function KitchenOrders() {
       console.error('Error printing ticket:', error)
       toast.error('Failed to print ticket')
     }
-  }
+  }, [])
 
-  function getOrderElapsedTime(order: Order): string {
+  const getOrderElapsedTime = useCallback((order: Order): string => {
     const startTime = order.preparing_started_at || order.created_at
     if (!startTime) return 'N/A'
     const elapsed = Date.now() - new Date(startTime).getTime()
     const minutes = Math.floor(elapsed / 60000)
     const seconds = Math.floor((elapsed % 60000) / 1000)
     return `${minutes}m ${seconds}s`
-  }
+  }, [])
 
-  function isOrderDelayed(order: Order): boolean {
+  const isOrderDelayed = useCallback((order: Order): boolean => {
     if (!order.created_at) return false
     const elapsed = Date.now() - new Date(order.created_at).getTime()
     return elapsed > 15 * 60 * 1000
-  }
+  }, [])
 
-  const filteredOrders = orders.filter(order => {
+  const filteredOrders = useMemo(() => orders.filter(order => {
     const matchesSearch = 
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.table_number?.toString().includes(searchQuery) ||
@@ -170,9 +170,9 @@ export default function KitchenOrders() {
     const matchesType = typeFilter === 'all' || order.order_type === typeFilter
     
     return matchesSearch && matchesStatus && matchesType
-  })
+  }), [orders, searchQuery, statusFilter, typeFilter])
 
-  const statusCounts = {
+  const statusCounts = useMemo(() => ({
     all: orders.length,
     new: orders.filter(o => o.status === 'new').length,
     preparing: orders.filter(o => o.status === 'preparing').length,
@@ -180,7 +180,7 @@ export default function KitchenOrders() {
     served: orders.filter(o => o.status === 'served').length,
     completed: orders.filter(o => o.status === 'completed').length,
     cancelled: orders.filter(o => o.status === 'cancelled').length,
-  }
+  }), [orders])
 
   if (loading) {
     return (

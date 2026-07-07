@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { formatCurrency } from '../../lib/utils'
@@ -58,12 +58,7 @@ export default function ManagerDashboard() {
   const [paymentMethodData, setPaymentMethodData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    loadDashboardStats()
-    setupRealtimeSubscriptions()
-  }, [])
-
-  async function loadDashboardStats() {
+  const loadDashboardStats = useCallback(async () => {
     try {
       const today = new Date().toISOString().split('T')[0]
       const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
@@ -300,7 +295,12 @@ export default function ManagerDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.tenant_id])
+
+  useEffect(() => {
+    loadDashboardStats()
+    setupRealtimeSubscriptions()
+  }, [loadDashboardStats])
 
   function setupRealtimeSubscriptions() {
     // Disabled for now - causing subscription errors

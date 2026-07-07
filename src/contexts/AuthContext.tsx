@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
 import { User, UserRole, Tenant, Subscription, SubscriptionPlan } from '../types'
 import { supabase } from '../lib/supabase'
 import toast from 'react-hot-toast'
@@ -209,13 +209,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  function hasPermission(permission: string): boolean {
+  const hasPermission = useCallback((permission: string): boolean => {
     if (!user) return false
     const userPermissions = PERMISSIONS[user.role] || []
     return userPermissions.includes(permission)
-  }
+  }, [user])
 
-  function hasModuleAccess(module: string): boolean {
+  const hasModuleAccess = useCallback((module: string): boolean => {
     // For demo purposes, return true if no plan is set
     if (!plan) return true
     
@@ -231,10 +231,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     const accessKey = moduleAccess[module]
     return accessKey ? (plan as any)[accessKey] : true
-  }
+  }, [plan])
+
+  const contextValue = useMemo(() => ({
+    user,
+    tenant,
+    subscription,
+    plan,
+    loading,
+    login,
+    logout,
+    hasPermission,
+    hasModuleAccess,
+  }), [user, tenant, subscription, plan, loading, login, logout, hasPermission, hasModuleAccess])
 
   return (
-    <AuthContext.Provider value={{ user, tenant, subscription, plan, loading, login, logout, hasPermission, hasModuleAccess }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   )

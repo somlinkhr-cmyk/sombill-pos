@@ -1,23 +1,38 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import LoginPage from './pages/LoginPage'
-import ManagerDashboard from './pages/manager/Dashboard'
-import CashierPOS from './pages/cashier/POS'
-import CashierOrders from './pages/cashier/Orders'
-import CashierTables from './pages/cashier/Tables'
-import CashierMenu from './pages/cashier/Menu'
-import CashierCustomers from './pages/cashier/Customers'
-import CashierMessages from './pages/cashier/Messages'
-import CashierSettings from './pages/cashier/Settings'
-import KitchenDisplay from './pages/kitchen/Display'
-import WaiterPanel from './pages/waiter/Panel'
-import NFCMenu from './pages/customer/NFCMenu'
-import WaiterDashboard from './pages/waiter/WaiterDashboard'
-import KitchenDisplaySystem from './pages/kitchen/KitchenDisplaySystem'
-import KitchenOperations from './pages/kitchen/KitchenOperations'
-import KitchenDashboard from './pages/kitchen/KitchenDashboard'
-import KitchenOrders from './pages/kitchen/KitchenOrders'
-import KitchenMenu from './pages/kitchen/KitchenMenu'
+
+// Lazy load all pages for code splitting
+const ManagerDashboard = lazy(() => import('./pages/manager/Dashboard'))
+const CashierPOS = lazy(() => import('./pages/cashier/POS'))
+const CashierOrders = lazy(() => import('./pages/cashier/Orders'))
+const CashierTables = lazy(() => import('./pages/cashier/Tables'))
+const CashierMenu = lazy(() => import('./pages/cashier/Menu'))
+const CashierCustomers = lazy(() => import('./pages/cashier/Customers'))
+const CashierMessages = lazy(() => import('./pages/cashier/Messages'))
+const CashierSettings = lazy(() => import('./pages/cashier/Settings'))
+const KitchenDisplay = lazy(() => import('./pages/kitchen/Display'))
+const WaiterPanel = lazy(() => import('./pages/waiter/Panel'))
+const NFCMenu = lazy(() => import('./pages/customer/NFCMenu'))
+const WaiterDashboard = lazy(() => import('./pages/waiter/WaiterDashboard'))
+const KitchenDisplaySystem = lazy(() => import('./pages/kitchen/KitchenDisplaySystem'))
+const KitchenOperations = lazy(() => import('./pages/kitchen/KitchenOperations'))
+const KitchenDashboard = lazy(() => import('./pages/kitchen/KitchenDashboard'))
+const KitchenOrders = lazy(() => import('./pages/kitchen/KitchenOrders'))
+const KitchenMenu = lazy(() => import('./pages/kitchen/KitchenMenu'))
+
+// Loading fallback component
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#f5f6f8]">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3d0f91] mx-auto mb-4"></div>
+        <p className="text-[#1c1530] text-sm">Loading...</p>
+      </div>
+    </div>
+  )
+}
 
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { user, loading } = useAuth()
@@ -78,158 +93,160 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<RoleRedirect />} />
-          
-          <Route
-            path="/manager"
-            element={
-              <ProtectedRoute allowedRoles={['manager']}>
-                <ManagerDashboard />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/cashier"
-            element={
-              <ProtectedRoute allowedRoles={['cashier', 'manager']}>
-                <CashierPOS />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cashier/orders"
-            element={
-              <ProtectedRoute allowedRoles={['cashier', 'manager']}>
-                <CashierOrders />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cashier/tables"
-            element={
-              <ProtectedRoute allowedRoles={['cashier', 'manager']}>
-                <CashierTables />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cashier/menu"
-            element={
-              <ProtectedRoute allowedRoles={['cashier', 'manager']}>
-                <CashierMenu />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cashier/customers"
-            element={
-              <ProtectedRoute allowedRoles={['cashier', 'manager']}>
-                <CashierCustomers />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cashier/messages"
-            element={
-              <ProtectedRoute allowedRoles={['cashier', 'manager']}>
-                <CashierMessages />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cashier/settings"
-            element={
-              <ProtectedRoute allowedRoles={['cashier', 'manager']}>
-                <CashierSettings />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/waiter"
-            element={
-              <ProtectedRoute allowedRoles={['waiter', 'manager']}>
-                <WaiterPanel />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/waiter/dashboard"
-            element={
-              <ProtectedRoute allowedRoles={['waiter', 'manager']}>
-                <WaiterDashboard />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/kitchen"
-            element={
-              <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
-                <KitchenDisplay />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/kitchen/system"
-            element={
-              <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
-                <KitchenDisplaySystem />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/kitchen/operations"
-            element={
-              <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
-                <KitchenOperations />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/kitchen/dashboard"
-            element={
-              <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
-                <KitchenDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/kitchen/orders"
-            element={
-              <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
-                <KitchenOrders />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/kitchen/menu"
-            element={
-              <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
-                <KitchenMenu />
-              </ProtectedRoute>
-            }
-          />
-          
-          <Route
-            path="/customer"
-            element={<NFCMenu />}
-          />
-          
-          <Route
-            path="/menu/:tableId"
-            element={<NFCMenu />}
-          />
-          <Route
-            path="/menu"
-            element={<NFCMenu />}
-          />
-          
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<RoleRedirect />} />
+            
+            <Route
+              path="/manager"
+              element={
+                <ProtectedRoute allowedRoles={['manager']}>
+                  <ManagerDashboard />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/cashier"
+              element={
+                <ProtectedRoute allowedRoles={['cashier', 'manager']}>
+                  <CashierPOS />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cashier/orders"
+              element={
+                <ProtectedRoute allowedRoles={['cashier', 'manager']}>
+                  <CashierOrders />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cashier/tables"
+              element={
+                <ProtectedRoute allowedRoles={['cashier', 'manager']}>
+                  <CashierTables />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cashier/menu"
+              element={
+                <ProtectedRoute allowedRoles={['cashier', 'manager']}>
+                  <CashierMenu />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cashier/customers"
+              element={
+                <ProtectedRoute allowedRoles={['cashier', 'manager']}>
+                  <CashierCustomers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cashier/messages"
+              element={
+                <ProtectedRoute allowedRoles={['cashier', 'manager']}>
+                  <CashierMessages />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cashier/settings"
+              element={
+                <ProtectedRoute allowedRoles={['cashier', 'manager']}>
+                  <CashierSettings />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/waiter"
+              element={
+                <ProtectedRoute allowedRoles={['waiter', 'manager']}>
+                  <WaiterPanel />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/waiter/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['waiter', 'manager']}>
+                  <WaiterDashboard />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/kitchen"
+              element={
+                <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
+                  <KitchenDisplay />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/kitchen/system"
+              element={
+                <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
+                  <KitchenDisplaySystem />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/kitchen/operations"
+              element={
+                <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
+                  <KitchenOperations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/kitchen/dashboard"
+              element={
+                <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
+                  <KitchenDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/kitchen/orders"
+              element={
+                <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
+                  <KitchenOrders />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/kitchen/menu"
+              element={
+                <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
+                  <KitchenMenu />
+                </ProtectedRoute>
+              }
+            />
+            
+            <Route
+              path="/customer"
+              element={<NFCMenu />}
+            />
+            
+            <Route
+              path="/menu/:tableId"
+              element={<NFCMenu />}
+            />
+            <Route
+              path="/menu"
+              element={<NFCMenu />}
+            />
+            
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </AuthProvider>
   )

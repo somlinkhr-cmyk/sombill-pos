@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
@@ -51,13 +51,7 @@ export default function KitchenOperations() {
   })
   const [currentTime, setCurrentTime] = useState(new Date())
 
-  useEffect(() => {
-    loadData()
-    const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000)
-    return () => clearInterval(timeInterval)
-  }, [])
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true)
     try {
       // Load active kitchen sessions
@@ -134,16 +128,22 @@ export default function KitchenOperations() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  function getSessionDuration(session: KitchenSession): string {
+  useEffect(() => {
+    loadData()
+    const timeInterval = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(timeInterval)
+  }, [loadData])
+
+  const getSessionDuration = useCallback((session: KitchenSession): string => {
     const start = new Date(session.started_at).getTime()
     const elapsed = Date.now() - start
     const hours = Math.floor(elapsed / 3600000)
     const minutes = Math.floor((elapsed % 3600000) / 60000)
     if (hours > 0) return `${hours}h ${minutes}m`
     return `${minutes}m`
-  }
+  }, [])
 
   if (loading) {
     return (

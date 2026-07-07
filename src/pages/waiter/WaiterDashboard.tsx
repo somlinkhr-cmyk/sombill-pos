@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
@@ -118,19 +118,19 @@ export default function WaiterDashboard() {
   const [cancelledOrders, setCancelledOrders] = useState<Order[]>([])
 
   // Filtered tables
-  const filteredTables = tables.filter(table => {
+  const filteredTables = useMemo(() => tables.filter(table => {
     const matchesSearch = tableSearchQuery === '' || 
       table.number.toString().includes(tableSearchQuery)
     const matchesStatus = tableStatusFilter === 'all' || 
       table.status === tableStatusFilter
     return matchesSearch && matchesStatus
-  })
+  }), [tables, tableSearchQuery, tableStatusFilter])
 
   // Filtered orders based on status
-  const filteredOrders = orderStatusFilter === 'active' ? activeOrders :
+  const filteredOrders = useMemo(() => orderStatusFilter === 'active' ? activeOrders :
     orderStatusFilter === 'completed' ? completedOrders :
     orderStatusFilter === 'cancelled' ? cancelledOrders :
-    activeOrders
+    activeOrders, [activeOrders, completedOrders, cancelledOrders, orderStatusFilter])
 
   useEffect(() => {
     console.log('WaiterDashboard: user', user)
