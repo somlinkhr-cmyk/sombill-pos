@@ -96,6 +96,12 @@ export default function WaiterDashboard() {
   const [activeOrders, setActiveOrders] = useState<Order[]>([])
   const [selectedTableForPanel, setSelectedTableForPanel] = useState<Table | null>(null)
   const [activeTab, setActiveTab] = useState('tables')
+  const [showStatusMenu, setShowStatusMenu] = useState(false)
+  const [showDiscountModal, setShowDiscountModal] = useState(false)
+  const [discountAmount, setDiscountAmount] = useState(0)
+  const [discountReason, setDiscountReason] = useState('')
+  const [splitType, setSplitType] = useState<'even' | 'items' | null>(null)
+  const [splitGuests, setSplitGuests] = useState(2)
 
   useEffect(() => {
     console.log('WaiterDashboard: user', user)
@@ -277,6 +283,171 @@ export default function WaiterDashboard() {
     } catch (error) {
       console.error('Error updating table status:', error)
       toast.error('Failed to update table status')
+    }
+  }
+
+  async function handleMarkOrderServed(orderId: string) {
+    try {
+      await supabase
+        .from('orders')
+        .update({ status: 'served' })
+        .eq('id', orderId)
+      
+      toast.success('Order marked as served')
+    } catch (error) {
+      console.error('Error marking order as served:', error)
+      toast.error('Failed to mark order as served')
+    }
+  }
+
+  async function handleSendToKitchen() {
+    if (!selectedTableForPanel || cart.length === 0) {
+      toast.error('Please add items to the order')
+      return
+    }
+
+    try {
+      const total = cart.reduce((sum, item) => sum + item.total_price, 0)
+      
+      const { data: order } = await supabase
+        .from('orders')
+        .insert({
+          table_id: selectedTableForPanel.id,
+          waiter_id: user?.id,
+          order_type: 'dine_in',
+          status: 'new',
+          subtotal: total,
+          total,
+          payment_status: 'pending',
+          tenant_id: user?.tenant_id,
+          source: 'waiter',
+        })
+        .select()
+        .single()
+
+      if (order) {
+        for (const item of cart) {
+          await supabase.from('order_items').insert({
+            order_id: order.id,
+            product_id: item.product_id,
+            product_name: item.product_name,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            total_price: item.total_price,
+            tenant_id: user?.tenant_id,
+          })
+        }
+
+        await supabase
+          .from('tables')
+          .update({ status: 'occupied' })
+          .eq('id', selectedTableForPanel.id)
+
+        toast.success('Order sent to kitchen successfully')
+        setCart([])
+        loadData()
+      }
+    } catch (error) {
+      console.error('Error sending order to kitchen:', error)
+      toast.error('Failed to send order to kitchen')
+    }
+  }
+
+  function handlePrintKitchenTicket() {
+    if (!selectedTableForPanel || cart.length === 0) {
+      toast.error('Please add items to the order')
+      return
+    }
+
+    const total = cart.reduce((sum, item) => sum + item.total_price, 0)
+    const ticketContent = `
+================================
+      KITCHEN TICKET
+================================
+Table: ${selectedTableForPanel.number}
+Date: ${new Date().toLocaleString()}
+Waiter: ${user?.name}
+================================
+${cart.map(item => `
+${item.quantity}x ${item.product_name}
+    ${formatCurrency(item.total_price)}
+${item.notes ? `Note: ${item.notes}` : ''}
+`).join('')}
+================================
+Total: ${formatCurrency(total)}
+================================
+    `
+    
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(`<pre>${ticketContent}</pre>`)
+      printWindow.document.close()
+      printWindow.print()
+    }
+  }
+
+  function handlePrintReceipt() {
+    if (!selectedTableForPanel) {
+      toast.error('Please select a table')
+      return
+    }
+
+    const receiptContent = `
+================================
+           SomBill
+      Restaurant POS
+================================
+Table: ${selectedTableForPanel.number}
+Date: ${new Date().toLocaleDateString()}
+Time: ${new Date().toLocaleTimeString()}
+Bill #: ${Math.floor(Math.random() * 10000)}
+Waiter: ${user?.name}
+================================
+ITEMS
+--------------------------------
+2x Bariis Iskukaris          $18.00
+   No raisins
+1x Grilled Hilib Ari         $12.50
+2x Fresh Lime Juice           $4.00
+================================
+Subtotal                     $34.50
+Tax (10%)                     $3.45
+Service (5%)                  $1.73
+${discountAmount > 0 ? `Discount (${discountReason})  -${formatCurrency(discountAmount)}` : ''}
+--------------------------------
+TOTAL                       ${formatCurrency(36.23 - discountAmount)}
+================================
+Thank you for dining with us!
+    `
+    
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(`<pre style="font-family: monospace; font-size: 12px; white-space: pre;">${receiptContent}</pre>`)
+      printWindow.document.close()
+      printWindow.print()
+    }
+  }
+
+  async function handleMarkAsPaid() {
+    if (!selectedTableForPanel) {
+      toast.error('Please select a table')
+      return
+    }
+
+    try {
+      await supabase
+        .from('tables')
+        .update({ status: 'available' })
+        .eq('id', selectedTableForPanel.id)
+
+      toast.success('Bill marked as paid. Table is now available.')
+      setSelectedTableForPanel(null)
+      setDiscountAmount(0)
+      setDiscountReason('')
+      loadData()
+    } catch (error) {
+      console.error('Error marking bill as paid:', error)
+      toast.error('Failed to mark bill as paid')
     }
   }
 
@@ -560,7 +731,12 @@ export default function WaiterDashboard() {
                   {tables.map(table => (
                     <div
                       key={table.id}
-                      onClick={() => setSelectedTableForPanel(table)}
+                      onClick={() => {
+                        setSelectedTableForPanel(table)
+                        if (table.status === 'occupied') {
+                          setActiveTab('orders')
+                        }
+                      }}
                       className={`relative bg-white rounded-[16px] p-[18px] cursor-pointer transition-all border-2 ${
                         table.status === 'available' 
                           ? 'border-transparent shadow-[inset_0_0_0_1.5px_#DADCE1]' 
@@ -622,11 +798,63 @@ export default function WaiterDashboard() {
               {selectedTableForPanel && (
                 <div className="w-[340px] bg-white border-l border-[#DADCE1] flex flex-col flex-shrink-0">
                   <div className="p-[22px_22px_14px] border-b border-[#F1F2F4]">
-                    <div className="font-['Outfit'] text-[19px] font-bold text-[#170438]">
-                      Table {selectedTableForPanel.number}
-                    </div>
-                    <div className="text-[12px] text-[#8A8E98] mt-1">
-                      {selectedTableForPanel.capacity} guests · {selectedTableForPanel.status === 'occupied' ? 'Opened 12:58 PM' : 'Available'} · Waiter: {user?.name}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-['Outfit'] text-[19px] font-bold text-[#170438]">
+                          Table {selectedTableForPanel.number}
+                        </div>
+                        <div className="text-[12px] text-[#8A8E98] mt-1">
+                          {selectedTableForPanel.capacity} guests · {selectedTableForPanel.status === 'occupied' ? 'Opened 12:58 PM' : 'Available'} · Waiter: {user?.name}
+                        </div>
+                      </div>
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowStatusMenu(!showStatusMenu)}
+                          className="w-8 h-8 rounded-lg bg-[#F1F2F4] flex items-center justify-center hover:bg-[#E5E7EB] transition-colors"
+                        >
+                          <Settings className="w-4 h-4 text-[#8A8E98]" />
+                        </button>
+                        {showStatusMenu && (
+                          <div className="absolute right-0 top-10 bg-white rounded-lg shadow-lg border border-[#DADCE1] py-2 w-40 z-20">
+                            <button
+                              onClick={() => {
+                                handleUpdateTableStatus(selectedTableForPanel.id, 'available')
+                                setShowStatusMenu(false)
+                              }}
+                              className="w-full px-4 py-2 text-left text-[13px] hover:bg-[#F1F2F4] text-[#170438]"
+                            >
+                              Mark Available
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleUpdateTableStatus(selectedTableForPanel.id, 'occupied')
+                                setShowStatusMenu(false)
+                              }}
+                              className="w-full px-4 py-2 text-left text-[13px] hover:bg-[#F1F2F4] text-[#170438]"
+                            >
+                              Mark Occupied
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleUpdateTableStatus(selectedTableForPanel.id, 'cleaning')
+                                setShowStatusMenu(false)
+                              }}
+                              className="w-full px-4 py-2 text-left text-[13px] hover:bg-[#F1F2F4] text-[#170438]"
+                            >
+                              Mark Cleaning
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleUpdateTableStatus(selectedTableForPanel.id, 'reserved')
+                                setShowStatusMenu(false)
+                              }}
+                              className="w-full px-4 py-2 text-left text-[13px] hover:bg-[#F1F2F4] text-[#170438]"
+                            >
+                              Mark Reserved
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -700,8 +928,19 @@ export default function WaiterDashboard() {
 
           {activeTab === 'orders' && (
             <div className="flex-1 p-[22px_32px] overflow-auto">
-              <div className="text-[16px] font-semibold font-['Outfit'] text-[#170438] mb-4">
-                Active Orders — {activeOrders.length}
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-[16px] font-semibold font-['Outfit'] text-[#170438]">
+                  Active Orders — {activeOrders.length}
+                </div>
+                {selectedTableForPanel && (
+                  <button
+                    onClick={() => handleOpenOrderModal(selectedTableForPanel)}
+                    className="flex items-center gap-2 px-4 py-2 rounded-[10px] bg-[#170438] text-white text-[13px] font-semibold hover:bg-[#2C0F72] transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    New Order
+                  </button>
+                )}
               </div>
               <div className="space-y-3">
                 {activeOrders.length === 0 ? (
@@ -725,6 +964,7 @@ export default function WaiterDashboard() {
                             order.status === 'new' ? 'bg-[#E3922E] text-white' :
                             order.status === 'preparing' ? 'bg-[#39129A] text-white' :
                             order.status === 'ready' ? 'bg-[#2FAF7B] text-white' :
+                            order.status === 'served' ? 'bg-[#6FA3C7] text-white' :
                             'bg-[#8A8E98] text-white'
                           }`}>
                             {order.status}
@@ -733,6 +973,27 @@ export default function WaiterDashboard() {
                             {formatCurrency(order.total)}
                           </span>
                         </div>
+                      </div>
+                      <div className="flex gap-2 mt-3">
+                        {order.status === 'ready' && (
+                          <button
+                            onClick={() => handleMarkOrderServed(order.id)}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-[8px] bg-[#2FAF7B] text-white text-[12px] font-semibold hover:bg-[#248E62] transition-colors"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Mark Served
+                          </button>
+                        )}
+                        <button
+                          onClick={() => {
+                            setSelectedTableForPanel(tables.find(t => t.id === order.table_id) || null)
+                            setActiveTab('bill')
+                          }}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-[8px] bg-[#F1F2F4] text-[#170438] text-[12px] font-semibold hover:bg-[#E5E7EB] transition-colors"
+                        >
+                          <Receipt className="w-3.5 h-3.5" />
+                          View Bill
+                        </button>
                       </div>
                     </div>
                   ))
@@ -785,9 +1046,26 @@ export default function WaiterDashboard() {
                 {filteredProducts.map(product => (
                   <button
                     key={product.id}
-                    onClick={() => selectedTableForPanel && handleOpenOrderModal(selectedTableForPanel)}
-                    className="bg-white rounded-[16px] p-4 text-left hover:shadow-lg transition-all border border-[#DADCE1]"
+                    onClick={() => {
+                      if (selectedTableForPanel) {
+                        handleAddToCart(product)
+                      } else {
+                        toast.error('Please select a table first')
+                      }
+                    }}
+                    disabled={!product.is_available}
+                    className={`bg-white rounded-[16px] p-4 text-left hover:shadow-lg transition-all border-2 relative ${
+                      !product.is_available ? 'opacity-50 cursor-not-allowed border-[#DADCE1]' : 'border-[#DADCE1] hover:border-[#8FB9D6]'
+                    }`}
                   >
+                    {!product.is_available && (
+                      <div className="absolute top-2 right-2 px-2 py-1 bg-[#8A8E98] text-white text-[10px] font-semibold rounded-full">
+                        Unavailable
+                      </div>
+                    )}
+                    <div className="w-full h-24 bg-[#F1F2F4] rounded-lg mb-3 flex items-center justify-center">
+                      <UtensilsCrossed className="w-8 h-8 text-[#8A8E98]" />
+                    </div>
                     <p className="font-semibold text-[#170438]">{product.name}</p>
                     {product.name_so && (
                       <p className="text-sm text-[#8A8E98]">{product.name_so}</p>
@@ -798,6 +1076,70 @@ export default function WaiterDashboard() {
                   </button>
                 ))}
               </div>
+
+              {/* Cart Panel */}
+              {selectedTableForPanel && cart.length > 0 && (
+                <div className="fixed bottom-0 right-0 w-[380px] bg-white border-t border-[#DADCE1] shadow-lg rounded-tl-2xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="font-['Outfit'] font-bold text-[#170438]">
+                      Current Order - Table {selectedTableForPanel.number}
+                    </div>
+                    <button
+                      onClick={() => setCart([])}
+                      className="text-[#E1505C] text-[12px] font-semibold hover:underline"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <div className="max-h-48 overflow-auto space-y-2 mb-3">
+                    {cart.map(item => (
+                      <div key={item.id} className="flex items-center justify-between bg-[#F1F2F4] rounded-lg p-2">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleUpdateQuantity(item.product_id, -1)}
+                            className="w-6 h-6 rounded bg-white flex items-center justify-center text-[#170438] font-bold"
+                          >
+                            -
+                          </button>
+                          <span className="font-['IBM_Plex_Mono'] font-bold text-[#170438]">{item.quantity}</span>
+                          <button
+                            onClick={() => handleUpdateQuantity(item.product_id, 1)}
+                            className="w-6 h-6 rounded bg-white flex items-center justify-center text-[#170438] font-bold"
+                          >
+                            +
+                          </button>
+                        </div>
+                        <div className="flex-1 ml-2">
+                          <div className="text-[13px] font-semibold text-[#170438]">{item.product_name}</div>
+                        </div>
+                        <div className="font-['IBM_Plex_Mono'] font-bold text-[#170438]">
+                          {formatCurrency(item.total_price)}
+                        </div>
+                        <button
+                          onClick={() => handleRemoveFromCart(item.product_id)}
+                          className="ml-2 text-[#E1505C]"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleSendToKitchen()}
+                      className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#2FAF7B] text-white hover:bg-[#248E62] transition-colors"
+                    >
+                      Send to Kitchen
+                    </button>
+                    <button
+                      onClick={() => handlePrintKitchenTicket()}
+                      className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#170438] text-white hover:bg-[#2C0F72] transition-colors"
+                    >
+                      Print Ticket
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -811,90 +1153,257 @@ export default function WaiterDashboard() {
                   Please select a table from the Tables section to view its bill
                 </div>
               ) : (
-                <div className="max-w-2xl mx-auto bg-white rounded-[16px] p-6 border border-[#DADCE1]">
-                  <div className="flex justify-between items-center mb-6">
-                    <div>
-                      <h2 className="font-['Outfit'] text-[24px] font-bold text-[#170438]">
-                        Table {selectedTableForPanel.number}
-                      </h2>
-                      <p className="text-[13px] text-[#8A8E98] mt-1">
-                        {new Date().toLocaleDateString()}
-                      </p>
+                <div className="max-w-2xl mx-auto">
+                  {/* Bill Header */}
+                  <div className="bg-white rounded-[16px] p-6 border border-[#DADCE1] mb-4">
+                    <div className="text-center mb-4">
+                      <div className="font-['Sora'] text-[28px] font-bold text-[#170438]">
+                        Som<span className="text-[#86abc9]">Bill</span>
+                      </div>
+                      <div className="text-[12px] text-[#8A8E98]">Restaurant POS System</div>
                     </div>
-                    <div className="font-['IBM_Plex_Mono'] text-[24px] font-bold text-[#39129A]">
-                      $32.03
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 mb-6">
-                    <div className="flex justify-between py-2 border-b border-[#F1F2F4]">
-                      <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
-                          2
+                    <div className="flex justify-between items-start border-t border-[#F1F2F4] pt-4">
+                      <div>
+                        <div className="font-['Outfit'] text-[18px] font-bold text-[#170438]">
+                          Table {selectedTableForPanel.number}
                         </div>
-                        <div>
-                          <div className="text-[14px] font-semibold text-[#170438]">Bariis Iskukaris</div>
-                          <div className="text-[11px] text-[#8A8E98]">No raisins</div>
+                        <div className="text-[12px] text-[#8A8E98] mt-1">
+                          {new Date().toLocaleDateString()} · {new Date().toLocaleTimeString()}
+                        </div>
+                        <div className="text-[12px] text-[#8A8E98]">
+                          Waiter: {user?.name}
                         </div>
                       </div>
-                      <div className="font-['IBM_Plex_Mono'] text-[14px] font-semibold text-[#170438]">
-                        $18.00
-                      </div>
-                    </div>
-                    <div className="flex justify-between py-2 border-b border-[#F1F2F4]">
-                      <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
-                          1
+                      <div className="text-right">
+                        <div className="text-[12px] text-[#8A8E98]">Bill #</div>
+                        <div className="font-['IBM_Plex_Mono'] text-[14px] font-bold text-[#170438]">
+                          {Math.floor(Math.random() * 10000)}
                         </div>
-                        <div>
-                          <div className="text-[14px] font-semibold text-[#170438]">Grilled Hilib Ari</div>
-                        </div>
-                      </div>
-                      <div className="font-['IBM_Plex_Mono'] text-[14px] font-semibold text-[#170438]">
-                        $12.50
-                      </div>
-                    </div>
-                    <div className="flex justify-between py-2 border-b border-[#F1F2F4]">
-                      <div className="flex gap-3">
-                        <div className="w-8 h-8 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
-                          2
-                        </div>
-                        <div>
-                          <div className="text-[14px] font-semibold text-[#170438]">Fresh Lime Juice</div>
-                        </div>
-                      </div>
-                      <div className="font-['IBM_Plex_Mono'] text-[14px] font-semibold text-[#170438]">
-                        $4.00
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-2 pt-4 border-t border-[#DADCE1]">
-                    <div className="flex justify-between text-[13px] text-[#8A8E98]">
-                      <span>Subtotal</span>
-                      <span>$34.50</span>
+                  {/* Bill Items */}
+                  <div className="bg-white rounded-[16px] p-6 border border-[#DADCE1] mb-4">
+                    <div className="space-y-3 mb-6">
+                      <div className="flex justify-between py-2 border-b border-[#F1F2F4]">
+                        <div className="flex gap-3">
+                          <div className="w-8 h-8 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
+                            2
+                          </div>
+                          <div>
+                            <div className="text-[14px] font-semibold text-[#170438]">Bariis Iskukaris</div>
+                            <div className="text-[11px] text-[#8A8E98]">No raisins</div>
+                          </div>
+                        </div>
+                        <div className="font-['IBM_Plex_Mono'] text-[14px] font-semibold text-[#170438]">
+                          $18.00
+                        </div>
+                      </div>
+                      <div className="flex justify-between py-2 border-b border-[#F1F2F4]">
+                        <div className="flex gap-3">
+                          <div className="w-8 h-8 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
+                            1
+                          </div>
+                          <div>
+                            <div className="text-[14px] font-semibold text-[#170438]">Grilled Hilib Ari</div>
+                          </div>
+                        </div>
+                        <div className="font-['IBM_Plex_Mono'] text-[14px] font-semibold text-[#170438]">
+                          $12.50
+                        </div>
+                      </div>
+                      <div className="flex justify-between py-2 border-b border-[#F1F2F4]">
+                        <div className="flex gap-3">
+                          <div className="w-8 h-8 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
+                            2
+                          </div>
+                          <div>
+                            <div className="text-[14px] font-semibold text-[#170438]">Fresh Lime Juice</div>
+                          </div>
+                        </div>
+                        <div className="font-['IBM_Plex_Mono'] text-[14px] font-semibold text-[#170438]">
+                          $4.00
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-[13px] text-[#8A8E98]">
-                      <span>Service (5%)</span>
-                      <span>$1.73</span>
-                    </div>
-                    <div className="flex justify-between font-['Outfit'] font-bold text-[20px] mt-4">
-                      <span>Total</span>
-                      <span>$36.23</span>
+
+                    <div className="space-y-2 pt-4 border-t border-[#DADCE1]">
+                      <div className="flex justify-between text-[13px] text-[#8A8E98]">
+                        <span>Subtotal</span>
+                        <span>$34.50</span>
+                      </div>
+                      <div className="flex justify-between text-[13px] text-[#8A8E98]">
+                        <span>Tax (10%)</span>
+                        <span>$3.45</span>
+                      </div>
+                      <div className="flex justify-between text-[13px] text-[#8A8E98]">
+                        <span>Service (5%)</span>
+                        <span>$1.73</span>
+                      </div>
+                      {discountAmount > 0 && (
+                        <div className="flex justify-between text-[13px] text-[#E1505C]">
+                          <span>Discount ({discountReason})</span>
+                          <span>-${formatCurrency(discountAmount)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-['Outfit'] font-bold text-[24px] mt-4 pt-4 border-t border-[#DADCE1]">
+                        <span>Total</span>
+                        <span className="text-[#39129A]">${formatCurrency(36.23 - discountAmount)}</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex gap-3 mt-6">
-                    <button className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#F1F2F4] text-[#170438]">
+                  {/* Actions */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <button
+                      onClick={() => setShowDiscountModal(true)}
+                      className="py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#F1F2F4] text-[#170438] hover:bg-[#E5E7EB] transition-colors"
+                    >
+                      Apply Discount
+                    </button>
+                    <button
+                      onClick={() => setSplitType('even')}
+                      className="py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#F1F2F4] text-[#170438] hover:bg-[#E5E7EB] transition-colors"
+                    >
                       Split Bill
                     </button>
-                    <button className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#170438] text-white">
-                      Mark as Paid
-                    </button>
+                  </div>
+
+                  {/* Split Options */}
+                  {splitType === 'even' && (
+                    <div className="bg-white rounded-[16px] p-6 border border-[#DADCE1] mb-4">
+                      <h3 className="font-['Outfit'] font-bold text-[#170438] mb-4">Split Evenly</h3>
+                      <div className="flex items-center gap-4 mb-4">
+                        <label className="text-[13px] text-[#8A8E98]">Number of guests:</label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="20"
+                          value={splitGuests}
+                          onChange={(e) => setSplitGuests(parseInt(e.target.value) || 2)}
+                          className="w-20 px-3 py-2 rounded-lg border border-[#DADCE1] text-[13px]"
+                        />
+                      </div>
+                      <div className="bg-[#F1F2F4] rounded-lg p-4">
+                        <div className="text-[13px] text-[#8A8E98] mb-1">Each person pays:</div>
+                        <div className="font-['IBM_Plex_Mono'] text-[20px] font-bold text-[#39129A]">
+                          {formatCurrency((36.23 - discountAmount) / splitGuests)}
+                        </div>
+                      </div>
+                      <div className="flex gap-2 mt-4">
+                        <button
+                          onClick={() => setSplitType(null)}
+                          className="flex-1 py-2 rounded-lg text-[13px] font-semibold bg-[#F1F2F4] text-[#170438]"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => setSplitType(null)}
+                          className="flex-1 py-2 rounded-lg text-[13px] font-semibold bg-[#170438] text-white"
+                        >
+                          Confirm Split
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Payment Actions */}
+                  <div className="bg-white rounded-[16px] p-6 border border-[#DADCE1]">
+                    <h3 className="font-['Outfit'] font-bold text-[#170438] mb-4">Payment</h3>
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <button className="py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#170438] text-white hover:bg-[#2C0F72] transition-colors">
+                        Cash
+                      </button>
+                      <button className="py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#39129A] text-white hover:bg-[#4B1FBE] transition-colors">
+                        Card
+                      </button>
+                      <button className="py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#F1F2F4] text-[#170438] hover:bg-[#E5E7EB] transition-colors">
+                        Split
+                      </button>
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handlePrintReceipt()}
+                        className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#F1F2F4] text-[#170438] hover:bg-[#E5E7EB] transition-colors"
+                      >
+                        Print Receipt
+                      </button>
+                      <button
+                        onClick={() => handleMarkAsPaid()}
+                        className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#2FAF7B] text-white hover:bg-[#248E62] transition-colors"
+                      >
+                        Mark as Paid
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
+          )}
+
+          {/* Discount Modal */}
+          {showDiscountModal && (
+            <Modal
+              isOpen={showDiscountModal}
+              onClose={() => setShowDiscountModal(false)}
+              title="Apply Discount"
+              size="md"
+            >
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#170438] mb-2">
+                    Discount Amount
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={discountAmount}
+                    onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
+                    className="w-full px-4 py-2 rounded-lg border border-[#DADCE1] text-[13px]"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[13px] font-semibold text-[#170438] mb-2">
+                    Reason (Required)
+                  </label>
+                  <select
+                    value={discountReason}
+                    onChange={(e) => setDiscountReason(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border border-[#DADCE1] text-[13px]"
+                  >
+                    <option value="">Select a reason...</option>
+                    <option value="Manager Comp">Manager Comp</option>
+                    <option value="Loyalty Discount">Loyalty Discount</option>
+                    <option value="Service Issue">Service Issue</option>
+                    <option value="Promotion">Promotion</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowDiscountModal(false)}
+                    className="flex-1 py-2 rounded-lg text-[13px] font-semibold bg-[#F1F2F4] text-[#170438]"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (discountReason) {
+                        setShowDiscountModal(false)
+                        toast.success('Discount applied')
+                      } else {
+                        toast.error('Please select a reason')
+                      }
+                    }}
+                    className="flex-1 py-2 rounded-lg text-[13px] font-semibold bg-[#170438] text-white"
+                  >
+                    Apply Discount
+                  </button>
+                </div>
+              </div>
+            </Modal>
           )}
         </div>
       </div>
