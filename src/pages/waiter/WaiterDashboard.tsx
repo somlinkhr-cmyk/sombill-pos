@@ -528,169 +528,372 @@ export default function WaiterDashboard() {
 
         {/* Content */}
         <div className="flex flex-1 min-h-0">
-          {/* Floor Grid */}
-          <div className="flex-1 p-[22px_32px] overflow-auto">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-[16px] font-semibold font-['Outfit'] text-[#170438]">
-                Dining Floor — {tables.length} tables
-              </div>
-              <div className="flex gap-4">
-                <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
-                  <div className="w-[9px] h-[9px] rounded-full bg-[#8FB9D6]" />
-                  Available
-                </div>
-                <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
-                  <div className="w-[9px] h-[9px] rounded-full bg-[#B7D4E8]" />
-                  Occupied
-                </div>
-                <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
-                  <div className="w-[9px] h-[9px] rounded-full bg-[#E3922E]" />
-                  Needs attention
-                </div>
-                <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
-                  <div className="w-[9px] h-[9px] rounded-full bg-[#8A8E98]" />
-                  Bill requested
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-4 gap-4">
-              {tables.map(table => (
-                <div
-                  key={table.id}
-                  onClick={() => setSelectedTableForPanel(table)}
-                  className={`relative bg-white rounded-[16px] p-[18px] cursor-pointer transition-all border-2 ${
-                    table.status === 'available' 
-                      ? 'border-transparent shadow-[inset_0_0_0_1.5px_#DADCE1]' 
-                      : table.status === 'occupied'
-                      ? 'bg-gradient-to-br from-[#2C0F72] to-[#170438] text-white border-transparent'
-                      : table.call_bell_requested
-                      ? 'border-[#E3922E] border-2'
-                      : 'border-[#B4B7C0] border-2'
-                  } ${selectedTableForPanel?.id === table.id ? 'border-[#8FB9D6]' : ''} hover:-translate-y-0.5 hover:shadow-lg`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-['IBM_Plex_Mono'] text-[20px] font-bold">
-                        T-{String(table.number).padStart(2, '0')}
-                      </div>
-                      <div className="text-[11px] opacity-70 mt-0.5">
-                        {table.capacity} seats
-                      </div>
-                    </div>
-                    <div className={`w-[9px] h-[9px] rounded-full mt-1 ${
-                      table.status === 'available' ? 'bg-[#8FB9D6]' :
-                      table.status === 'occupied' ? 'bg-[#B7D4E8]' :
-                      table.call_bell_requested ? 'bg-[#E3922E] animate-pulse-custom' :
-                      'bg-[#8A8E98]'
-                    }`} />
+          {activeTab === 'tables' && (
+            <>
+              {/* Floor Grid */}
+              <div className="flex-1 p-[22px_32px] overflow-auto">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-[16px] font-semibold font-['Outfit'] text-[#170438]">
+                    Dining Floor — {tables.length} tables
                   </div>
-                  
-                  {table.status === 'occupied' && (
-                    <>
-                      <div className="mt-[14px] text-[12px] opacity-85">
-                        Seated 14 min ago
-                      </div>
-                      <div className="font-['IBM_Plex_Mono'] font-bold text-[15px] mt-1.5">
-                        ${formatCurrency(Math.floor(Math.random() * 100) + 10)}
-                      </div>
-                      <div className="mt-3 text-[10.5px] uppercase tracking-wider font-bold text-[#B7D4E8]">
-                        Order in kitchen
-                      </div>
-                    </>
-                  )}
-                  
-                  {table.status === 'available' && (
-                    <div className="mt-12 text-[10.5px] uppercase tracking-wider font-bold text-[#6FA3C7]">
+                  <div className="flex gap-4">
+                    <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
+                      <div className="w-[9px] h-[9px] rounded-full bg-[#8FB9D6]" />
                       Available
                     </div>
-                  )}
-                  
-                  {table.call_bell_requested && (
-                    <div className="mt-12 text-[10.5px] uppercase tracking-wider font-bold text-[#E3922E]">
-                      Calling waiter
+                    <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
+                      <div className="w-[9px] h-[9px] rounded-full bg-[#B7D4E8]" />
+                      Occupied
                     </div>
-                  )}
+                    <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
+                      <div className="w-[9px] h-[9px] rounded-full bg-[#E3922E]" />
+                      Needs attention
+                    </div>
+                    <div className="flex items-center gap-2 text-[12px] text-[#8A8E98] font-medium">
+                      <div className="w-[9px] h-[9px] rounded-full bg-[#8A8E98]" />
+                      Bill requested
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Order Panel */}
-          {selectedTableForPanel && (
-            <div className="w-[340px] bg-white border-l border-[#DADCE1] flex flex-col flex-shrink-0">
-              <div className="p-[22px_22px_14px] border-b border-[#F1F2F4]">
-                <div className="font-['Outfit'] text-[19px] font-bold text-[#170438]">
-                  Table {selectedTableForPanel.number}
-                </div>
-                <div className="text-[12px] text-[#8A8E98] mt-1">
-                  {selectedTableForPanel.capacity} guests · {selectedTableForPanel.status === 'occupied' ? 'Opened 12:58 PM' : 'Available'} · Waiter: {user?.name}
+                <div className="grid grid-cols-4 gap-4">
+                  {tables.map(table => (
+                    <div
+                      key={table.id}
+                      onClick={() => setSelectedTableForPanel(table)}
+                      className={`relative bg-white rounded-[16px] p-[18px] cursor-pointer transition-all border-2 ${
+                        table.status === 'available' 
+                          ? 'border-transparent shadow-[inset_0_0_0_1.5px_#DADCE1]' 
+                          : table.status === 'occupied'
+                          ? 'bg-gradient-to-br from-[#2C0F72] to-[#170438] text-white border-transparent'
+                          : table.call_bell_requested
+                          ? 'border-[#E3922E] border-2'
+                          : 'border-[#B4B7C0] border-2'
+                      } ${selectedTableForPanel?.id === table.id ? 'border-[#8FB9D6]' : ''} hover:-translate-y-0.5 hover:shadow-lg`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-['IBM_Plex_Mono'] text-[20px] font-bold">
+                            T-{String(table.number).padStart(2, '0')}
+                          </div>
+                          <div className="text-[11px] opacity-70 mt-0.5">
+                            {table.capacity} seats
+                          </div>
+                        </div>
+                        <div className={`w-[9px] h-[9px] rounded-full mt-1 ${
+                          table.status === 'available' ? 'bg-[#8FB9D6]' :
+                          table.status === 'occupied' ? 'bg-[#B7D4E8]' :
+                          table.call_bell_requested ? 'bg-[#E3922E] animate-pulse-custom' :
+                          'bg-[#8A8E98]'
+                        }`} />
+                      </div>
+                      
+                      {table.status === 'occupied' && (
+                        <>
+                          <div className="mt-[14px] text-[12px] opacity-85">
+                            Seated 14 min ago
+                          </div>
+                          <div className="font-['IBM_Plex_Mono'] font-bold text-[15px] mt-1.5">
+                            ${formatCurrency(Math.floor(Math.random() * 100) + 10)}
+                          </div>
+                          <div className="mt-3 text-[10.5px] uppercase tracking-wider font-bold text-[#B7D4E8]">
+                            Order in kitchen
+                          </div>
+                        </>
+                      )}
+                      
+                      {table.status === 'available' && (
+                        <div className="mt-12 text-[10.5px] uppercase tracking-wider font-bold text-[#6FA3C7]">
+                          Available
+                        </div>
+                      )}
+                      
+                      {table.call_bell_requested && (
+                        <div className="mt-12 text-[10.5px] uppercase tracking-wider font-bold text-[#E3922E]">
+                          Calling waiter
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="flex-1 p-[14px_22px] overflow-auto">
-                {selectedTableForPanel.status === 'occupied' ? (
-                  <div className="space-y-3">
-                    <div className="flex justify-between py-3 border-b border-[#F1F2F4]">
-                      <div className="flex gap-2.5">
-                        <div className="w-6 h-6 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
+              {/* Order Panel */}
+              {selectedTableForPanel && (
+                <div className="w-[340px] bg-white border-l border-[#DADCE1] flex flex-col flex-shrink-0">
+                  <div className="p-[22px_22px_14px] border-b border-[#F1F2F4]">
+                    <div className="font-['Outfit'] text-[19px] font-bold text-[#170438]">
+                      Table {selectedTableForPanel.number}
+                    </div>
+                    <div className="text-[12px] text-[#8A8E98] mt-1">
+                      {selectedTableForPanel.capacity} guests · {selectedTableForPanel.status === 'occupied' ? 'Opened 12:58 PM' : 'Available'} · Waiter: {user?.name}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 p-[14px_22px] overflow-auto">
+                    {selectedTableForPanel.status === 'occupied' ? (
+                      <div className="space-y-3">
+                        <div className="flex justify-between py-3 border-b border-[#F1F2F4]">
+                          <div className="flex gap-2.5">
+                            <div className="w-6 h-6 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
+                              2
+                            </div>
+                            <div>
+                              <div className="text-[13.5px] font-semibold">Bariis Iskukaris</div>
+                              <div className="text-[11px] text-[#8A8E98]">No raisins</div>
+                            </div>
+                          </div>
+                          <div className="font-['IBM_Plex_Mono'] text-[13px] font-semibold text-[#170438]">
+                            $18.00
+                          </div>
+                        </div>
+                        <div className="flex justify-between py-3 border-b border-[#F1F2F4]">
+                          <div className="flex gap-2.5">
+                            <div className="w-6 h-6 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
+                              1
+                            </div>
+                            <div>
+                              <div className="text-[13.5px] font-semibold">Grilled Hilib Ari</div>
+                            </div>
+                          </div>
+                          <div className="font-['IBM_Plex_Mono'] text-[13px] font-semibold text-[#170438]">
+                            $12.50
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center text-[#8A8E98] py-8">
+                        Table is available
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="p-[18px_22px_22px] border-t border-[#F1F2F4]">
+                    <div className="flex justify-between text-[13px] text-[#8A8E98] mb-1.5">
+                      <span>Subtotal</span>
+                      <span>$30.50</span>
+                    </div>
+                    <div className="flex justify-between text-[13px] text-[#8A8E98] mb-1.5">
+                      <span>Service (5%)</span>
+                      <span>$1.53</span>
+                    </div>
+                    <div className="flex justify-between font-['Outfit'] font-bold text-[18px] mt-2 mb-4">
+                      <span>Total</span>
+                      <span>$32.03</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleOpenOrderModal(selectedTableForPanel)}
+                        className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#F1F2F4] text-[#170438]"
+                      >
+                        Add Items
+                      </button>
+                      <button className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#170438] text-white">
+                        Print Bill
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {activeTab === 'orders' && (
+            <div className="flex-1 p-[22px_32px] overflow-auto">
+              <div className="text-[16px] font-semibold font-['Outfit'] text-[#170438] mb-4">
+                Active Orders — {activeOrders.length}
+              </div>
+              <div className="space-y-3">
+                {activeOrders.length === 0 ? (
+                  <div className="text-center text-[#8A8E98] py-8">
+                    No active orders
+                  </div>
+                ) : (
+                  activeOrders.map(order => (
+                    <div key={order.id} className="bg-white rounded-[16px] p-4 border border-[#DADCE1]">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-['Outfit'] font-bold text-[#170438]">
+                            Table {(order as any).tables?.number || 'N/A'}
+                          </div>
+                          <div className="text-[12px] text-[#8A8E98] mt-1">
+                            {new Date(order.created_at).toLocaleTimeString()}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-3 py-1 rounded-full text-[11px] font-semibold ${
+                            order.status === 'new' ? 'bg-[#E3922E] text-white' :
+                            order.status === 'preparing' ? 'bg-[#39129A] text-white' :
+                            order.status === 'ready' ? 'bg-[#2FAF7B] text-white' :
+                            'bg-[#8A8E98] text-white'
+                          }`}>
+                            {order.status}
+                          </span>
+                          <span className="font-['IBM_Plex_Mono'] font-bold text-[#170438]">
+                            {formatCurrency(order.total)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'menu' && (
+            <div className="flex-1 p-[22px_32px] overflow-auto">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-[16px] font-semibold font-['Outfit'] text-[#170438]">
+                  Menu — {products.length} items
+                </div>
+                <div className="bg-[#F1F2F4] rounded-[10px] px-4 py-2 text-[13px] text-[#8A8E98] w-[220px] flex items-center gap-2">
+                  <Search className="w-4 h-4" />
+                  <input 
+                    type="text" 
+                    placeholder="Search menu items…" 
+                    className="bg-transparent outline-none w-full"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="mb-4 flex gap-2 overflow-x-auto pb-2">
+                <button
+                  onClick={() => setSelectedCategory('all')}
+                  className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
+                    selectedCategory === 'all' ? 'bg-[#170438] text-white' : 'bg-white border border-[#DADCE1] text-[#170438]'
+                  }`}
+                >
+                  All
+                </button>
+                {categories.map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`px-4 py-2 rounded-full text-sm whitespace-nowrap ${
+                      selectedCategory === cat.id ? 'bg-[#170438] text-white' : 'bg-white border border-[#DADCE1] text-[#170438]'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                {filteredProducts.map(product => (
+                  <button
+                    key={product.id}
+                    onClick={() => selectedTableForPanel && handleOpenOrderModal(selectedTableForPanel)}
+                    className="bg-white rounded-[16px] p-4 text-left hover:shadow-lg transition-all border border-[#DADCE1]"
+                  >
+                    <p className="font-semibold text-[#170438]">{product.name}</p>
+                    {product.name_so && (
+                      <p className="text-sm text-[#8A8E98]">{product.name_so}</p>
+                    )}
+                    <p className="text-lg font-bold text-[#39129A] mt-2">
+                      {formatCurrency(product.selling_price)}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'bill' && (
+            <div className="flex-1 p-[22px_32px] overflow-auto">
+              <div className="text-[16px] font-semibold font-['Outfit'] text-[#170438] mb-4">
+                Bill — Select a table to view bill
+              </div>
+              {!selectedTableForPanel ? (
+                <div className="text-center text-[#8A8E98] py-8">
+                  Please select a table from the Tables section to view its bill
+                </div>
+              ) : (
+                <div className="max-w-2xl mx-auto bg-white rounded-[16px] p-6 border border-[#DADCE1]">
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h2 className="font-['Outfit'] text-[24px] font-bold text-[#170438]">
+                        Table {selectedTableForPanel.number}
+                      </h2>
+                      <p className="text-[13px] text-[#8A8E98] mt-1">
+                        {new Date().toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="font-['IBM_Plex_Mono'] text-[24px] font-bold text-[#39129A]">
+                      $32.03
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 mb-6">
+                    <div className="flex justify-between py-2 border-b border-[#F1F2F4]">
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
                           2
                         </div>
                         <div>
-                          <div className="text-[13.5px] font-semibold">Bariis Iskukaris</div>
+                          <div className="text-[14px] font-semibold text-[#170438]">Bariis Iskukaris</div>
                           <div className="text-[11px] text-[#8A8E98]">No raisins</div>
                         </div>
                       </div>
-                      <div className="font-['IBM_Plex_Mono'] text-[13px] font-semibold text-[#170438]">
+                      <div className="font-['IBM_Plex_Mono'] text-[14px] font-semibold text-[#170438]">
                         $18.00
                       </div>
                     </div>
-                    <div className="flex justify-between py-3 border-b border-[#F1F2F4]">
-                      <div className="flex gap-2.5">
-                        <div className="w-6 h-6 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
+                    <div className="flex justify-between py-2 border-b border-[#F1F2F4]">
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
                           1
                         </div>
                         <div>
-                          <div className="text-[13.5px] font-semibold">Grilled Hilib Ari</div>
+                          <div className="text-[14px] font-semibold text-[#170438]">Grilled Hilib Ari</div>
                         </div>
                       </div>
-                      <div className="font-['IBM_Plex_Mono'] text-[13px] font-semibold text-[#170438]">
+                      <div className="font-['IBM_Plex_Mono'] text-[14px] font-semibold text-[#170438]">
                         $12.50
                       </div>
                     </div>
+                    <div className="flex justify-between py-2 border-b border-[#F1F2F4]">
+                      <div className="flex gap-3">
+                        <div className="w-8 h-8 rounded-[7px] bg-[#EEF5FA] text-[#39129A] flex items-center justify-center font-['IBM_Plex_Mono'] text-[12px] font-bold flex-shrink-0">
+                          2
+                        </div>
+                        <div>
+                          <div className="text-[14px] font-semibold text-[#170438]">Fresh Lime Juice</div>
+                        </div>
+                      </div>
+                      <div className="font-['IBM_Plex_Mono'] text-[14px] font-semibold text-[#170438]">
+                        $4.00
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <div className="text-center text-[#8A8E98] py-8">
-                    Table is available
-                  </div>
-                )}
-              </div>
 
-              <div className="p-[18px_22px_22px] border-t border-[#F1F2F4]">
-                <div className="flex justify-between text-[13px] text-[#8A8E98] mb-1.5">
-                  <span>Subtotal</span>
-                  <span>$30.50</span>
+                  <div className="space-y-2 pt-4 border-t border-[#DADCE1]">
+                    <div className="flex justify-between text-[13px] text-[#8A8E98]">
+                      <span>Subtotal</span>
+                      <span>$34.50</span>
+                    </div>
+                    <div className="flex justify-between text-[13px] text-[#8A8E98]">
+                      <span>Service (5%)</span>
+                      <span>$1.73</span>
+                    </div>
+                    <div className="flex justify-between font-['Outfit'] font-bold text-[20px] mt-4">
+                      <span>Total</span>
+                      <span>$36.23</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 mt-6">
+                    <button className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#F1F2F4] text-[#170438]">
+                      Split Bill
+                    </button>
+                    <button className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#170438] text-white">
+                      Mark as Paid
+                    </button>
+                  </div>
                 </div>
-                <div className="flex justify-between text-[13px] text-[#8A8E98] mb-1.5">
-                  <span>Service (5%)</span>
-                  <span>$1.53</span>
-                </div>
-                <div className="flex justify-between font-['Outfit'] font-bold text-[18px] mt-2 mb-4">
-                  <span>Total</span>
-                  <span>$32.03</span>
-                </div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => handleOpenOrderModal(selectedTableForPanel)}
-                    className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#F1F2F4] text-[#170438]"
-                  >
-                    Add Items
-                  </button>
-                  <button className="flex-1 py-3 rounded-[11px] font-bold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#170438] text-white">
-                    Print Bill
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
           )}
         </div>
