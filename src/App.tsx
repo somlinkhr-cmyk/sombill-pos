@@ -36,6 +36,7 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
       cashier: '/cashier',
       waiter: '/waiter/dashboard',
       kitchen: '/kitchen/system',
+      customer: '/menu',
     }
     return <Navigate to={roleRoutes[user.role] || '/login'} replace />
   }
@@ -63,6 +64,7 @@ function RoleRedirect() {
     cashier: '/cashier',
     waiter: '/waiter/dashboard',
     kitchen: '/kitchen/system',
+    customer: '/menu',
   }
 
   return <Navigate to={roleRoutes[user.role] || '/login'} replace />
@@ -172,6 +174,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
                 <KitchenDisplaySystem />
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/customer"
+            element={
+              <ProtectedRoute allowedRoles={['customer']}>
+                <NFCMenu />
               </ProtectedRoute>
             }
           />

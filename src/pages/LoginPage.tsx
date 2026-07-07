@@ -20,6 +20,7 @@ export default function LoginPage() {
         cashier: '/cashier',
         waiter: '/waiter',
         kitchen: '/kitchen',
+        customer: '/customer',
       }
       navigate(roleRoutes[user.role] || '/manager', { replace: true })
     }
@@ -145,6 +146,7 @@ export default function LoginPage() {
               { id: 'cashier', label: 'Cashier' },
               { id: 'waiter', label: 'Waiter' },
               { id: 'kitchen', label: 'Kitchen' },
+              { id: 'customer', label: 'Customer' },
               { id: 'admin', label: 'Admin' },
             ].map((r) => (
               <button
