@@ -180,11 +180,7 @@ function App() {
           
           <Route
             path="/customer"
-            element={
-              <ProtectedRoute allowedRoles={['customer']}>
-                <NFCMenu />
-              </ProtectedRoute>
-            }
+            element={<NFCMenu />}
           />
           
           <Route
