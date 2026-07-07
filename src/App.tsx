@@ -14,6 +14,10 @@ import WaiterPanel from './pages/waiter/Panel'
 import NFCMenu from './pages/customer/NFCMenu'
 import WaiterDashboard from './pages/waiter/WaiterDashboard'
 import KitchenDisplaySystem from './pages/kitchen/KitchenDisplaySystem'
+import KitchenOperations from './pages/kitchen/KitchenOperations'
+import KitchenDashboard from './pages/kitchen/KitchenDashboard'
+import KitchenOrders from './pages/kitchen/KitchenOrders'
+import KitchenMenu from './pages/kitchen/KitchenMenu'
 
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { user, loading } = useAuth()
@@ -174,6 +178,38 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
                 <KitchenDisplaySystem />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/kitchen/operations"
+            element={
+              <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
+                <KitchenOperations />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/kitchen/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
+                <KitchenDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/kitchen/orders"
+            element={
+              <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
+                <KitchenOrders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/kitchen/menu"
+            element={
+              <ProtectedRoute allowedRoles={['kitchen', 'manager']}>
+                <KitchenMenu />
               </ProtectedRoute>
             }
           />
