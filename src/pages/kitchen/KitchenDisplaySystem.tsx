@@ -112,59 +112,84 @@ export default function KitchenDisplaySystem() {
     try {
       console.log('KitchenDisplaySystem: Loading data...')
       
-      // Load kitchen stations - filter by tenant_id if available, otherwise load all
-      let stationsQuery = supabase.from('kitchen_stations').select('*').eq('is_active', true).order('display_order')
-      if (user?.tenant_id) {
-        stationsQuery = stationsQuery.eq('tenant_id', user.tenant_id)
+      // Load kitchen stations - handle missing table gracefully
+      let stationsData: KitchenStation[] = []
+      try {
+        let stationsQuery = supabase.from('kitchen_stations').select('*').eq('is_active', true).order('display_order')
+        if (user?.tenant_id) {
+          stationsQuery = stationsQuery.eq('tenant_id', user.tenant_id)
+        }
+        
+        const { data: stationsDataResult, error: stationsError } = await stationsQuery
+        
+        if (stationsError) {
+          console.error('KitchenDisplaySystem: Stations error', stationsError)
+          // If table doesn't exist, use empty array
+          if (stationsError.code === '42P01') {
+            console.log('KitchenDisplaySystem: kitchen_stations table does not exist, using empty stations')
+          }
+        } else {
+          console.log('KitchenDisplaySystem: Stations loaded', stationsDataResult?.length)
+          stationsData = stationsDataResult || []
+        }
+      } catch (e) {
+        console.error('KitchenDisplaySystem: Stations query failed', e)
       }
-      
-      const { data: stationsData, error: stationsError } = await stationsQuery
-      
-      if (stationsError) {
-        console.error('KitchenDisplaySystem: Stations error', stationsError)
-      } else {
-        console.log('KitchenDisplaySystem: Stations loaded', stationsData?.length)
-        setStations(stationsData || [])
+      setStations(stationsData)
+
+      // Load orders - handle missing tables gracefully
+      let ordersData: any[] = []
+      try {
+        let query = supabase
+          .from('orders')
+          .select('*, tables(number), users(name)')
+          .in('status', ['new', 'preparing', 'ready'])
+          .order('created_at', { ascending: false })
+
+        if (user?.tenant_id) {
+          query = query.eq('tenant_id', user.tenant_id)
+        }
+
+        if (selectedStation !== 'all') {
+          query = query.eq('kitchen_station', selectedStation)
+        }
+
+        const { data: ordersDataResult, error: ordersError } = await query
+        
+        if (ordersError) {
+          console.error('KitchenDisplaySystem: Orders error', ordersError)
+        } else {
+          ordersData = ordersDataResult || []
+        }
+      } catch (e) {
+        console.error('KitchenDisplaySystem: Orders query failed', e)
       }
-
-      // Load orders - filter by tenant_id if available, otherwise load all
-      let query = supabase
-        .from('orders')
-        .select('*, tables(number), users(name)')
-        .in('status', ['new', 'preparing', 'ready'])
-        .order('created_at', { ascending: false })
-
-      if (user?.tenant_id) {
-        query = query.eq('tenant_id', user.tenant_id)
-      }
-
-      if (selectedStation !== 'all') {
-        query = query.eq('kitchen_station', selectedStation)
-      }
-
-      const { data: ordersData, error: ordersError } = await query
 
       // Load completed orders for stats
-      let completedQuery = supabase
-        .from('orders')
-        .select('*')
-        .eq('status', 'completed')
-        .gte('created_at', new Date(new Date().setHours(0,0,0,0)).toISOString())
+      let completedOrders: any[] = []
+      try {
+        let completedQuery = supabase
+          .from('orders')
+          .select('*')
+          .eq('status', 'completed')
+          .gte('created_at', new Date(new Date().setHours(0,0,0,0)).toISOString())
 
-      if (user?.tenant_id) {
-        completedQuery = completedQuery.eq('tenant_id', user.tenant_id)
+        if (user?.tenant_id) {
+          completedQuery = completedQuery.eq('tenant_id', user.tenant_id)
+        }
+
+        const { data: completedOrdersResult } = await completedQuery
+        completedOrders = completedOrdersResult || []
+      } catch (e) {
+        console.error('KitchenDisplaySystem: Completed orders query failed', e)
       }
 
-      const { data: completedOrders } = await completedQuery
-
-      if (ordersError) {
-        console.error('KitchenDisplaySystem: Orders error', ordersError)
-      } else {
-        console.log('KitchenDisplaySystem: Orders loaded', ordersData?.length)
-        
-        // Load order items for each order
-        const ordersWithItems = await Promise.all(
-          (ordersData || []).map(async (order: any) => {
+      console.log('KitchenDisplaySystem: Orders loaded', ordersData?.length)
+      
+      // Load order items for each order
+      const ordersWithItems = await Promise.all(
+        ordersData.map(async (order: any) => {
+          try {
             let itemsQuery = supabase.from('order_items').select('*').eq('order_id', order.id)
             if (user?.tenant_id) {
               itemsQuery = itemsQuery.eq('tenant_id', user.tenant_id)
@@ -178,44 +203,52 @@ export default function KitchenDisplaySystem() {
               waiter: order.users ? { name: order.users.name } : undefined,
               items: items || [],
             }
-          })
-        )
-        
-        setOrders(ordersWithItems)
-        
-        // Calculate average prep time from completed orders
-        const prepTimes = (completedOrders || [])
-          .filter(o => o.preparing_started_at && o.ready_at)
-          .map(o => {
-            const start = new Date(o.preparing_started_at!).getTime()
-            const end = new Date(o.ready_at!).getTime()
-            return (end - start) / 60000 // Convert to minutes
-          })
-        
-        const avgPrepTime = prepTimes.length > 0 
-          ? prepTimes.reduce((a, b) => a + b, 0) / prepTimes.length 
-          : 0
-        
-        // Update stats
-        const newStats = {
-          new: ordersWithItems.filter(o => o.status === 'new').length,
-          preparing: ordersWithItems.filter(o => o.status === 'preparing').length,
-          ready: ordersWithItems.filter(o => o.status === 'ready').length,
-          total: ordersWithItems.length,
-          avgPrepTime: Math.round(avgPrepTime),
-          completedToday: (completedOrders || []).length,
-        }
-        
-        setStats(newStats)
-        
-        // Play notification sound if new orders increased
-        if (newStats.new > previousOrderCount && previousOrderCount >= 0) {
-          playNotificationSound()
-          toast.success('New order received!')
-        }
-        
-        setPreviousOrderCount(newStats.new)
+          } catch (e) {
+            console.error('KitchenDisplaySystem: Failed to load items for order', order.id, e)
+            return {
+              ...order,
+              table_number: order.tables?.number,
+              waiter: order.users ? { name: order.users.name } : undefined,
+              items: [],
+            }
+          }
+        })
+      )
+      
+      setOrders(ordersWithItems)
+      
+      // Calculate average prep time from completed orders
+      const prepTimes = (completedOrders || [])
+        .filter(o => o.preparing_started_at && o.ready_at)
+        .map(o => {
+          const start = new Date(o.preparing_started_at!).getTime()
+          const end = new Date(o.ready_at!).getTime()
+          return (end - start) / 60000 // Convert to minutes
+        })
+      
+      const avgPrepTime = prepTimes.length > 0 
+        ? prepTimes.reduce((a, b) => a + b, 0) / prepTimes.length 
+        : 0
+      
+      // Update stats
+      const newStats = {
+        new: ordersWithItems.filter(o => o.status === 'new').length,
+        preparing: ordersWithItems.filter(o => o.status === 'preparing').length,
+        ready: ordersWithItems.filter(o => o.status === 'ready').length,
+        total: ordersWithItems.length,
+        avgPrepTime: Math.round(avgPrepTime),
+        completedToday: (completedOrders || []).length,
       }
+      
+      setStats(newStats)
+      
+      // Play notification sound if new orders increased
+      if (newStats.new > previousOrderCount && previousOrderCount >= 0) {
+        playNotificationSound()
+        toast.success('New order received!')
+      }
+      
+      setPreviousOrderCount(newStats.new)
     } catch (error) {
       console.error('KitchenDisplaySystem: Error loading data:', error)
       toast.error('Failed to load data')

@@ -63,23 +63,36 @@ export default function KitchenOrders() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      let query = supabase
-        .from('orders')
-        .select('*, tables(number), users(name)')
-        .order('created_at', { ascending: false })
+      let ordersData: any[] = []
+      
+      // Load orders - handle missing tables gracefully
+      try {
+        let query = supabase
+          .from('orders')
+          .select('*, tables(number), users(name)')
+          .order('created_at', { ascending: false })
 
-      if (user?.tenant_id) {
-        query = query.eq('tenant_id', user.tenant_id)
+        if (user?.tenant_id) {
+          query = query.eq('tenant_id', user.tenant_id)
+        }
+
+        const { data: ordersDataResult, error } = await query
+
+        if (error) {
+          console.error('Error loading orders:', error)
+          toast.error('Failed to load orders')
+        } else {
+          ordersData = ordersDataResult || []
+        }
+      } catch (e) {
+        console.error('Error loading orders:', e)
+        toast.error('Failed to load orders')
       }
 
-      const { data: ordersData, error } = await query
-
-      if (error) {
-        console.error('Error loading orders:', error)
-        toast.error('Failed to load orders')
-      } else {
-        const ordersWithItems = await Promise.all(
-          (ordersData || []).map(async (order: any) => {
+      // Load order items for each order
+      const ordersWithItems = await Promise.all(
+        ordersData.map(async (order: any) => {
+          try {
             const { data: items } = await supabase
               .from('order_items')
               .select('*')
@@ -91,10 +104,18 @@ export default function KitchenOrders() {
               waiter: order.users ? { name: order.users.name } : undefined,
               items: items || [],
             }
-          })
-        )
-        setOrders(ordersWithItems)
-      }
+          } catch (e) {
+            console.error('Failed to load items for order', order.id, e)
+            return {
+              ...order,
+              table_number: order.tables?.number,
+              waiter: order.users ? { name: order.users.name } : undefined,
+              items: [],
+            }
+          }
+        })
+      )
+      setOrders(ordersWithItems)
     } catch (error) {
       console.error('Error loading data:', error)
       toast.error('Failed to load data')

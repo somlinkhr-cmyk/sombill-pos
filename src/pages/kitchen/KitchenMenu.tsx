@@ -54,36 +54,55 @@ export default function KitchenMenu() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      // Load menu items
-      let itemsQuery = supabase
-        .from('menu_items')
-        .select('*')
-        .order('name', { ascending: true })
+      // Load menu items - handle missing table gracefully
+      let itemsData: MenuItem[] = []
+      try {
+        let itemsQuery = supabase
+          .from('menu_items')
+          .select('*')
+          .order('name', { ascending: true })
 
-      if (user?.tenant_id) {
-        itemsQuery = itemsQuery.eq('tenant_id', user.tenant_id)
-      }
+        if (user?.tenant_id) {
+          itemsQuery = itemsQuery.eq('tenant_id', user.tenant_id)
+        }
 
-      const { data: itemsData, error: itemsError } = await itemsQuery
+        const { data: itemsDataResult, error: itemsError } = await itemsQuery
 
-      if (itemsError) {
-        console.error('Error loading menu items:', itemsError)
+        if (itemsError) {
+          console.error('Error loading menu items:', itemsError)
+          if (itemsError.code === '42P01') {
+            console.log('KitchenMenu: menu_items table does not exist')
+          }
+          toast.error('Failed to load menu items')
+        } else {
+          itemsData = itemsDataResult || []
+        }
+      } catch (e) {
+        console.error('Error loading menu items:', e)
         toast.error('Failed to load menu items')
-      } else {
-        setMenuItems(itemsData || [])
       }
+      setMenuItems(itemsData)
 
-      // Load categories
-      const { data: categoriesData, error: categoriesError } = await supabase
-        .from('menu_categories')
-        .select('*')
-        .order('name', { ascending: true })
+      // Load categories - handle missing table gracefully
+      let categoriesData: Category[] = []
+      try {
+        const { data: categoriesDataResult, error: categoriesError } = await supabase
+          .from('menu_categories')
+          .select('*')
+          .order('name', { ascending: true })
 
-      if (categoriesError) {
-        console.error('Error loading categories:', categoriesError)
-      } else {
-        setCategories(categoriesData || [])
+        if (categoriesError) {
+          console.error('Error loading categories:', categoriesError)
+          if (categoriesError.code === '42P01') {
+            console.log('KitchenMenu: menu_categories table does not exist')
+          }
+        } else {
+          categoriesData = categoriesDataResult || []
+        }
+      } catch (e) {
+        console.error('Error loading categories:', e)
       }
+      setCategories(categoriesData)
     } catch (error) {
       console.error('Error loading data:', error)
       toast.error('Failed to load data')
