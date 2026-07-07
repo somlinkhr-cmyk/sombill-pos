@@ -53,8 +53,9 @@ export default function KitchenDashboard() {
     setLoading(true)
     try {
       const today = new Date().toISOString().split('T')[0]
+      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString()
 
-      // Load order stats
+      // Load all stats in parallel - only select needed columns
       const [
         { count: activeOrders },
         { count: waitingOrders },
@@ -63,23 +64,25 @@ export default function KitchenDashboard() {
         { count: completedOrders },
         { data: orderItems },
         { data: allOrders },
+        { data: prepTimeOrders },
+        { count: delayedCount },
+        { data: busyStations },
+        { count: staffCount },
       ] = await Promise.all([
         supabase.from('orders').select('*', { count: 'exact', head: true }).in('status', ['new', 'preparing', 'ready']),
         supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'new'),
         supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'preparing'),
         supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'ready'),
         supabase.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'completed').gte('created_at', today),
-        supabase.from('order_items').select('product_name').gte('created_at', today),
-        supabase.from('orders').select('created_at, status').gte('created_at', today),
+        supabase.from('order_items').select('product_name').gte('created_at', today).limit(1000),
+        supabase.from('orders').select('created_at, status').gte('created_at', today).limit(500),
+        supabase.from('orders').select('preparing_started_at, ready_at').eq('status', 'completed').gte('created_at', today).limit(500),
+        supabase.from('orders').select('*', { count: 'exact', head: true }).in('status', ['new', 'preparing']).lt('created_at', fifteenMinutesAgo),
+        supabase.from('orders').select('kitchen_station').in('status', ['new', 'preparing']).not('kitchen_station', 'is', null).limit(100),
+        supabase.from('kitchen_sessions').select('*', { count: 'exact', head: true }).is('active', true),
       ])
 
       // Calculate average prep time
-      const { data: prepTimeOrders } = await supabase
-        .from('orders')
-        .select('preparing_started_at, ready_at')
-        .eq('status', 'completed')
-        .gte('created_at', today)
-
       const prepTimes = (prepTimeOrders || [])
         .filter((o: any) => o.preparing_started_at && o.ready_at)
         .map((o: any) => {
@@ -90,28 +93,7 @@ export default function KitchenDashboard() {
 
       const avgPrepTime = prepTimes.length > 0 ? prepTimes.reduce((a, b) => a + b, 0) / prepTimes.length : 0
 
-      // Count delayed orders
-      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString()
-      const { count: delayedCount } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .in('status', ['new', 'preparing'])
-        .lt('created_at', fifteenMinutesAgo)
-
-      // Count busy stations
-      const { data: busyStations } = await supabase
-        .from('orders')
-        .select('kitchen_station')
-        .in('status', ['new', 'preparing'])
-        .not('kitchen_station', 'is', null)
-
       const uniqueBusyStations = new Set((busyStations || []).map((o: any) => o.kitchen_station))
-
-      // Count online kitchen staff
-      const { count: staffCount } = await supabase
-        .from('kitchen_sessions')
-        .select('*', { count: 'exact', head: true })
-        .is('active', true)
 
       // Calculate popular items
       const itemCounts = new Map<string, number>()
@@ -125,22 +107,19 @@ export default function KitchenDashboard() {
         .sort((a, b) => b.count - a.count)
         .slice(0, 5)
 
-      // Calculate hourly data
+      // Calculate hourly data - optimized
       const hourlyData: { hour: string; orders: number }[] = []
+      const hourCounts = new Map<number, number>()
+      
+      ;(allOrders || []).forEach((order: any) => {
+        const hour = new Date(order.created_at).getHours()
+        hourCounts.set(hour, (hourCounts.get(hour) || 0) + 1)
+      })
+
       for (let i = 0; i < 24; i++) {
-        const hourStart = new Date()
-        hourStart.setHours(i, 0, 0, 0)
-        const hourEnd = new Date()
-        hourEnd.setHours(i, 59, 59, 999)
-
-        const hourOrders = (allOrders || []).filter((order: any) => {
-          const orderTime = new Date(order.created_at)
-          return orderTime >= hourStart && orderTime <= hourEnd
-        }).length
-
         hourlyData.push({
           hour: `${i.toString().padStart(2, '0')}:00`,
-          orders: hourOrders,
+          orders: hourCounts.get(i) || 0,
         })
       }
 
