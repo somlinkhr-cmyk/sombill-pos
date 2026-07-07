@@ -402,10 +402,10 @@ export default function WaiterDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-[#EEF5FA]">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Loading Waiter Dashboard...</p>
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-[#170438]" />
+          <p className="text-[#170438]">Loading Waiter Dashboard...</p>
         </div>
       </div>
     )

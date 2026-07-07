@@ -415,14 +415,23 @@ export default function KitchenDisplaySystem() {
         </ul>
 
         {/* Footer */}
-        <div className="mt-auto border-t border-white/10 pt-4 flex items-center gap-2.5 relative z-10">
-          <div className="w-[34px] h-[34px] rounded-[9px] bg-[#86abc9] text-[#190a42] flex items-center justify-center font-['Sora'] font-bold text-[13px]">
-            {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'KD'}
+        <div className="mt-auto border-t border-white/10 pt-4 relative z-10">
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-[34px] h-[34px] rounded-[9px] bg-[#86abc9] text-[#190a42] flex items-center justify-center font-['Sora'] font-bold text-[13px]">
+              {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'KD'}
+            </div>
+            <div>
+              <div className="text-[13px] font-semibold">{user?.name || 'Kitchen Staff'}</div>
+              <div className="text-[11px] text-white/45">Head Chef · Line 1</div>
+            </div>
           </div>
-          <div>
-            <div className="text-[13px] font-semibold">{user?.name || 'Kitchen Staff'}</div>
-            <div className="text-[11px] text-white/45">Head Chef · Line 1</div>
-          </div>
+          <button
+            onClick={() => logout()}
+            className="flex items-center gap-[11px] p-[9px_12px] rounded-[10px] text-white/72 hover:bg-white/6 hover:text-white text-[13.5px] font-medium transition-all w-full"
+          >
+            <LogOut width="17" height="17" />
+            Logout
+          </button>
         </div>
       </aside>
 
