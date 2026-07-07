@@ -37,6 +37,7 @@ interface Order {
   ready_at?: string
   served_at?: string
   kitchen_station?: string
+  priority?: 'low' | 'normal' | 'high' | 'urgent'
   items?: OrderItem[]
   waiter?: {
     name: string
@@ -81,6 +82,9 @@ export default function KitchenDisplaySystem() {
     completedToday: 0,
   })
   const [previousOrderCount, setPreviousOrderCount] = useState(0)
+  const [selectedPriority, setSelectedPriority] = useState<string>('all')
+  const [selectedOrderType, setSelectedOrderType] = useState<string>('all')
+  const [isFullScreen, setIsFullScreen] = useState(false)
 
   useEffect(() => {
     console.log('KitchenDisplaySystem: user', user)
@@ -295,6 +299,36 @@ export default function KitchenDisplaySystem() {
     }
   }
 
+  async function handleRejectOrder(orderId: string) {
+    try {
+      await supabase
+        .from('orders')
+        .update({ status: 'cancelled' })
+        .eq('id', orderId)
+      
+      toast.success('Order rejected')
+      loadData()
+    } catch (error) {
+      console.error('Error rejecting order:', error)
+      toast.error('Failed to reject order')
+    }
+  }
+
+  async function handleRecallOrder(orderId: string) {
+    try {
+      await supabase
+        .from('orders')
+        .update({ status: 'new' })
+        .eq('id', orderId)
+      
+      toast.success('Order recalled')
+      loadData()
+    } catch (error) {
+      console.error('Error recalling order:', error)
+      toast.error('Failed to recall order')
+    }
+  }
+
   async function handleUpdateItemStatus(itemId: string, status: OrderItem['status']) {
     try {
       const updateData: any = { status }
@@ -370,9 +404,34 @@ export default function KitchenDisplaySystem() {
     }
   }
 
+  function toggleFullScreen() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error('Error attempting to enable full screen:', err)
+      })
+      setIsFullScreen(true)
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+        setIsFullScreen(false)
+      }
+    }
+  }
+
+  useEffect(() => {
+    const handleFullScreenChange = () => {
+      setIsFullScreen(!!document.fullscreenElement)
+    }
+    document.addEventListener('fullscreenchange', handleFullScreenChange)
+    return () => document.removeEventListener('fullscreenchange', handleFullScreenChange)
+  }, [])
+
   const filteredOrders = orders.filter(order => {
     if (selectedStation === 'all') return true
-    return order.kitchen_station === selectedStation
+    if (selectedStation !== 'all' && order.kitchen_station !== selectedStation) return false
+    if (selectedPriority !== 'all' && order.priority !== selectedPriority) return false
+    if (selectedOrderType !== 'all' && order.order_type !== selectedOrderType) return false
+    return true
   })
 
   const ordersByStatus = {
@@ -489,6 +548,25 @@ export default function KitchenDisplaySystem() {
               {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'KD'}
             </div>
             <button
+              onClick={toggleFullScreen}
+              className="flex items-center gap-2 px-4 py-2 rounded-[10px] border border-[#e7e8ea] bg-white text-[#1c1530] text-[13px] font-semibold hover:bg-[#f5f6f8] transition-all"
+              title={isFullScreen ? 'Exit Full Screen' : 'Enter Full Screen'}
+            >
+              {isFullScreen ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M8 3v3a2 2 0 0 1-2 2H3"/>
+                  <path d="M21 8v-3a2 2 0 0 0-2-2h-3"/>
+                  <path d="M3 16v3a2 2 0 0 0 2 2h3"/>
+                  <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                </svg>
+              )}
+              {isFullScreen ? 'Exit' : 'Full Screen'}
+            </button>
+            <button
               onClick={() => logout()}
               className="flex items-center gap-2 px-4 py-2 rounded-[10px] border border-[#e7e8ea] bg-white text-[#1c1530] text-[13px] font-semibold hover:bg-[#f5f6f8] transition-all"
             >
@@ -522,6 +600,45 @@ export default function KitchenDisplaySystem() {
               </button>
             )
           })}
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="flex gap-2 p-[12px_30px_0_30px] flex-wrap items-center">
+          <span className="text-[12px] font-semibold text-[#5c5570] mr-2">Priority:</span>
+          {[
+            { id: 'all', label: 'All' },
+            { id: 'urgent', label: 'Urgent' },
+            { id: 'high', label: 'High' },
+            { id: 'normal', label: 'Normal' },
+            { id: 'low', label: 'Low' },
+          ].map(priority => (
+            <button
+              key={priority.id}
+              onClick={() => setSelectedPriority(priority.id)}
+              className={`px-3 py-1.5 rounded-[8px] text-[12px] font-semibold border cursor-pointer transition-all ${
+                selectedPriority === priority.id ? 'bg-[#3d0f91] border-[#3d0f91] text-white' : 'bg-white border-[#e7e8ea] text-[#1c1530]'
+              }`}
+            >
+              {priority.label}
+            </button>
+          ))}
+          <span className="text-[12px] font-semibold text-[#5c5570] mx-2">Type:</span>
+          {[
+            { id: 'all', label: 'All' },
+            { id: 'dine_in', label: 'Dine-in' },
+            { id: 'takeaway', label: 'Takeaway' },
+            { id: 'delivery', label: 'Delivery' },
+          ].map(type => (
+            <button
+              key={type.id}
+              onClick={() => setSelectedOrderType(type.id)}
+              className={`px-3 py-1.5 rounded-[8px] text-[12px] font-semibold border cursor-pointer transition-all ${
+                selectedOrderType === type.id ? 'bg-[#3d0f91] border-[#3d0f91] text-white' : 'bg-white border-[#e7e8ea] text-[#1c1530]'
+              }`}
+            >
+              {type.label}
+            </button>
+          ))}
         </div>
 
         {/* Stats */}
@@ -590,7 +707,18 @@ export default function KitchenDisplaySystem() {
                     <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-[3px] bg-[#3d0f91]" />
                     <div className="flex justify-between items-start mb-2.5 pl-2">
                       <div>
-                        <div className="font-['Sora'] font-bold text-[15px]">#{order.id.slice(-4)}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-['Sora'] font-bold text-[15px]">#{order.id.slice(-4)}</div>
+                          {order.priority && order.priority !== 'normal' && (
+                            <span className={`text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] ${
+                              order.priority === 'urgent' ? 'bg-[#dc2626] text-white' :
+                              order.priority === 'high' ? 'bg-[#f59e0b] text-white' :
+                              'bg-[#6b7280] text-white'
+                            }`}>
+                              {order.priority}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1.5 mt-1">
                           <span className={`text-[10.5px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] ${
                             order.order_type === 'dine_in' ? 'bg-[#efeafc] text-[#3d0f91]' : order.order_type === 'takeaway' ? 'bg-[#eaf2f7] text-[#6d97b8]' : 'bg-[#fdf1e2] text-[#d97706]'
@@ -624,12 +752,21 @@ export default function KitchenDisplaySystem() {
                         <span className="text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] bg-[#f5f6f8] text-[#1c1530]">Grill</span>
                         <span className="text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] bg-[#f5f6f8] text-[#1c1530]">Bar</span>
                       </div>
-                      <button
-                        onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}
-                        className="rounded-[8px] px-3.5 py-2 text-[12.5px] font-bold border-none cursor-pointer font-['Inter'] bg-[#3d0f91] text-white hover:brightness-0.94"
-                      >
-                        Start Preparing
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleRejectOrder(order.id)}
+                          className="rounded-[8px] px-3 py-2 text-[12.5px] font-bold border-none cursor-pointer font-['Inter'] bg-[#dc2626] text-white hover:brightness-0.94"
+                          title="Reject Order"
+                        >
+                          <XCircle width="16" height="16" />
+                        </button>
+                        <button
+                          onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}
+                          className="rounded-[8px] px-3.5 py-2 text-[12.5px] font-bold border-none cursor-pointer font-['Inter'] bg-[#3d0f91] text-white hover:brightness-0.94"
+                        >
+                          Start Preparing
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -657,7 +794,18 @@ export default function KitchenDisplaySystem() {
                     <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-[3px] bg-[#6d97b8]" />
                     <div className="flex justify-between items-start mb-2.5 pl-2">
                       <div>
-                        <div className="font-['Sora'] font-bold text-[15px]">#{order.id.slice(-4)}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-['Sora'] font-bold text-[15px]">#{order.id.slice(-4)}</div>
+                          {order.priority && order.priority !== 'normal' && (
+                            <span className={`text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] ${
+                              order.priority === 'urgent' ? 'bg-[#dc2626] text-white' :
+                              order.priority === 'high' ? 'bg-[#f59e0b] text-white' :
+                              'bg-[#6b7280] text-white'
+                            }`}>
+                              {order.priority}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1.5 mt-1">
                           <span className={`text-[10.5px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] ${
                             order.order_type === 'dine_in' ? 'bg-[#efeafc] text-[#3d0f91]' : order.order_type === 'takeaway' ? 'bg-[#eaf2f7] text-[#6d97b8]' : 'bg-[#fdf1e2] text-[#d97706]'
@@ -723,7 +871,18 @@ export default function KitchenDisplaySystem() {
                     <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-[3px] bg-[#1a9a56]" />
                     <div className="flex justify-between items-start mb-2.5 pl-2">
                       <div>
-                        <div className="font-['Sora'] font-bold text-[15px]">#{order.id.slice(-4)}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="font-['Sora'] font-bold text-[15px]">#{order.id.slice(-4)}</div>
+                          {order.priority && order.priority !== 'normal' && (
+                            <span className={`text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] ${
+                              order.priority === 'urgent' ? 'bg-[#dc2626] text-white' :
+                              order.priority === 'high' ? 'bg-[#f59e0b] text-white' :
+                              'bg-[#6b7280] text-white'
+                            }`}>
+                              {order.priority}
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center gap-1.5 mt-1">
                           <span className={`text-[10.5px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] ${
                             order.order_type === 'dine_in' ? 'bg-[#efeafc] text-[#3d0f91]' : order.order_type === 'takeaway' ? 'bg-[#eaf2f7] text-[#6d97b8]' : 'bg-[#fdf1e2] text-[#d97706]'
@@ -754,12 +913,21 @@ export default function KitchenDisplaySystem() {
                       <div className="flex gap-1 flex-wrap">
                         <span className="text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] bg-[#f5f6f8] text-[#1c1530]">Grill</span>
                       </div>
-                      <button
-                        onClick={() => handleUpdateOrderStatus(order.id, 'served')}
-                        className="rounded-[8px] px-3.5 py-2 text-[12.5px] font-bold border-none cursor-pointer font-['Inter'] bg-[#1a9a56] text-white hover:brightness-0.94"
-                      >
-                        Mark Served
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleRecallOrder(order.id)}
+                          className="rounded-[8px] px-3 py-2 text-[12.5px] font-bold border-none cursor-pointer font-['Inter'] bg-[#f59e0b] text-white hover:brightness-0.94"
+                          title="Recall Order"
+                        >
+                          <RefreshCw width="16" height="16" />
+                        </button>
+                        <button
+                          onClick={() => handleUpdateOrderStatus(order.id, 'served')}
+                          className="rounded-[8px] px-3.5 py-2 text-[12.5px] font-bold border-none cursor-pointer font-['Inter'] bg-[#1a9a56] text-white hover:brightness-0.94"
+                        >
+                          Mark Served
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
