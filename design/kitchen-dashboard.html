@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SomBill — Kitchen Display</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --purple-950:#170438;
+    --purple-900:#210A55;
+    --purple-800:#2C0F72;
+    --purple-700:#39129A;
+    --purple-600:#4B1FBE;
+    --ice-500:#6FA3C7;
+    --ice-400:#8FB9D6;
+    --ice-300:#B7D4E8;
+    --ice-200:#DCEAF3;
+    --silver-300:#9EA2AC;
+    --silver-200:#C7CAD2;
+    --silver-100:#E8E9ED;
+    --white:#FFFFFF;
+    --success:#3FD08F;
+    --warning:#F0A93E;
+    --danger:#F0555F;
+    --font-display:'Outfit',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(143,185,214,0.10), transparent 40%),
+      radial-gradient(circle at 85% 100%, rgba(75,31,190,0.25), transparent 50%),
+      var(--purple-950);
+    color:var(--white);
+    font-family:var(--font-body);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 32px;
+    border-bottom:1px solid rgba(143,185,214,0.18);
+    background:rgba(23,4,56,0.6);
+    backdrop-filter:blur(6px);
+    position:sticky; top:0; z-index:20;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand svg{width:34px; height:34px;}
+  .brand-text{font-family:var(--font-display); font-weight:700; font-size:20px; letter-spacing:0.2px;}
+  .brand-text span{color:var(--ice-400);}
+  .brand-sub{font-size:11px; color:var(--silver-200); font-weight:500; letter-spacing:0.6px; text-transform:uppercase; margin-top:2px;}
+
+  .station-tabs{display:flex; gap:6px; background:rgba(255,255,255,0.05); padding:5px; border-radius:12px; border:1px solid rgba(255,255,255,0.08);}
+  .station-tab{
+    padding:9px 18px; border-radius:9px; font-size:13px; font-weight:600; color:var(--silver-200);
+    cursor:pointer; transition:all .2s; font-family:var(--font-body); white-space:nowrap;
+  }
+  .station-tab.active{background:var(--ice-400); color:var(--purple-950);}
+  .station-tab:hover:not(.active){background:rgba(255,255,255,0.08); color:var(--white);}
+
+  .clock-block{text-align:right;}
+  .clock-time{font-family:var(--font-mono); font-size:22px; font-weight:600; color:var(--ice-300);}
+  .clock-date{font-size:11px; color:var(--silver-300); margin-top:2px;}
+
+  .stats-strip{
+    display:flex; gap:0; padding:14px 32px; border-bottom:1px solid rgba(143,185,214,0.12);
+  }
+  .stat{flex:1; padding-right:24px; border-right:1px solid rgba(255,255,255,0.08);}
+  .stat:last-child{border-right:none;}
+  .stat-label{font-size:11px; text-transform:uppercase; letter-spacing:0.7px; color:var(--silver-300); font-weight:600;}
+  .stat-value{font-family:var(--font-mono); font-size:26px; font-weight:600; margin-top:4px;}
+  .stat-value.warn{color:var(--warning);}
+  .stat-value.good{color:var(--success);}
+
+  .board{
+    display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px;
+    padding:24px 32px 40px;
+    align-items:start;
+  }
+  .column-head{
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding:0 4px;
+  }
+  .column-title{font-family:var(--font-display); font-size:15px; font-weight:600; letter-spacing:0.3px; display:flex; align-items:center; gap:8px;}
+  .dot{width:8px; height:8px; border-radius:50%;}
+  .dot.new{background:var(--ice-400);}
+  .dot.prep{background:var(--warning);}
+  .dot.ready{background:var(--success);}
+  .column-count{
+    font-family:var(--font-mono); font-size:12px; background:rgba(255,255,255,0.08); padding:2px 9px; border-radius:20px; color:var(--silver-100);
+  }
+  .cards{display:flex; flex-direction:column; gap:14px;}
+
+  .ticket{
+    position:relative;
+    background:linear-gradient(155deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+    border:1px solid rgba(255,255,255,0.09);
+    border-radius:16px;
+    padding:18px 18px 16px 22px;
+    overflow:hidden;
+  }
+  /* signature S-curve accent, echoing the logo mark */
+  .ticket::before{
+    content:"";
+    position:absolute; left:0; top:0; bottom:0; width:6px;
+    background:var(--curve-color, var(--ice-400));
+    clip-path: path('M6 0 C6 22, 0 22, 0 44 C0 66, 6 66, 6 88 L6 400 L0 400 L0 0 Z');
+  }
+  .ticket.state-new::before{background:var(--ice-400);}
+  .ticket.state-prep::before{background:var(--warning);}
+  .ticket.state-ready::before{background:var(--success);}
+
+  .ticket-head{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;}
+  .order-id{font-family:var(--font-mono); font-size:19px; font-weight:700; letter-spacing:0.3px;}
+  .table-tag{
+    font-size:11px; font-weight:600; color:var(--purple-950); background:var(--ice-300);
+    padding:3px 10px; border-radius:20px; margin-top:6px; display:inline-block;
+  }
+  .timer{
+    font-family:var(--font-mono); font-size:20px; font-weight:700; text-align:right;
+  }
+  .timer.ok{color:var(--success);}
+  .timer.mid{color:var(--warning);}
+  .timer.late{color:var(--danger);}
+  .timer-label{font-size:10px; text-transform:uppercase; color:var(--silver-300); letter-spacing:0.5px; text-align:right; margin-top:2px;}
+
+  .item-list{margin:12px 0; display:flex; flex-direction:column; gap:7px;}
+  .item-row{display:flex; justify-content:space-between; font-size:14px; font-weight:500;}
+  .item-qty{font-family:var(--font-mono); color:var(--ice-300); margin-right:8px;}
+  .item-mod{font-size:12px; color:var(--silver-300); margin-left:24px; margin-top:-3px;}
+
+  .ticket-foot{display:flex; gap:8px; margin-top:14px;}
+  .btn{
+    flex:1; border:none; border-radius:10px; padding:11px 0; font-family:var(--font-body);
+    font-weight:600; font-size:13px; cursor:pointer; transition:transform .15s, opacity .15s;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--ice-400); color:var(--purple-950);}
+  .btn-primary:hover{background:var(--ice-300);}
+  .btn-ghost{background:rgba(255,255,255,0.07); color:var(--white); border:1px solid rgba(255,255,255,0.14);}
+  .btn-ghost:hover{background:rgba(255,255,255,0.12);}
+  .btn-ready{background:var(--success); color:var(--purple-950);}
+  .btn-ready:hover{opacity:0.9;}
+
+  .pulse{
+    position:absolute; top:14px; right:16px; width:8px; height:8px; border-radius:50%; background:var(--danger);
+    animation:pulse 1.4s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(240,85,95,0.55);}
+    70%{box-shadow:0 0 0 9px rgba(240,85,95,0);}
+    100%{box-shadow:0 0 0 0 rgba(240,85,95,0);}
+  }
+
+  @media (max-width:1100px){
+    .board{grid-template-columns:1fr;}
+    .station-tabs{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M62 8 L28 34 C20 40 20 50 28 56 L62 82" stroke="#DDE1E6" stroke-width="16" stroke-linecap="round"/>
+      <path d="M38 18 L72 44 C80 50 80 60 72 66 L38 92" stroke="#8FB9D6" stroke-width="16" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="brand-text">Som<span>Bill</span></div>
+      <div class="brand-sub">Kitchen Display</div>
+    </div>
+  </div>
+
+  <div class="station-tabs">
+    <div class="station-tab active">All Stations</div>
+    <div class="station-tab">Grill</div>
+    <div class="station-tab">Fry</div>
+    <div class="station-tab">Cold &amp; Salads</div>
+    <div class="station-tab">Drinks</div>
+  </div>
+
+  <div class="clock-block">
+    <div class="clock-time" id="clock">14:32:07</div>
+    <div class="clock-date">Monday, 6 July</div>
+  </div>
+</div>
+
+<div class="stats-strip">
+  <div class="stat">
+    <div class="stat-label">Orders in queue</div>
+    <div class="stat-value">9</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Avg. prep time</div>
+    <div class="stat-value">11m 40s</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Running late</div>
+    <div class="stat-value warn">2</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">Completed today</div>
+    <div class="stat-value good">86</div>
+  </div>
+</div>
+
+<div class="board">
+
+  <!-- NEW -->
+  <div class="col">
+    <div class="column-head">
+      <div class="column-title"><span class="dot new"></span>New Orders</div>
+      <div class="column-count">3</div>
+    </div>
+    <div class="cards">
+
+      <div class="ticket state-new">
+        <div class="ticket-head">
+          <div>
+            <div class="order-id">#1042</div>
+            <div class="table-tag">Table 6</div>
+          </div>
+          <div>
+            <div class="timer ok">00:38</div>
+            <div class="timer-label">elapsed</div>
+          </div>
+        </div>
+        <div class="item-list">
+          <div class="item-row"><span><span class="item-qty">2×</span>Bariis Iskukaris</span></div>
+          <div class="item-mod">No raisins</div>
+          <div class="item-row"><span><span class="item-qty">1×</span>Grilled Hilib Ari</span></div>
+          <div class="item-row"><span><span class="item-qty">2×</span>Fresh Lime Juice</span></div>
+        </div>
+        <div class="ticket-foot">
+          <button class="btn btn-ghost">Hold</button>
+          <button class="btn btn-primary">Start Preparing</button>
+        </div>
+      </div>
+
+      <div class="ticket state-new">
+        <div class="pulse"></div>
+        <div class="ticket-head">
+          <div>
+            <div class="order-id">#1043</div>
+            <div class="table-tag">Takeaway</div>
+          </div>
+          <div>
+            <div class="timer mid">04:12</div>
+            <div class="timer-label">elapsed</div>
+          </div>
+        </div>
+        <div class="item-list">
+          <div class="item-row"><span><span class="item-qty">1×</span>Chicken Suqaar</span></div>
+          <div class="item-row"><span><span class="item-qty">1×</span>Somali Tea</span></div>
+        </div>
+        <div class="ticket-foot">
+          <button class="btn btn-ghost">Hold</button>
+          <button class="btn btn-primary">Start Preparing</button>
+        </div>
+      </div>
+
+      <div class="ticket state-new">
+        <div class="ticket-head">
+          <div>
+            <div class="order-id">#1044</div>
+            <div class="table-tag">Table 2</div>
+          </div>
+          <div>
+            <div class="timer ok">00:12</div>
+            <div class="timer-label">elapsed</div>
+          </div>
+        </div>
+        <div class="item-list">
+          <div class="item-row"><span><span class="item-qty">3×</span>Sambuus (Beef)</span></div>
+          <div class="item-row"><span><span class="item-qty">1×</span>Mango Smoothie</span></div>
+        </div>
+        <div class="ticket-foot">
+          <button class="btn btn-ghost">Hold</button>
+          <button class="btn btn-primary">Start Preparing</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PREPARING -->
+  <div class="col">
+    <div class="column-head">
+      <div class="column-title"><span class="dot prep"></span>Preparing</div>
+      <div class="column-count">4</div>
+    </div>
+    <div class="cards">
+
+      <div class="ticket state-prep">
+        <div class="ticket-head">
+          <div>
+            <div class="order-id">#1039</div>
+            <div class="table-tag">Table 4</div>
+          </div>
+          <div>
+            <div class="timer mid">06:54</div>
+            <div class="timer-label">elapsed</div>
+          </div>
+        </div>
+        <div class="item-list">
+          <div class="item-row"><span><span class="item-qty">1×</span>Camel Meat Grill</span></div>
+          <div class="item-mod">Well done</div>
+          <div class="item-row"><span><span class="item-qty">2×</span>Bariis Cadaan</span></div>
+        </div>
+        <div class="ticket-foot">
+          <button class="btn btn-ghost">Notify Waiter</button>
+          <button class="btn btn-ready">Mark Ready</button>
+        </div>
+      </div>
+
+      <div class="ticket state-prep">
+        <div class="pulse"></div>
+        <div class="ticket-head">
+          <div>
+            <div class="order-id">#1035</div>
+            <div class="table-tag">Table 9</div>
+          </div>
+          <div>
+            <div class="timer late">13:21</div>
+            <div class="timer-label">elapsed</div>
+          </div>
+        </div>
+        <div class="item-list">
+          <div class="item-row"><span><span class="item-qty">4×</span>Fish Fillet Fried</span></div>
+          <div class="item-row"><span><span class="item-qty">2×</span>Vegetable Soup</span></div>
+        </div>
+        <div class="ticket-foot">
+          <button class="btn btn-ghost">Notify Waiter</button>
+          <button class="btn btn-ready">Mark Ready</button>
+        </div>
+      </div>
+
+      <div class="ticket state-prep">
+        <div class="ticket-head">
+          <div>
+            <div class="order-id">#1041</div>
+            <div class="table-tag">Table 1</div>
+          </div>
+          <div>
+            <div class="timer ok">02:47</div>
+            <div class="timer-label">elapsed</div>
+          </div>
+        </div>
+        <div class="item-list">
+          <div class="item-row"><span><span class="item-qty">1×</span>Beef Suqaar Family</span></div>
+        </div>
+        <div class="ticket-foot">
+          <button class="btn btn-ghost">Notify Waiter</button>
+          <button class="btn btn-ready">Mark Ready</button>
+        </div>
+      </div>
+
+      <div class="ticket state-prep">
+        <div class="ticket-head">
+          <div>
+            <div class="order-id">#1040</div>
+            <div class="table-tag">Bar</div>
+          </div>
+          <div>
+            <div class="timer mid">05:03</div>
+            <div class="timer-label">elapsed</div>
+          </div>
+        </div>
+        <div class="item-list">
+          <div class="item-row"><span><span class="item-qty">2×</span>Grilled Prawns</span></div>
+        </div>
+        <div class="ticket-foot">
+          <button class="btn btn-ghost">Notify Waiter</button>
+          <button class="btn btn-ready">Mark Ready</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- READY -->
+  <div class="col">
+    <div class="column-head">
+      <div class="column-title"><span class="dot ready"></span>Ready to Serve</div>
+      <div class="column-count">2</div>
+    </div>
+    <div class="cards">
+
+      <div class="ticket state-ready">
+        <div class="ticket-head">
+          <div>
+            <div class="order-id">#1037</div>
+            <div class="table-tag">Table 7</div>
+          </div>
+          <div>
+            <div class="timer ok">Ready</div>
+            <div class="timer-label">1m ago</div>
+          </div>
+        </div>
+        <div class="item-list">
+          <div class="item-row"><span><span class="item-qty">2×</span>Chicken Biryani</span></div>
+          <div class="item-row"><span><span class="item-qty">2×</span>Fresh Juice</span></div>
+        </div>
+        <div class="ticket-foot">
+          <button class="btn btn-primary" style="flex:none; width:100%;">Bump — Order Served</button>
+        </div>
+      </div>
+
+      <div class="ticket state-ready">
+        <div class="ticket-head">
+          <div>
+            <div class="order-id">#1038</div>
+            <div class="table-tag">Takeaway</div>
+          </div>
+          <div>
+            <div class="timer ok">Ready</div>
+            <div class="timer-label">3m ago</div>
+          </div>
+        </div>
+        <div class="item-list">
+          <div class="item-row"><span><span class="item-qty">1×</span>Beef Sambuus x6</span></div>
+        </div>
+        <div class="ticket-foot">
+          <button class="btn btn-primary" style="flex:none; width:100%;">Bump — Order Served</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function tick(){
+    const el = document.getElementById('clock');
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const s = String(now.getSeconds()).padStart(2,'0');
+    el.textContent = `${h}:${m}:${s}`;
+  }
+  setInterval(tick, 1000);
+  tick();
+
+  document.querySelectorAll('.station-tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      document.querySelectorAll('.station-tab').forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('.btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const ticket = btn.closest('.ticket');
+      ticket.style.transition = 'opacity .3s, transform .3s';
+      ticket.style.opacity = '0.3';
+      ticket.style.transform = 'scale(0.98)';
+      setTimeout(()=>{ ticket.style.opacity='1'; ticket.style.transform='scale(1)'; }, 300);
+    });
+  });
+</script>
+</body>
+</html>

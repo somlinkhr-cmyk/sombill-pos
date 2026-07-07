@@ -330,413 +330,285 @@ export default function KitchenDisplaySystem() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#f5f6f8] text-[#1c1530] font-['Inter']">
-      {/* Sidebar */}
-      <aside className="w-[236px] min-w-[236px] h-screen bg-gradient-to-b from-[#190a42] via-[#22105c] to-[#3d0f91] text-white flex flex-col p-[26px_18px] relative overflow-hidden">
-        <div className="absolute right-[-70px] bottom-[-70px] w-[230px] h-[230px] rounded-full bg-[radial-gradient(circle,rgba(134,171,201,0.18),transparent_70%)]" />
-        
-        {/* Brand */}
-        <div className="flex items-center gap-2.5 p-[4px_6px_28px_6px] relative z-10">
-          <svg width="34" height="34" viewBox="0 0 100 100" fill="none">
-            <path d="M25 30 L55 30 Q70 30 70 42 Q70 54 55 54 L35 54 Q22 54 22 66 Q22 78 35 78 L65 78" stroke="#d7d9dc" strokeWidth="13" strokeLinecap="round" fill="none"/>
-            <path d="M25 30 L55 54 L35 78" stroke="#86abc9" strokeWidth="13" strokeLinecap="round" fill="none"/>
-            <circle cx="70" cy="42" r="9" fill="#86abc9"/>
-            <circle cx="22" cy="78" r="9" fill="#d7d9dc"/>
+    <div className="min-h-screen text-white" style={{
+      background: 'radial-gradient(circle at 15% 0%, rgba(143,185,214,0.10), transparent 40%), radial-gradient(circle at 85% 100%, rgba(75,31,190,0.25), transparent 50%), #170438'
+    }}>
+      {/* Top Bar */}
+      <div className="flex items-center justify-between px-8 py-[18px] border-b border-[rgba(143,185,214,0.18)] bg-[rgba(23,4,56,0.6)] backdrop-blur-[6px] sticky top-0 z-20">
+        <div className="flex items-center gap-3">
+          <svg className="w-[34px] h-[34px]" viewBox="0 0 100 100" fill="none">
+            <path d="M62 8 L28 34 C20 40 20 50 28 56 L62 82" stroke="#DDE1E6" strokeWidth="16" strokeLinecap="round"/>
+            <path d="M38 18 L72 44 C80 50 80 60 72 66 L38 92" stroke="#8FB9D6" strokeWidth="16" strokeLinecap="round"/>
           </svg>
           <div>
-            <div className="font-['Sora'] font-bold text-[19px] tracking-[-0.01em]">
-              Som<span className="text-[#86abc9]">Bill</span>
+            <div className="font-['Outfit'] font-bold text-[20px] tracking-[0.2px]">
+              Som<span className="text-[#8FB9D6]">Bill</span>
             </div>
-            <div className="text-[10.5px] text-white/50 tracking-[0.04em] uppercase mt-0.5">
+            <div className="text-[11px] text-[#C7CAD2] font-medium tracking-[0.6px] uppercase mt-0.5">
               Kitchen Display
             </div>
           </div>
         </div>
-
-        {/* Navigation */}
-        <div className="text-[10.5px] font-semibold tracking-[0.09em] uppercase text-white/38 p-[16px_10px_8px] relative z-10">
-          Operations
-        </div>
-        <ul className="flex flex-col gap-0.5 relative z-10">
-          <li>
-            <a href="/manager" className="flex items-center gap-[11px] p-[9px_12px] rounded-[10px] text-white/72 hover:bg-white/6 hover:text-white text-[13.5px] font-medium transition-all">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-              Dashboard
-            </a>
-          </li>
-          <li>
-            <a href="/kitchen/system" className="flex items-center gap-[11px] p-[9px_12px] rounded-[10px] bg-white/10 text-white text-[13.5px] font-medium transition-all shadow-[inset_3px_0_0_#86abc9]">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 3v10a2 2 0 0 0 2 2h1"/><path d="M7 3v6"/><path d="M4 3h3"/><path d="M15 3c-2 0-3 2-3 4s1 3 2 3v11"/><circle cx="19" cy="19" r="0"/></svg>
-              Kitchen Display
-            </a>
-          </li>
-          <li>
-            <a href="/cashier/orders" className="flex items-center gap-[11px] p-[9px_12px] rounded-[10px] text-white/72 hover:bg-white/6 hover:text-white text-[13.5px] font-medium transition-all">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2h12l2 5H4l2-5Z"/><path d="M4 7v13a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V7"/><path d="M9 12h6"/></svg>
-              Orders
-            </a>
-          </li>
-          <li>
-            <a href="/manager/menu" className="flex items-center gap-[11px] p-[9px_12px] rounded-[10px] text-white/72 hover:bg-white/6 hover:text-white text-[13.5px] font-medium transition-all">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-              Menu
-            </a>
-          </li>
-        </ul>
-
-        <div className="text-[10.5px] font-semibold tracking-[0.09em] uppercase text-white/38 p-[16px_10px_8px] relative z-10">
-          Management
-        </div>
-        <ul className="flex flex-col gap-0.5 relative z-10">
-          <li>
-            <a href="/manager/inventory" className="flex items-center gap-[11px] p-[9px_12px] rounded-[10px] text-white/72 hover:bg-white/6 hover:text-white text-[13.5px] font-medium transition-all">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 8V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2"/><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M3 13h18"/></svg>
-              Inventory
-            </a>
-          </li>
-          <li>
-            <a href="/manager/staff" className="flex items-center gap-[11px] p-[9px_12px] rounded-[10px] text-white/72 hover:bg-white/6 hover:text-white text-[13.5px] font-medium transition-all">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v2"/><path d="M17 3.5a4 4 0 0 1 0 7"/></svg>
-              Staff
-            </a>
-          </li>
-          <li>
-            <a href="/manager/reports" className="flex items-center gap-[11px] p-[9px_12px] rounded-[10px] text-white/72 hover:bg-white/6 hover:text-white text-[13.5px] font-medium transition-all">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3v18h18"/><path d="m7 15 4-6 3 3 5-7"/></svg>
-              Reports
-            </a>
-          </li>
-          <li>
-            <a href="/manager/settings" className="flex items-center gap-[11px] p-[9px_12px] rounded-[10px] text-white/72 hover:bg-white/6 hover:text-white text-[13.5px] font-medium transition-all">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.36.5.98.83 1.51 1H21a2 2 0 0 1 0 4h-.09c-.66 0-1.25.4-1.51 1z"/></svg>
-              Settings
-            </a>
-          </li>
-        </ul>
-
-        {/* Footer */}
-        <div className="mt-auto border-t border-white/10 pt-4 flex items-center gap-2.5 relative z-10">
-          <div className="w-[34px] h-[34px] rounded-[9px] bg-[#86abc9] text-[#190a42] flex items-center justify-center font-['Sora'] font-bold text-[13px]">
-            {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'KD'}
-          </div>
-          <div>
-            <div className="text-[13px] font-semibold">{user?.name || 'Kitchen Staff'}</div>
-            <div className="text-[11px] text-white/45">Head Chef · Line 1</div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 h-screen overflow-y-auto bg-[#f5f6f8]">
-        {/* Header */}
-        <header className="bg-white border-b border-[#e7e8ea] p-[18px_30px] flex items-center justify-between sticky top-0 z-10">
-          <div>
-            <h1 className="font-['Sora'] text-[19px] font-bold tracking-[-0.01em]">Kitchen Display — Main Line</h1>
-            <p className="text-[12.5px] text-[#5c5570] mt-0.5">Hargeisa Branch · {stats.total} open orders · avg prep 11m 20s</p>
-          </div>
-          <div className="flex items-center gap-3.5">
-            <div className="flex flex-col items-end pr-3.5 border-r border-[#e7e8ea]">
-              <div className="font-['Sora'] font-bold text-[15px]">{currentTime.toLocaleTimeString('en-GB')}</div>
-              <div className="text-[11px] text-[#5c5570]">{currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
-            </div>
-            <div className="w-[38px] h-[38px] rounded-[10px] border border-[#e7e8ea] bg-white flex items-center justify-center cursor-pointer relative">
-              <Bell width="18" height="18" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#dc2626] border-[1.5px] border-white" />
-            </div>
-            <div className="w-[38px] h-[38px] rounded-[10px] bg-[#3d0f91] text-white flex items-center justify-center font-['Sora'] font-bold text-[13px]">
-              {user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'KD'}
-            </div>
-          </div>
-        </header>
 
         {/* Station Tabs */}
-        <div className="flex gap-2 p-[16px_30px_0_30px] flex-wrap">
+        <div className="flex gap-1.5 bg-white/5 p-1.5 rounded-[12px] border border-white/8">
           <button
             onClick={() => setSelectedStation('all')}
-            className={`px-4 py-2 rounded-[100px] text-[13px] font-semibold border cursor-pointer flex items-center gap-1.5 transition-all ${
-              selectedStation === 'all' ? 'bg-[#3d0f91] border-[#3d0f91] text-white' : 'bg-white border-[#e7e8ea] text-[#1c1530]'
+            className={`px-4.5 py-2 rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all whitespace-nowrap ${
+              selectedStation === 'all' ? 'bg-[#8FB9D6] text-[#170438]' : 'text-[#C7CAD2] hover:bg-white/8 hover:text-white'
             }`}
           >
-            All Stations <span className={`text-[11px] px-[7px] py-[1px] rounded-[100px] ${selectedStation === 'all' ? 'bg-white/20 text-white' : 'bg-[#f5f6f8] text-[#1c1530]'}`}>{stats.total}</span>
+            All Stations
           </button>
-          {stations.map(station => {
-            const count = orders.filter(o => o.kitchen_station === station.id).length
-            return (
-              <button
-                key={station.id}
-                onClick={() => setSelectedStation(station.id)}
-                className={`px-4 py-2 rounded-[100px] text-[13px] font-semibold border cursor-pointer flex items-center gap-1.5 transition-all ${
-                  selectedStation === station.id ? 'bg-[#3d0f91] border-[#3d0f91] text-white' : 'bg-white border-[#e7e8ea] text-[#1c1530]'
-                }`}
-              >
-                {station.name} <span className={`text-[11px] px-[7px] py-[1px] rounded-[100px] ${selectedStation === station.id ? 'bg-white/20 text-white' : 'bg-[#f5f6f8] text-[#1c1530]'}`}>{count}</span>
-              </button>
-            )
-          })}
+          {stations.map(station => (
+            <button
+              key={station.id}
+              onClick={() => setSelectedStation(station.id)}
+              className={`px-4.5 py-2 rounded-[9px] text-[13px] font-semibold cursor-pointer transition-all whitespace-nowrap ${
+                selectedStation === station.id ? 'bg-[#8FB9D6] text-[#170438]' : 'text-[#C7CAD2] hover:bg-white/8 hover:text-white'
+              }`}
+            >
+              {station.name}
+            </button>
+          ))}
         </div>
 
-        {/* Stats */}
-        <section className="grid grid-cols-4 gap-4 p-[20px_30px_6px_30px]">
-          <div className="bg-white border border-[#e7e8ea] rounded-[14px] p-[16px_18px] flex flex-col gap-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[12px] font-semibold text-[#5c5570]">Active Orders</span>
-              <div className="w-[30px] h-[30px] rounded-[8px] bg-[#efeafc] text-[#3d0f91] flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6M9 13h6M9 17h3"/></svg>
-              </div>
-            </div>
-            <div className="font-['Sora'] text-[26px] font-bold tracking-[-0.01em]">{stats.total}</div>
-            <div className="text-[11.5px] font-semibold text-[#1a9a56]">▲ 3 vs last hour</div>
+        <div className="text-right">
+          <div className="font-['IBM_Plex_Mono'] text-[22px] font-semibold text-[#B7D4E8]">
+            {currentTime.toLocaleTimeString()}
           </div>
-          <div className="bg-white border border-[#e7e8ea] rounded-[14px] p-[16px_18px] flex flex-col gap-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[12px] font-semibold text-[#5c5570]">Avg Prep Time</span>
-              <div className="w-[30px] h-[30px] rounded-[8px] bg-[#eaf2f7] text-[#6d97b8] flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-              </div>
-            </div>
-            <div className="font-['Sora'] text-[26px] font-bold tracking-[-0.01em]">11m 20s</div>
-            <div className="text-[11.5px] font-semibold text-[#1a9a56]">▼ 1m 05s faster</div>
+          <div className="text-[11px] text-[#9EA2AC] mt-0.5">
+            {currentTime.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}
           </div>
-          <div className="bg-white border border-[#e7e8ea] rounded-[14px] p-[16px_18px] flex flex-col gap-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[12px] font-semibold text-[#5c5570]">Ready for Pickup</span>
-              <div className="w-[30px] h-[30px] rounded-[8px] bg-[#e6f6ec] text-[#1a9a56] flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6 9 17l-5-5"/></svg>
-              </div>
-            </div>
-            <div className="font-['Sora'] text-[26px] font-bold tracking-[-0.01em]">{stats.ready}</div>
-            <div className="text-[11.5px] font-semibold text-[#5c5570]">Awaiting server pickup</div>
-          </div>
-          <div className="bg-white border border-[#e7e8ea] rounded-[14px] p-[16px_18px] flex flex-col gap-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-[12px] font-semibold text-[#5c5570]">Delayed Orders</span>
-              <div className="w-[30px] h-[30px] rounded-[8px] bg-[#fce9e8] text-[#dc2626] flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 2.7 17a2 2 0 0 0 1.8 3h15a2 2 0 0 0 1.8-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-              </div>
-            </div>
-            <div className="font-['Sora'] text-[26px] font-bold tracking-[-0.01em]">{orders.filter(o => isOrderDelayed(o)).length}</div>
-            <div className="text-[11.5px] font-semibold text-[#dc2626]">Past 15 min target</div>
-          </div>
-        </section>
+        </div>
+      </div>
 
-        {/* Board */}
-        <section className="flex gap-4.5 p-[22px_30px_30px_30px] items-start">
-          {/* New Orders */}
-          <div className="flex-1 min-w-[320px] bg-white border border-[#e7e8ea] rounded-[18px] flex flex-col max-h-[calc(100vh-260px)]">
-            <div className="flex items-center justify-between p-[16px_18px] border-b border-[#e7e8ea]">
-              <div className="flex items-center gap-2">
-                <div className="w-[9px] h-[9px] rounded-full bg-[#3d0f91]" />
-                <h2 className="font-['Sora'] text-[14.5px] font-bold">New Orders</h2>
-              </div>
-              <span className="text-[12px] font-bold text-[#1c1530] bg-[#f5f6f8] px-2.5 py-0.5 rounded-[100px]">{ordersByStatus.new.length}</span>
+      {/* Stats Strip */}
+      <div className="flex gap-0 px-8 py-[14px] border-b border-[rgba(143,185,214,0.12)]">
+        <div className="flex-1 pr-6 border-r border-white/8">
+          <div className="text-[11px] uppercase tracking-[0.7px] text-[#9EA2AC] font-semibold">
+            Orders in queue
+          </div>
+          <div className="font-['IBM_Plex_Mono'] text-[26px] font-semibold mt-1">
+            {stats.new}
+          </div>
+        </div>
+        <div className="flex-1 pr-6 border-r border-white/8">
+          <div className="text-[11px] uppercase tracking-[0.7px] text-[#9EA2AC] font-semibold">
+            Avg. prep time
+          </div>
+          <div className="font-['IBM_Plex_Mono'] text-[26px] font-semibold mt-1">
+            11m 40s
+          </div>
+        </div>
+        <div className="flex-1 pr-6 border-r border-white/8">
+          <div className="text-[11px] uppercase tracking-[0.7px] text-[#9EA2AC] font-semibold">
+            Running late
+          </div>
+          <div className="font-['IBM_Plex_Mono'] text-[26px] font-semibold mt-1 text-[#F0A93E]">
+            {orders.filter(o => isOrderDelayed(o)).length}
+          </div>
+        </div>
+        <div className="flex-1">
+          <div className="text-[11px] uppercase tracking-[0.7px] text-[#9EA2AC] font-semibold">
+            Completed today
+          </div>
+          <div className="font-['IBM_Plex_Mono'] text-[26px] font-semibold mt-1 text-[#3FD08F]">
+            86
+          </div>
+        </div>
+      </div>
+
+      {/* Board */}
+      <div className="grid grid-cols-3 gap-5 p-6 align-start">
+        {/* New Orders */}
+        <div>
+          <div className="flex items-center justify-between mb-3.5 px-1">
+            <div className="font-['Outfit'] text-[15px] font-semibold tracking-[0.3px] flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#8FB9D6]" />
+              New Orders
             </div>
-            <div className="p-3.5 flex flex-col gap-3 overflow-y-auto">
-              {ordersByStatus.new.map(order => (
-                <div key={order.id} className="border border-[#e7e8ea] rounded-[12px] p-[14px_14px_12px_14px] relative bg-white">
-                  <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-[3px] bg-[#3d0f91]" />
-                  <div className="flex justify-between items-start mb-2.5 pl-2">
-                    <div>
-                      <div className="font-['Sora'] font-bold text-[15px]">#{order.id.slice(-4)}</div>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className={`text-[10.5px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] ${
-                          order.order_type === 'dine_in' ? 'bg-[#efeafc] text-[#3d0f91]' : order.order_type === 'takeaway' ? 'bg-[#eaf2f7] text-[#6d97b8]' : 'bg-[#fdf1e2] text-[#d97706]'
-                        }`}>
-                          {order.order_type === 'dine_in' ? 'Dine-in' : order.order_type === 'takeaway' ? 'Takeaway' : 'Delivery'}
-                        </span>
-                        <span className="text-[11.5px] text-[#1c1530] font-semibold">
-                          {order.order_type === 'dine_in' ? `Table ${order.table_number || 'N/A'}` : 'Pickup 2:15'}
-                        </span>
-                      </div>
+            <div className="font-['IBM_Plex_Mono'] text-[12px] bg-white/8 px-2 py-0.5 rounded-[20px] text-[#E8E9ED]">
+              {ordersByStatus.new.length}
+            </div>
+          </div>
+          <div className="flex flex-col gap-3.5">
+            {ordersByStatus.new.map(order => (
+              <div key={order.id} className="relative bg-gradient-to-br from-white/5 to-white/1.5 border border-white/9 rounded-[16px] p-[18px_18px_16px_22px] overflow-hidden">
+                <div className="absolute left-0 top-0 bottom-0 w-[6px] bg-[#8FB9D6]" style={{
+                  clipPath: 'path("M6 0 C6 22, 0 22, 0 44 C0 66, 6 66, 6 88 L6 400 L0 400 L0 0 Z")'
+                }} />
+                <div className="flex justify-between items-start mb-2.5">
+                  <div>
+                    <div className="font-['IBM_Plex_Mono'] text-[19px] font-bold tracking-[0.3px]">
+                      #{order.id.slice(-4)}
                     </div>
-                    <div className="w-[46px] h-[46px] rounded-full flex items-center justify-center relative flex-shrink-0">
-                      <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        <circle cx="18" cy="18" r="16" fill="none" stroke="#e7e8ea" strokeWidth="3" />
-                        <circle 
-                          cx="18" cy="18" r="16" 
-                          fill="none" 
-                          stroke={isOrderDelayed(order) ? '#dc2626' : '#3d0f91'}
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          strokeDasharray="100 100"
-                          strokeDashoffset={isOrderDelayed(order) ? '20' : '30'}
-                        />
-                      </svg>
-                      <span className="font-['Sora'] text-[11.5px] font-bold bg-white w-[36px] h-[36px] rounded-full flex items-center justify-center z-10">
-                        {getOrderElapsedTime(order)}
+                    <div className="text-[11px] font-semibold text-[#170438] bg-[#B7D4E8] px-2.5 py-0.5 rounded-[20px] mt-1.5 inline-block">
+                      {order.order_type === 'dine_in' ? `Table ${order.table_number || 'N/A'}` : 'Takeaway'}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`font-['IBM_Plex_Mono'] text-[20px] font-bold ${isOrderDelayed(order) ? 'text-[#F0555F]' : 'text-[#3FD08F]'}`}>
+                      {getOrderElapsedTime(order)}
+                    </div>
+                    <div className="text-[10px] uppercase text-[#9EA2AC] tracking-[0.5px] mt-0.5">
+                      elapsed
+                    </div>
+                  </div>
+                </div>
+                <div className="my-3 flex flex-col gap-1.5">
+                  {order.items?.map(item => (
+                    <div key={item.id} className="flex justify-between text-[14px] font-medium">
+                      <span>
+                        <span className="font-['IBM_Plex_Mono'] text-[#B7D4E8] mr-2">{item.quantity}×</span>
+                        {item.product_name}
                       </span>
                     </div>
-                  </div>
-                  <div className="pl-2 flex flex-col gap-1.5 mb-2.5">
-                    {order.items?.map(item => (
-                      <div key={item.id} className="flex gap-2 text-[13px]">
-                        <span className="font-bold text-[#3d0f91] min-w-[22px]">{item.quantity}×</span>
-                        <div>
-                          <span className="font-semibold text-[#1c1530]">{item.product_name}</span>
-                          {item.notes && <span className="block text-[11.5px] text-[#5c5570] italic mt-0.5">{item.notes}</span>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between pl-2 gap-2">
-                    <div className="flex gap-1 flex-wrap">
-                      <span className="text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] bg-[#f5f6f8] text-[#1c1530]">Grill</span>
-                      <span className="text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] bg-[#f5f6f8] text-[#1c1530]">Bar</span>
-                    </div>
-                    <button
-                      onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}
-                      className="rounded-[8px] px-3.5 py-2 text-[12.5px] font-bold border-none cursor-pointer font-['Inter'] bg-[#3d0f91] text-white hover:brightness-0.94"
-                    >
-                      Start Preparing
-                    </button>
-                  </div>
+                  ))}
                 </div>
-              ))}
+                <div className="flex gap-2 mt-3.5">
+                  <button
+                    onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}
+                    className="flex-1 py-2.5 rounded-[10px] font-semibold text-[13px] border-none cursor-pointer font-['Inter'] bg-white/7 text-white border border-white/14 hover:bg-white/12 transition-all active:scale-95"
+                  >
+                    Hold
+                  </button>
+                  <button
+                    onClick={() => handleUpdateOrderStatus(order.id, 'preparing')}
+                    className="flex-1 py-2.5 rounded-[10px] font-semibold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#8FB9D6] text-[#170438] hover:bg-[#B7D4E8] transition-all active:scale-95"
+                  >
+                    Start Preparing
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Preparing */}
+        <div>
+          <div className="flex items-center justify-between mb-3.5 px-1">
+            <div className="font-['Outfit'] text-[15px] font-semibold tracking-[0.3px] flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#F0A93E]" />
+              Preparing
+            </div>
+            <div className="font-['IBM_Plex_Mono'] text-[12px] bg-white/8 px-2 py-0.5 rounded-[20px] text-[#E8E9ED]">
+              {ordersByStatus.preparing.length}
             </div>
           </div>
-
-          {/* Preparing */}
-          <div className="flex-1 min-w-[320px] bg-white border border-[#e7e8ea] rounded-[18px] flex flex-col max-h-[calc(100vh-260px)]">
-            <div className="flex items-center justify-between p-[16px_18px] border-b border-[#e7e8ea]">
-              <div className="flex items-center gap-2">
-                <div className="w-[9px] h-[9px] rounded-full bg-[#6d97b8]" />
-                <h2 className="font-['Sora'] text-[14.5px] font-bold">Preparing</h2>
-              </div>
-              <span className="text-[12px] font-bold text-[#1c1530] bg-[#f5f6f8] px-2.5 py-0.5 rounded-[100px]">{ordersByStatus.preparing.length}</span>
-            </div>
-            <div className="p-3.5 flex flex-col gap-3 overflow-y-auto">
-              {ordersByStatus.preparing.map(order => (
-                <div key={order.id} className="border border-[#e7e8ea] rounded-[12px] p-[14px_14px_12px_14px] relative bg-white">
-                  <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-[3px] bg-[#6d97b8]" />
-                  <div className="flex justify-between items-start mb-2.5 pl-2">
-                    <div>
-                      <div className="font-['Sora'] font-bold text-[15px]">#{order.id.slice(-4)}</div>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className={`text-[10.5px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] ${
-                          order.order_type === 'dine_in' ? 'bg-[#efeafc] text-[#3d0f91]' : order.order_type === 'takeaway' ? 'bg-[#eaf2f7] text-[#6d97b8]' : 'bg-[#fdf1e2] text-[#d97706]'
-                        }`}>
-                          {order.order_type === 'dine_in' ? 'Dine-in' : order.order_type === 'takeaway' ? 'Takeaway' : 'Delivery'}
-                        </span>
-                        <span className="text-[11.5px] text-[#1c1530] font-semibold">
-                          {order.order_type === 'dine_in' ? `Table ${order.table_number || 'N/A'}` : 'Pickup 2:15'}
-                        </span>
-                      </div>
+          <div className="flex flex-col gap-3.5">
+            {ordersByStatus.preparing.map(order => (
+              <div key={order.id} className="relative bg-gradient-to-br from-white/5 to-white/1.5 border border-white/9 rounded-[16px] p-[18px_18px_16px_22px] overflow-hidden">
+                <div className="absolute left-0 top-0 bottom-0 w-[6px] bg-[#F0A93E]" style={{
+                  clipPath: 'path("M6 0 C6 22, 0 22, 0 44 C0 66, 6 66, 6 88 L6 400 L0 400 L0 0 Z")'
+                }} />
+                {isOrderDelayed(order) && (
+                  <div className="absolute top-3.5 right-4 w-2 h-2 rounded-full bg-[#F0555F] animate-pulse-custom" />
+                )}
+                <div className="flex justify-between items-start mb-2.5">
+                  <div>
+                    <div className="font-['IBM_Plex_Mono'] text-[19px] font-bold tracking-[0.3px]">
+                      #{order.id.slice(-4)}
                     </div>
-                    <div className="w-[46px] h-[46px] rounded-full flex items-center justify-center relative flex-shrink-0">
-                      <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        <circle cx="18" cy="18" r="16" fill="none" stroke="#e7e8ea" strokeWidth="3" />
-                        <circle 
-                          cx="18" cy="18" r="16" 
-                          fill="none" 
-                          stroke={isOrderDelayed(order) ? '#dc2626' : '#6d97b8'}
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          strokeDasharray="100 100"
-                          strokeDashoffset={isOrderDelayed(order) ? '20' : '50'}
-                        />
-                      </svg>
-                      <span className="font-['Sora'] text-[11.5px] font-bold bg-white w-[36px] h-[36px] rounded-full flex items-center justify-center z-10">
-                        {getOrderElapsedTime(order)}
+                    <div className="text-[11px] font-semibold text-[#170438] bg-[#B7D4E8] px-2.5 py-0.5 rounded-[20px] mt-1.5 inline-block">
+                      {order.order_type === 'dine_in' ? `Table ${order.table_number || 'N/A'}` : 'Takeaway'}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`font-['IBM_Plex_Mono'] text-[20px] font-bold ${isOrderDelayed(order) ? 'text-[#F0555F]' : 'text-[#F0A93E]'}`}>
+                      {getOrderElapsedTime(order)}
+                    </div>
+                    <div className="text-[10px] uppercase text-[#9EA2AC] tracking-[0.5px] mt-0.5">
+                      elapsed
+                    </div>
+                  </div>
+                </div>
+                <div className="my-3 flex flex-col gap-1.5">
+                  {order.items?.map(item => (
+                    <div key={item.id} className="flex justify-between text-[14px] font-medium">
+                      <span>
+                        <span className="font-['IBM_Plex_Mono'] text-[#B7D4E8] mr-2">{item.quantity}×</span>
+                        {item.product_name}
                       </span>
                     </div>
-                  </div>
-                  <div className="pl-2 flex flex-col gap-1.5 mb-2.5">
-                    {order.items?.map(item => (
-                      <div key={item.id} className="flex gap-2 text-[13px]">
-                        <span className="font-bold text-[#3d0f91] min-w-[22px]">{item.quantity}×</span>
-                        <div>
-                          <span className="font-semibold text-[#1c1530]">{item.product_name}</span>
-                          {item.notes && <span className="block text-[11.5px] text-[#5c5570] italic mt-0.5">{item.notes}</span>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between pl-2 gap-2">
-                    <div className="flex gap-1 flex-wrap">
-                      <span className="text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] bg-[#f5f6f8] text-[#1c1530]">Grill</span>
-                    </div>
-                    <button
-                      onClick={() => handleUpdateOrderStatus(order.id, 'ready')}
-                      className="rounded-[8px] px-3.5 py-2 text-[12.5px] font-bold border-none cursor-pointer font-['Inter'] bg-[#6d97b8] text-white hover:brightness-0.94"
-                    >
-                      Mark Ready
-                    </button>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Ready */}
-          <div className="flex-1 min-w-[320px] bg-white border border-[#e7e8ea] rounded-[18px] flex flex-col max-h-[calc(100vh-260px)]">
-            <div className="flex items-center justify-between p-[16px_18px] border-b border-[#e7e8ea]">
-              <div className="flex items-center gap-2">
-                <div className="w-[9px] h-[9px] rounded-full bg-[#1a9a56]" />
-                <h2 className="font-['Sora'] text-[14.5px] font-bold">Ready for Pickup</h2>
+                <div className="flex gap-2 mt-3.5">
+                  <button
+                    className="flex-1 py-2.5 rounded-[10px] font-semibold text-[13px] border-none cursor-pointer font-['Inter'] bg-white/7 text-white border border-white/14 hover:bg-white/12 transition-all active:scale-95"
+                  >
+                    Notify Waiter
+                  </button>
+                  <button
+                    onClick={() => handleUpdateOrderStatus(order.id, 'ready')}
+                    className="flex-1 py-2.5 rounded-[10px] font-semibold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#3FD08F] text-[#170438] hover:opacity-90 transition-all active:scale-95"
+                  >
+                    Mark Ready
+                  </button>
+                </div>
               </div>
-              <span className="text-[12px] font-bold text-[#1c1530] bg-[#f5f6f8] px-2.5 py-0.5 rounded-[100px]">{ordersByStatus.ready.length}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Ready */}
+        <div>
+          <div className="flex items-center justify-between mb-3.5 px-1">
+            <div className="font-['Outfit'] text-[15px] font-semibold tracking-[0.3px] flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#3FD08F]" />
+              Ready to Serve
             </div>
-            <div className="p-3.5 flex flex-col gap-3 overflow-y-auto">
-              {ordersByStatus.ready.map(order => (
-                <div key={order.id} className="border border-[#e7e8ea] rounded-[12px] p-[14px_14px_12px_14px] relative bg-white">
-                  <div className="absolute left-0 top-3 bottom-3 w-[3px] rounded-[3px] bg-[#1a9a56]" />
-                  <div className="flex justify-between items-start mb-2.5 pl-2">
-                    <div>
-                      <div className="font-['Sora'] font-bold text-[15px]">#{order.id.slice(-4)}</div>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className={`text-[10.5px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] ${
-                          order.order_type === 'dine_in' ? 'bg-[#efeafc] text-[#3d0f91]' : order.order_type === 'takeaway' ? 'bg-[#eaf2f7] text-[#6d97b8]' : 'bg-[#fdf1e2] text-[#d97706]'
-                        }`}>
-                          {order.order_type === 'dine_in' ? 'Dine-in' : order.order_type === 'takeaway' ? 'Takeaway' : 'Delivery'}
-                        </span>
-                        <span className="text-[11.5px] text-[#1c1530] font-semibold">
-                          {order.order_type === 'dine_in' ? `Table ${order.table_number || 'N/A'}` : 'Waiting 4m'}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="w-[46px] h-[46px] rounded-full flex items-center justify-center relative flex-shrink-0">
-                      <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 36 36">
-                        <circle cx="18" cy="18" r="16" fill="none" stroke="#e7e8ea" strokeWidth="3" />
-                        <circle 
-                          cx="18" cy="18" r="16" 
-                          fill="none" 
-                          stroke="#1a9a56"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          strokeDasharray="100 100"
-                          strokeDashoffset="0"
-                        />
-                      </svg>
-                      <span className="font-['Sora'] text-[11.5px] font-bold bg-[#e6f6ec] w-[36px] h-[36px] rounded-full flex items-center justify-center z-10 text-[#1a9a56]">✓</span>
-                    </div>
-                  </div>
-                  <div className="pl-2 flex flex-col gap-1.5 mb-2.5">
-                    {order.items?.map(item => (
-                      <div key={item.id} className="flex gap-2 text-[13px]">
-                        <span className="font-bold text-[#3d0f91] min-w-[22px]">{item.quantity}×</span>
-                        <div>
-                          <span className="font-semibold text-[#1c1530]">{item.product_name}</span>
-                          {item.notes && <span className="block text-[11.5px] text-[#5c5570] italic mt-0.5">{item.notes}</span>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between pl-2 gap-2">
-                    <div className="flex gap-1 flex-wrap">
-                      <span className="text-[10px] font-bold uppercase tracking-[0.03em] px-1.5 py-0.5 rounded-[5px] bg-[#f5f6f8] text-[#1c1530]">Grill</span>
-                    </div>
-                    <button
-                      onClick={() => handleUpdateOrderStatus(order.id, 'served')}
-                      className="rounded-[8px] px-3.5 py-2 text-[12.5px] font-bold border-none cursor-pointer font-['Inter'] bg-[#1a9a56] text-white hover:brightness-0.94"
-                    >
-                      Served
-                    </button>
-                  </div>
-                </div>
-              ))}
+            <div className="font-['IBM_Plex_Mono'] text-[12px] bg-white/8 px-2 py-0.5 rounded-[20px] text-[#E8E9ED]">
+              {ordersByStatus.ready.length}
             </div>
           </div>
-        </section>
-      </main>
+          <div className="flex flex-col gap-3.5">
+            {ordersByStatus.ready.map(order => (
+              <div key={order.id} className="relative bg-gradient-to-br from-white/5 to-white/1.5 border border-white/9 rounded-[16px] p-[18px_18px_16px_22px] overflow-hidden">
+                <div className="absolute left-0 top-0 bottom-0 w-[6px] bg-[#3FD08F]" style={{
+                  clipPath: 'path("M6 0 C6 22, 0 22, 0 44 C0 66, 6 66, 6 88 L6 400 L0 400 L0 0 Z")'
+                }} />
+                <div className="flex justify-between items-start mb-2.5">
+                  <div>
+                    <div className="font-['IBM_Plex_Mono'] text-[19px] font-bold tracking-[0.3px]">
+                      #{order.id.slice(-4)}
+                    </div>
+                    <div className="text-[11px] font-semibold text-[#170438] bg-[#B7D4E8] px-2.5 py-0.5 rounded-[20px] mt-1.5 inline-block">
+                      {order.order_type === 'dine_in' ? `Table ${order.table_number || 'N/A'}` : 'Takeaway'}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-['IBM_Plex_Mono'] text-[20px] font-bold text-[#3FD08F]">
+                      Ready
+                    </div>
+                    <div className="text-[10px] uppercase text-[#9EA2AC] tracking-[0.5px] mt-0.5">
+                      {order.ready_at ? `${Math.floor((Date.now() - new Date(order.ready_at).getTime()) / 60000)}m ago` : 'Just now'}
+                    </div>
+                  </div>
+                </div>
+                <div className="my-3 flex flex-col gap-1.5">
+                  {order.items?.map(item => (
+                    <div key={item.id} className="flex justify-between text-[14px] font-medium">
+                      <span>
+                        <span className="font-['IBM_Plex_Mono'] text-[#B7D4E8] mr-2">{item.quantity}×</span>
+                        {item.product_name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2 mt-3.5">
+                  <button
+                    onClick={() => handleUpdateOrderStatus(order.id, 'served')}
+                    className="flex-none w-full py-2.5 rounded-[10px] font-semibold text-[13px] border-none cursor-pointer font-['Inter'] bg-[#8FB9D6] text-[#170438] hover:bg-[#B7D4E8] transition-all active:scale-95"
+                  >
+                    Bump — Order Served
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
