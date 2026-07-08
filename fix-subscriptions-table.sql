@@ -86,6 +86,23 @@ BEGIN
 END $$;
 
 -- Update status CHECK constraint to include 'trial'
-DROP CONSTRAINT IF EXISTS subscriptions_status_check ON public.subscriptions;
-ALTER TABLE public.subscriptions ADD CONSTRAINT subscriptions_status_check 
-CHECK (status IN ('trialing', 'active', 'past_due', 'canceled', 'trial'));
+DO $$
+BEGIN
+    -- Check if the old constraint exists and drop it
+    IF EXISTS (
+        SELECT 1 FROM pg_constraint 
+        WHERE conname = 'subscriptions_status_check'
+        AND conrelid = 'public.subscriptions'::regclass
+    ) THEN
+        ALTER TABLE public.subscriptions DROP CONSTRAINT subscriptions_status_check;
+    END IF;
+    
+    -- Add the updated constraint
+    ALTER TABLE public.subscriptions ADD CONSTRAINT subscriptions_status_check 
+    CHECK (status IN ('trialing', 'active', 'past_due', 'canceled', 'trial'));
+EXCEPTION
+    WHEN others THEN
+        -- If constraint doesn't exist or other error, just add it
+        ALTER TABLE public.subscriptions ADD CONSTRAINT subscriptions_status_check 
+        CHECK (status IN ('trialing', 'active', 'past_due', 'canceled', 'trial'));
+END $$;
