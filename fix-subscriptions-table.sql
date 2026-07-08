@@ -25,6 +25,40 @@ BEGIN
     END IF;
 END $$;
 
+-- Add current_period_start column if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'subscriptions' 
+        AND column_name = 'current_period_start'
+    ) THEN
+        -- Add column without NOT NULL first
+        ALTER TABLE public.subscriptions ADD COLUMN current_period_start TIMESTAMP WITH TIME ZONE;
+        -- Set default value for existing rows
+        UPDATE public.subscriptions SET current_period_start = NOW() WHERE current_period_start IS NULL;
+        -- Now add NOT NULL constraint
+        ALTER TABLE public.subscriptions ALTER COLUMN current_period_start SET NOT NULL;
+    END IF;
+END $$;
+
+-- Add current_period_end column if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'subscriptions' 
+        AND column_name = 'current_period_end'
+    ) THEN
+        -- Add column without NOT NULL first
+        ALTER TABLE public.subscriptions ADD COLUMN current_period_end TIMESTAMP WITH TIME ZONE;
+        -- Set default value for existing rows
+        UPDATE public.subscriptions SET current_period_end = NOW() + INTERVAL '1 month' WHERE current_period_end IS NULL;
+        -- Now add NOT NULL constraint
+        ALTER TABLE public.subscriptions ALTER COLUMN current_period_end SET NOT NULL;
+    END IF;
+END $$;
+
 -- Add start_date column if it doesn't exist
 DO $$
 BEGIN
