@@ -141,36 +141,48 @@ export default function SuperAdminDashboard() {
       const { data: ordersData } = await supabase.from('orders').select('total')
       const totalSales = (ordersData || []).reduce((sum, o) => sum + (o.total || 0), 0)
 
-      // Load recent activity from sa_activity_logs
-      const { data: activityData } = await supabase
-        .from('sa_activity_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10)
+      // Load recent activity from sa_activity_logs (if table exists)
+      let formattedActivity: RecentActivity[] = []
+      try {
+        const { data: activityData } = await supabase
+          .from('sa_activity_logs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10)
 
-      const formattedActivity = (activityData || []).map((log: any) => ({
-        id: log.id,
-        type: log.action,
-        description: log.description || log.action,
-        restaurant: 'System',
-        timestamp: log.created_at,
-      }))
+        formattedActivity = (activityData || []).map((log: any) => ({
+          id: log.id,
+          type: log.action,
+          description: log.description || log.action,
+          restaurant: 'System',
+          timestamp: log.created_at,
+        }))
+      } catch (e) {
+        // Table doesn't exist yet, use empty array
+        formattedActivity = []
+      }
 
-      // Load alerts from sa_notifications
-      const { data: notificationsData } = await supabase
-        .from('sa_notifications')
-        .select('*')
-        .eq('is_read', false)
-        .order('created_at', { ascending: false })
-        .limit(5)
+      // Load alerts from sa_notifications (if table exists)
+      let formattedAlerts: Alert[] = []
+      try {
+        const { data: notificationsData } = await supabase
+          .from('sa_notifications')
+          .select('*')
+          .eq('is_read', false)
+          .order('created_at', { ascending: false })
+          .limit(5)
 
-      const formattedAlerts = (notificationsData || []).map((notif: any) => ({
-        id: notif.id,
-        type: (notif.type === 'error' ? 'error' : notif.type === 'warning' ? 'warning' : 'info') as 'error' | 'success' | 'info' | 'warning',
-        title: notif.title,
-        message: notif.message,
-        timestamp: notif.created_at,
-      }))
+        formattedAlerts = (notificationsData || []).map((notif: any) => ({
+          id: notif.id,
+          type: (notif.type === 'error' ? 'error' : notif.type === 'warning' ? 'warning' : 'info') as 'error' | 'success' | 'info' | 'warning',
+          title: notif.title,
+          message: notif.message,
+          timestamp: notif.created_at,
+        }))
+      } catch (e) {
+        // Table doesn't exist yet, use empty array
+        formattedAlerts = []
+      }
 
       setStats({
         totalRestaurants: totalRestaurants || 0,
@@ -262,7 +274,7 @@ export default function SuperAdminDashboard() {
 
           <div className="mb-1.5">
             <div className="text-[10.5px] tracking-[1.3px] uppercase text-[#7C77B3] px-3 py-3.5 font-semibold">Restaurants</div>
-            <Link to="/superadmin/restaurants" className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] ${activeNav === 'restaurants' ? 'bg-white/12 text-white font-medium' : 'text-[#C9C6EA] hover:bg-white/6'}`}>
+            <Link to="/superadmin/restaurants" className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] ${window.location.pathname === '/superadmin/restaurants' ? 'bg-white/12 text-white font-medium' : 'text-[#C9C6EA] hover:bg-white/6'}`}>
               <Building2 className="w-4 h-4" />
               All Restaurants <span className="ml-auto font-mono text-[10.5px] bg-white/10 px-1.5 py-px rounded-[20px] text-[#D9D6F5]">{stats.totalRestaurants}</span>
             </Link>
@@ -274,11 +286,11 @@ export default function SuperAdminDashboard() {
 
           <div className="mb-1.5">
             <div className="text-[10.5px] tracking-[1.3px] uppercase text-[#7C77B3] px-3 py-3.5 font-semibold">Subscriptions</div>
-            <Link to="/superadmin/subscriptions" className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] ${activeNav === 'subscriptions' ? 'bg-white/12 text-white font-medium' : 'text-[#C9C6EA] hover:bg-white/6'}`}>
+            <Link to="/superadmin/subscriptions" className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] ${window.location.pathname === '/superadmin/subscriptions' ? 'bg-white/12 text-white font-medium' : 'text-[#C9C6EA] hover:bg-white/6'}`}>
               <CreditCard className="w-4 h-4" />
               Plans & Pricing
             </Link>
-            <Link to="/superadmin/payments" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] text-[#C9C6EA] hover:bg-white/6">
+            <Link to="/superadmin/payments" className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] ${window.location.pathname === '/superadmin/payments' ? 'bg-white/12 text-white font-medium' : 'text-[#C9C6EA] hover:bg-white/6'}`}>
               <DollarSign className="w-4 h-4" />
               Billing & Invoices
             </Link>
@@ -286,25 +298,21 @@ export default function SuperAdminDashboard() {
 
           <div className="mb-1.5">
             <div className="text-[10.5px] tracking-[1.3px] uppercase text-[#7C77B3] px-3 py-3.5 font-semibold">Users</div>
-            <Link to="/superadmin/users" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] text-[#C9C6EA] hover:bg-white/6">
+            <Link to="/superadmin/users" className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] ${window.location.pathname === '/superadmin/users' ? 'bg-white/12 text-white font-medium' : 'text-[#C9C6EA] hover:bg-white/6'}`}>
               <Users className="w-4 h-4" />
               Owners & Staff
-            </Link>
-            <Link to="/superadmin/roles" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] text-[#C9C6EA] hover:bg-white/6">
-              <Shield className="w-4 h-4" />
-              Roles & Permissions
             </Link>
           </div>
 
           <div className="mb-1.5">
             <div className="text-[10.5px] tracking-[1.3px] uppercase text-[#7C77B3] px-3 py-3.5 font-semibold">System</div>
-            <Link to="/superadmin/settings" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] text-[#C9C6EA] hover:bg-white/6">
+            <Link to="/superadmin/settings" className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] ${window.location.pathname === '/superadmin/settings' ? 'bg-white/12 text-white font-medium' : 'text-[#C9C6EA] hover:bg-white/6'}`}>
               <Settings className="w-4 h-4" />
               Settings
             </Link>
-            <Link to="/superadmin/audit" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] text-[#C9C6EA] hover:bg-white/6">
-              <Shield className="w-4 h-4" />
-              Audit Logs
+            <Link to="/superadmin/reports" className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] ${window.location.pathname === '/superadmin/reports' ? 'bg-white/12 text-white font-medium' : 'text-[#C9C6EA] hover:bg-white/6'}`}>
+              <FileText className="w-4 h-4" />
+              Reports
             </Link>
           </div>
         </div>
@@ -312,10 +320,17 @@ export default function SuperAdminDashboard() {
         {/* Sidebar Footer */}
         <div className="px-5 py-4 border-t border-white/8 flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-[#5286B3] flex items-center justify-center text-xs font-semibold text-white flex-shrink-0">SA</div>
-          <div>
+          <div className="flex-1">
             <div className="text-[12.5px] font-medium text-white">Super Admin</div>
             <div className="text-[10.5px] text-[#9C98CE]">Root Access</div>
           </div>
+          <button 
+            onClick={() => logout()}
+            className="p-2 rounded-lg text-[#C9C6EA] hover:bg-white/10 transition-colors"
+            title="Logout"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </div>
 
