@@ -269,7 +269,7 @@ function App() {
             <Route
               path="/superadmin"
               element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
+                <ProtectedRoute>
                   <SuperAdminDashboard />
                 </ProtectedRoute>
               }
@@ -277,7 +277,7 @@ function App() {
             <Route
               path="/superadmin/restaurants"
               element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
+                <ProtectedRoute>
                   <SuperAdminRestaurants />
                 </ProtectedRoute>
               }
@@ -285,7 +285,7 @@ function App() {
             <Route
               path="/superadmin/restaurants/new"
               element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
+                <ProtectedRoute>
                   <SuperAdminRestaurantSetupWizard />
                 </ProtectedRoute>
               }
@@ -293,7 +293,7 @@ function App() {
             <Route
               path="/superadmin/subscriptions"
               element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
+                <ProtectedRoute>
                   <SuperAdminSubscriptions />
                 </ProtectedRoute>
               }
@@ -301,7 +301,7 @@ function App() {
             <Route
               path="/superadmin/users"
               element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
+                <ProtectedRoute>
                   <SuperAdminUsers />
                 </ProtectedRoute>
               }
@@ -309,7 +309,7 @@ function App() {
             <Route
               path="/superadmin/payments"
               element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
+                <ProtectedRoute>
                   <SuperAdminPayments />
                 </ProtectedRoute>
               }
@@ -317,7 +317,7 @@ function App() {
             <Route
               path="/superadmin/settings"
               element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
+                <ProtectedRoute>
                   <SuperAdminSettings />
                 </ProtectedRoute>
               }
@@ -325,7 +325,7 @@ function App() {
             <Route
               path="/superadmin/reports"
               element={
-                <ProtectedRoute allowedRoles={['super_admin']}>
+                <ProtectedRoute>
                   <SuperAdminReports />
                 </ProtectedRoute>
               }

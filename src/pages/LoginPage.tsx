@@ -15,8 +15,13 @@ export default function LoginPage() {
   // Redirect to appropriate dashboard when user is logged in
   React.useEffect(() => {
     if (user) {
+      console.log('User logged in:', user)
+      console.log('is_super_admin:', user.is_super_admin)
+      console.log('role:', user.role)
+      
       // Super Admin redirect
       if (user.is_super_admin) {
+        console.log('Redirecting to /superadmin')
         navigate('/superadmin', { replace: true })
         return
       }
@@ -28,6 +33,7 @@ export default function LoginPage() {
         kitchen: '/kitchen',
         customer: '/customer',
       }
+      console.log('Redirecting to:', roleRoutes[user.role] || '/manager')
       navigate(roleRoutes[user.role] || '/manager', { replace: true })
     }
   }, [user, navigate])
