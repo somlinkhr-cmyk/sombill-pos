@@ -45,6 +45,28 @@ CREATE TABLE IF NOT EXISTS sa_subscription_plans (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Enable RLS on sa_subscription_plans
+ALTER TABLE sa_subscription_plans ENABLE ROW LEVEL SECURITY;
+
+-- Create RLS policies for sa_subscription_plans
+-- Allow super admins to do everything
+CREATE POLICY "Super admins can manage subscription plans"
+ON sa_subscription_plans
+FOR ALL
+USING (
+    EXISTS (
+        SELECT 1 FROM users
+        WHERE users.id = auth.uid()
+        AND users.is_super_admin = true
+    )
+);
+
+-- Allow authenticated users to view active plans
+CREATE POLICY "Authenticated users can view active subscription plans"
+ON sa_subscription_plans
+FOR SELECT
+USING (is_active = true);
+
 -- =====================================================
 -- SUPER ADMIN SUBSCRIPTIONS TABLE
 -- =====================================================
