@@ -463,7 +463,7 @@ CREATE TABLE IF NOT EXISTS public.inventory_categories (
 -- ============================================================================
 -- SUPPLIERS TABLE
 -- ============================================================================
-CREATE TABLE IF NOT EXISTS PUBLIC.suppliers (
+CREATE TABLE IF NOT EXISTS public.suppliers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
   restaurant_id UUID NOT NULL REFERENCES public.restaurants(id) ON DELETE CASCADE,

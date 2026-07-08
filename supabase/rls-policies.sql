@@ -3,36 +3,8 @@
 -- Production-ready RLS for multi-tenant restaurant management
 -- ============================================================================
 
--- Helper function to check if user is super admin
-CREATE OR REPLACE FUNCTION public.is_super_admin()
-RETURNS BOOLEAN
-LANGUAGE sql
-SECURITY DEFINER
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.users
-    WHERE id = auth.uid()
-    AND is_super_admin = true
-  );
-$$;
-
--- Helper function to get user's tenant_id
-CREATE OR REPLACE FUNCTION public.get_user_tenant_id()
-RETURNS UUID
-LANGUAGE sql
-SECURITY DEFINER
-AS $$
-  SELECT tenant_id FROM public.restaurant_users WHERE user_id = auth.uid() LIMIT 1;
-$$;
-
--- Helper function to get user's restaurant_id
-CREATE OR REPLACE FUNCTION public.get_user_restaurant_id()
-RETURNS UUID
-LANGUAGE sql
-SECURITY DEFINER
-AS $$
-  SELECT restaurant_id FROM public.restaurant_users WHERE user_id = auth.uid() LIMIT 1;
-$$;
+-- Note: Helper functions (is_super_admin, get_user_tenant_id, get_user_restaurant_id)
+-- are defined in functions.sql and must be run before this file
 
 -- ============================================================================
 -- USERS TABLE RLS

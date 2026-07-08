@@ -5,36 +5,18 @@
 -- This file runs all SQL migrations in the correct order to set up the complete
 -- production-ready backend for the restaurant management system.
 --
--- RUN THIS FILE IN SUPABASE SQL EDITOR
--- ============================================================================
--- 
+-- IMPORTANT: Run each file separately in Supabase SQL Editor in this order.
+-- Do NOT use \ir commands as they may not work in Supabase web interface.
+--
 -- EXECUTION ORDER:
 -- 1. complete-schema.sql - Creates all tables
--- 2. functions.sql - Creates PostgreSQL functions
+-- 2. functions.sql - Creates PostgreSQL functions (including RLS helper functions)
 -- 3. triggers.sql - Creates triggers for automation
 -- 4. indexes.sql - Creates performance indexes
--- 5. rls-policies.sql - Enables Row Level Security
+-- 5. rls-policies.sql - Enables Row Level Security (requires functions.sql first)
 -- 6. seed-data.sql - Inserts default subscription plans and system settings
 --
 -- ============================================================================
-
--- Step 1: Create complete schema
-\ir supabase/complete-schema.sql
-
--- Step 2: Create PostgreSQL functions
-\ir supabase/functions.sql
-
--- Step 3: Create triggers
-\ir supabase/triggers.sql
-
--- Step 4: Create indexes
-\ir supabase/indexes.sql
-
--- Step 5: Enable RLS policies
-\ir supabase/rls-policies.sql
-
--- Step 6: Insert seed data
-\ir supabase/seed-data.sql
 
 -- ============================================================================
 -- MIGRATION COMPLETE
