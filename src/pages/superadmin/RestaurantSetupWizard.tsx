@@ -160,11 +160,17 @@ export default function RestaurantSetupWizard() {
         .order('monthly_price', { ascending: true })
 
       if (error) throw error
+      
+      console.log('Loaded plans:', data)
       setPlans(data || [])
       
       // Select first plan by default
       if (data && data.length > 0) {
+        console.log('Setting default plan:', data[0].id)
         setFormData(prev => ({ ...prev, plan_id: data[0].id }))
+      } else {
+        console.warn('No active subscription plans found')
+        toast.error('No subscription plans available. Please create plans first.')
       }
     } catch (error) {
       console.error('Error loading plans:', error)
