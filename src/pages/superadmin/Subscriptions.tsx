@@ -793,9 +793,39 @@ function PlanForm({ plan, onSave, onCancel }: { plan: SubscriptionPlan | null, o
     setLoading(true)
 
     try {
+      // Generate slug from name if not provided
+      let slug = formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+      
+      // Check if slug already exists (for new plans only)
+      if (!plan) {
+        const { data: existingPlan } = await supabase
+          .from('sa_subscription_plans')
+          .select('slug')
+          .eq('slug', slug)
+          .single()
+        
+        if (existingPlan) {
+          // Append a number to make it unique
+          let counter = 1
+          while (true) {
+            const newSlug = `${slug}-${counter}`
+            const { data: checkPlan } = await supabase
+              .from('sa_subscription_plans')
+              .select('slug')
+              .eq('slug', newSlug)
+              .single()
+            if (!checkPlan) {
+              slug = newSlug
+              break
+            }
+            counter++
+          }
+        }
+      }
+
       const planData = {
         name: formData.name,
-        slug: formData.slug.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        slug: slug,
         description: formData.description || null,
         monthly_price: formData.monthly_price,
         yearly_price: formData.yearly_price,
