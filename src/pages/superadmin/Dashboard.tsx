@@ -290,6 +290,20 @@ export default function SuperAdminDashboard() {
               <CreditCard className="w-4 h-4" />
               Plans & Pricing
             </Link>
+            <div className="pl-9 pr-3 py-1 space-y-1">
+              <Link to="/superadmin/subscriptions/basic" className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] ${window.location.pathname === '/superadmin/subscriptions/basic' ? 'bg-white/12 text-white font-medium' : 'text-[#C9C6EA] hover:bg-white/6'}`}>
+                <div className="w-2 h-2 rounded-full bg-[#3FD988]" />
+                Basic
+              </Link>
+              <Link to="/superadmin/subscriptions/standard" className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] ${window.location.pathname === '/superadmin/subscriptions/standard' ? 'bg-white/12 text-white font-medium' : 'text-[#C9C6EA] hover:bg-white/6'}`}>
+                <div className="w-2 h-2 rounded-full bg-[#5286B3]" />
+                Standard
+              </Link>
+              <Link to="/superadmin/subscriptions/advanced" className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] ${window.location.pathname === '/superadmin/subscriptions/advanced' ? 'bg-white/12 text-white font-medium' : 'text-[#C9C6EA] hover:bg-white/6'}`}>
+                <div className="w-2 h-2 rounded-full bg-[#5B4FE0]" />
+                Advanced
+              </Link>
+            </div>
             <Link to="/superadmin/payments" className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13.3px] ${window.location.pathname === '/superadmin/payments' ? 'bg-white/12 text-white font-medium' : 'text-[#C9C6EA] hover:bg-white/6'}`}>
               <DollarSign className="w-4 h-4" />
               Billing & Invoices
