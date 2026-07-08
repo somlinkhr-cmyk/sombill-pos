@@ -299,6 +299,30 @@ function App() {
               }
             />
             <Route
+              path="/superadmin/subscriptions/basic"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminSubscriptions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/subscriptions/standard"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminSubscriptions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/subscriptions/advanced"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminSubscriptions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/superadmin/users"
               element={
                 <ProtectedRoute>
