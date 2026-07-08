@@ -10,11 +10,10 @@
 
 -- After creating the auth user, run this SQL to create the public user record:
 -- Replace the UUID with the actual auth user UUID
-INSERT INTO users (id, email, is_super_admin, is_active, is_verified, created_at, updated_at)
+INSERT INTO users (id, email, is_super_admin, is_active, created_at, updated_at)
 VALUES (
   'ecd9ff59-3366-40b3-bcb0-dac7e61bef2a',
   'superadmin@gmail.com',
-  true,
   true,
   true,
   NOW(),
@@ -23,5 +22,4 @@ VALUES (
 ON CONFLICT (id) DO UPDATE SET
   is_super_admin = true,
   is_active = true,
-  is_verified = true,
   updated_at = NOW();
