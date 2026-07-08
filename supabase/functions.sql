@@ -194,28 +194,12 @@ BEGIN
     true
   ) RETURNING id INTO v_subscription_id;
 
-  -- Create Supabase Auth user for owner
-  INSERT INTO auth.users (
-    id,
-    email,
-    encrypted_password,
-    email_confirmed_at,
-    raw_app_meta_data,
-    raw_user_meta_data,
-    created_at,
-    updated_at
-  ) VALUES (
-    uuid_generate_v4(),
-    p_owner_email,
-    crypt(p_owner_password, gen_salt('bf')),
-    NOW(),
-    '{"provider":"email","provider_id":"' || p_owner_email || '"}',
-    '{"full_name":"' || p_owner_first_name || ' ' || p_owner_last_name || '"}',
-    NOW(),
-    NOW()
-  ) RETURNING id INTO v_owner_user_id;
+  -- Note: Supabase Auth user should be created by the frontend using Supabase Auth SDK
+  -- The user_id will be passed as a parameter or retrieved from auth.uid()
+  -- For now, we'll create a placeholder user_id that will be updated later
+  v_owner_user_id := NULL;
 
-  -- Create restaurant user record for owner
+  -- Create restaurant user record for owner (user_id will be set after auth user creation)
   INSERT INTO public.restaurant_users (
     tenant_id,
     restaurant_id,
@@ -233,7 +217,7 @@ BEGIN
     v_tenant_id,
     v_restaurant_id,
     v_branch_id,
-    v_owner_user_id,
+    NULL, -- Will be set after auth user creation
     NULL, -- Will be set after role creation
     p_owner_first_name,
     p_owner_last_name,
