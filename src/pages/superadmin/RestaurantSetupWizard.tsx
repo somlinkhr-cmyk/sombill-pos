@@ -154,7 +154,7 @@ export default function RestaurantSetupWizard() {
   const loadPlans = useCallback(async () => {
     try {
       const { data, error } = await supabase
-        .from('subscription_plans')
+        .from('sa_subscription_plans')
         .select('*')
         .eq('is_active', true)
         .order('monthly_price', { ascending: true })
