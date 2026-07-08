@@ -273,11 +273,42 @@ export default function RestaurantSetupWizard() {
       
       // Step 1: Create tenant
       console.log('Step 1: Creating tenant...')
+      
+      // Generate slug from name
+      let tenantSlug = formData.name.toLowerCase().replace(/\s+/g, '-')
+      
+      // Check if slug already exists and make it unique
+      const { data: existingTenant } = await supabase
+        .from('tenants')
+        .select('slug')
+        .eq('slug', tenantSlug)
+        .single()
+      
+      if (existingTenant) {
+        // Append a number to make it unique
+        let counter = 1
+        while (true) {
+          const newSlug = `${tenantSlug}-${counter}`
+          const { data: checkTenant } = await supabase
+            .from('tenants')
+            .select('slug')
+            .eq('slug', newSlug)
+            .single()
+          if (!checkTenant) {
+            tenantSlug = newSlug
+            break
+          }
+          counter++
+        }
+      }
+      
+      console.log('Using tenant slug:', tenantSlug)
+      
       const { data: tenantData, error: tenantError } = await supabase
         .from('tenants')
         .insert({
           name: formData.name,
-          slug: formData.name.toLowerCase().replace(/\s+/g, '-'),
+          slug: tenantSlug,
           subscription_tier: 'silver',
           subscription_status: 'trialing',
           billing_cycle_start: new Date().toISOString().split('T')[0],
