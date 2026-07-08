@@ -168,18 +168,23 @@ $$ LANGUAGE plpgsql;
 -- =====================================================
 -- TRIGGERS FOR UPDATED_AT
 -- =====================================================
+DROP TRIGGER IF EXISTS update_sa_subscription_plans_updated_at ON sa_subscription_plans;
 CREATE TRIGGER update_sa_subscription_plans_updated_at BEFORE UPDATE ON sa_subscription_plans
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_sa_subscriptions_updated_at ON sa_subscriptions;
 CREATE TRIGGER update_sa_subscriptions_updated_at BEFORE UPDATE ON sa_subscriptions
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_sa_payments_updated_at ON sa_payments;
 CREATE TRIGGER update_sa_payments_updated_at BEFORE UPDATE ON sa_payments
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_sa_system_settings_updated_at ON sa_system_settings;
 CREATE TRIGGER update_sa_system_settings_updated_at BEFORE UPDATE ON sa_system_settings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_sa_api_keys_updated_at ON sa_api_keys;
 CREATE TRIGGER update_sa_api_keys_updated_at BEFORE UPDATE ON sa_api_keys
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
