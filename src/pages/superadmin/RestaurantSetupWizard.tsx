@@ -406,6 +406,7 @@ export default function RestaurantSetupWizard() {
 
       if (subscriptionError) {
         console.error('Subscription creation error:', subscriptionError)
+        console.error('Error details:', JSON.stringify(subscriptionError, null, 2))
         throw subscriptionError
       }
       console.log('Subscription created successfully')
