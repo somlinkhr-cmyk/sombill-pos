@@ -33,7 +33,12 @@ BEGIN
         WHERE table_name = 'subscriptions' 
         AND column_name = 'start_date'
     ) THEN
-        ALTER TABLE public.subscriptions ADD COLUMN start_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
+        -- Add column without NOT NULL first
+        ALTER TABLE public.subscriptions ADD COLUMN start_date TIMESTAMP WITH TIME ZONE;
+        -- Set default value for existing rows
+        UPDATE public.subscriptions SET start_date = NOW() WHERE start_date IS NULL;
+        -- Now add NOT NULL constraint
+        ALTER TABLE public.subscriptions ALTER COLUMN start_date SET NOT NULL;
     END IF;
 END $$;
 
@@ -45,7 +50,12 @@ BEGIN
         WHERE table_name = 'subscriptions' 
         AND column_name = 'end_date'
     ) THEN
-        ALTER TABLE public.subscriptions ADD COLUMN end_date TIMESTAMP WITH TIME ZONE NOT NULL;
+        -- Add column without NOT NULL first
+        ALTER TABLE public.subscriptions ADD COLUMN end_date TIMESTAMP WITH TIME ZONE;
+        -- Set default value for existing rows
+        UPDATE public.subscriptions SET end_date = NOW() + INTERVAL '1 month' WHERE end_date IS NULL;
+        -- Now add NOT NULL constraint
+        ALTER TABLE public.subscriptions ALTER COLUMN end_date SET NOT NULL;
     END IF;
 END $$;
 
