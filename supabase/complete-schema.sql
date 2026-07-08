@@ -8,6 +8,22 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ============================================================================
+-- USERS TABLE (User metadata for auth.users)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.users (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  is_super_admin BOOLEAN NOT NULL DEFAULT false,
+  email TEXT,
+  full_name TEXT,
+  avatar_url TEXT,
+  settings JSONB DEFAULT '{}',
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  deleted_at TIMESTAMP WITH TIME ZONE
+);
+
+-- ============================================================================
 -- TENANTS TABLE
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS public.tenants (

@@ -4,6 +4,13 @@
 -- ============================================================================
 
 -- ============================================================================
+-- USERS TABLE INDEXES
+-- ============================================================================
+CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_is_super_admin ON public.users(is_super_admin);
+CREATE INDEX IF NOT EXISTS idx_users_created_at ON public.users(created_at DESC);
+
+-- ============================================================================
 -- TENANTS TABLE INDEXES
 -- ============================================================================
 CREATE INDEX IF NOT EXISTS idx_tenants_slug ON public.tenants(slug);

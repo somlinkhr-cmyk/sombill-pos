@@ -35,6 +35,29 @@ AS $$
 $$;
 
 -- ============================================================================
+-- USERS TABLE RLS
+-- ============================================================================
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Super admins can manage users" ON public.users;
+DROP POLICY IF EXISTS "Users can view own profile" ON public.users;
+
+CREATE POLICY "Super admins can manage users"
+ON public.users
+FOR ALL
+USING (public.is_super_admin());
+
+CREATE POLICY "Users can view own profile"
+ON public.users
+FOR SELECT
+USING (id = auth.uid());
+
+CREATE POLICY "Users can update own profile"
+ON public.users
+FOR UPDATE
+USING (id = auth.uid());
+
+-- ============================================================================
 -- TENANTS TABLE RLS
 -- ============================================================================
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;

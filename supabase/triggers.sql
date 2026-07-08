@@ -17,6 +17,15 @@ END;
 $$;
 
 -- ============================================================================
+-- USERS TABLE UPDATED_AT TRIGGER
+-- ============================================================================
+DROP TRIGGER IF EXISTS users_updated_at ON public.users;
+CREATE TRIGGER users_updated_at
+  BEFORE UPDATE ON public.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_updated_at();
+
+-- ============================================================================
 -- AUDIT LOG TRIGGER FUNCTION
 -- ============================================================================
 CREATE OR REPLACE FUNCTION public.handle_audit_log()
