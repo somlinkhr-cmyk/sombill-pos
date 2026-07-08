@@ -129,8 +129,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data && data.is_active) {
         setUser(data)
         
-        // Load tenant data
-        if (data.tenant_id) {
+        // Load tenant data only if not super admin and has tenant_id
+        if (!data.is_super_admin && data.tenant_id) {
           await loadTenantData(data.tenant_id)
         }
       } else {

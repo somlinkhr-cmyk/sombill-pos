@@ -15,6 +15,12 @@ export default function LoginPage() {
   // Redirect to appropriate dashboard when user is logged in
   React.useEffect(() => {
     if (user) {
+      // Super Admin redirect
+      if (user.is_super_admin) {
+        navigate('/superadmin', { replace: true })
+        return
+      }
+      
       const roleRoutes: Record<string, string> = {
         manager: '/manager',
         cashier: '/cashier',

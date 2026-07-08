@@ -94,13 +94,17 @@ function RoleRedirect() {
     return <Navigate to="/login" replace />
   }
 
+  // Super Admin redirect
+  if (user.is_super_admin) {
+    return <Navigate to="/superadmin" replace />
+  }
+
   const roleRoutes: Record<string, string> = {
     manager: '/manager',
     cashier: '/cashier',
     waiter: '/waiter/dashboard',
     kitchen: '/kitchen/system',
     customer: '/menu',
-    super_admin: '/superadmin',
   }
 
   return <Navigate to={roleRoutes[user.role] || '/login'} replace />
