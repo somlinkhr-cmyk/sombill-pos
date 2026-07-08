@@ -18,6 +18,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 const PERMISSIONS: Record<UserRole, string[]> = {
+  super_admin: ['*'], // All permissions
   manager: [
     'dashboard.view',
     'orders.view',

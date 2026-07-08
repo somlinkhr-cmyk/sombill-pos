@@ -22,6 +22,16 @@ const KitchenDashboard = lazy(() => import('./pages/kitchen/KitchenDashboard'))
 const KitchenOrders = lazy(() => import('./pages/kitchen/KitchenOrders'))
 const KitchenMenu = lazy(() => import('./pages/kitchen/KitchenMenu'))
 
+// Super Admin pages
+const SuperAdminDashboard = lazy(() => import('./pages/superadmin/Dashboard'))
+const SuperAdminRestaurants = lazy(() => import('./pages/superadmin/Restaurants'))
+const SuperAdminRestaurantSetupWizard = lazy(() => import('./pages/superadmin/RestaurantSetupWizard'))
+const SuperAdminSubscriptions = lazy(() => import('./pages/superadmin/Subscriptions'))
+const SuperAdminUsers = lazy(() => import('./pages/superadmin/Users'))
+const SuperAdminPayments = lazy(() => import('./pages/superadmin/Payments'))
+const SuperAdminSettings = lazy(() => import('./pages/superadmin/Settings'))
+const SuperAdminReports = lazy(() => import('./pages/superadmin/Reports'))
+
 // Loading fallback component
 function PageLoader() {
   return (
@@ -49,6 +59,11 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
     return <Navigate to="/login" replace />
   }
 
+  // Super Admin bypass - check is_super_admin column
+  if (user.is_super_admin) {
+    return <>{children}</>
+  }
+
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     const roleRoutes: Record<string, string> = {
       manager: '/manager',
@@ -56,6 +71,7 @@ function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode;
       waiter: '/waiter/dashboard',
       kitchen: '/kitchen/system',
       customer: '/menu',
+      super_admin: '/superadmin',
     }
     return <Navigate to={roleRoutes[user.role] || '/login'} replace />
   }
@@ -84,6 +100,7 @@ function RoleRedirect() {
     waiter: '/waiter/dashboard',
     kitchen: '/kitchen/system',
     customer: '/menu',
+    super_admin: '/superadmin',
   }
 
   return <Navigate to={roleRoutes[user.role] || '/login'} replace />
@@ -242,6 +259,72 @@ function App() {
             <Route
               path="/menu"
               element={<NFCMenu />}
+            />
+            
+            {/* Super Admin Routes */}
+            <Route
+              path="/superadmin"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <SuperAdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/restaurants"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <SuperAdminRestaurants />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/restaurants/new"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <SuperAdminRestaurantSetupWizard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/subscriptions"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <SuperAdminSubscriptions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/users"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <SuperAdminUsers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/payments"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <SuperAdminPayments />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/settings"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <SuperAdminSettings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/reports"
+              element={
+                <ProtectedRoute allowedRoles={['super_admin']}>
+                  <SuperAdminReports />
+                </ProtectedRoute>
+              }
             />
             
             <Route path="*" element={<Navigate to="/" replace />} />

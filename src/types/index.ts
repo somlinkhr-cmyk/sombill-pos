@@ -1,4 +1,4 @@
-export type UserRole = 'manager' | 'cashier' | 'waiter' | 'kitchen'
+export type UserRole = 'manager' | 'cashier' | 'waiter' | 'kitchen' | 'super_admin'
 export type SubscriptionTier = 'silver' | 'gold' | 'platinum'
 export type SubscriptionStatus = 'trialing' | 'active' | 'past_due' | 'canceled'
 
