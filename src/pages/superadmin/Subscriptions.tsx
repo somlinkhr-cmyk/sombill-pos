@@ -96,6 +96,8 @@ export default function SuperAdminSubscriptions() {
   const [showResumeModal, setShowResumeModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [showPlanModal, setShowPlanModal] = useState(false)
+  const [editingPlan, setEditingPlan] = useState<SubscriptionPlan | null>(null)
   const [activeTab, setActiveTab] = useState<'subscriptions' | 'plans'>('subscriptions')
 
   const loadSubscriptions = useCallback(async () => {
@@ -293,12 +295,15 @@ export default function SuperAdminSubscriptions() {
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </Button>
-            <Link to="/superadmin/plans/new">
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Plan
-              </Button>
-            </Link>
+            <Button
+              onClick={() => {
+                setEditingPlan(null)
+                setShowPlanModal(true)
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Plan
+            </Button>
           </div>
         </div>
       </header>
@@ -642,12 +647,17 @@ export default function SuperAdminSubscriptions() {
                           )
                         ))}
                       </div>
-                      <Link to={`/superadmin/plans/${plan.id}`}>
-                        <Button className="w-full" variant="outline">
-                          <Settings className="w-4 h-4 mr-2" />
-                          Manage
-                        </Button>
-                      </Link>
+                      <Button 
+                        className="w-full" 
+                        variant="outline"
+                        onClick={() => {
+                          setEditingPlan(plan)
+                          setShowPlanModal(true)
+                        }}
+                      >
+                        <Settings className="w-4 h-4 mr-2" />
+                        Manage
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -749,6 +759,163 @@ export default function SuperAdminSubscriptions() {
           </div>
         </div>
       </Modal>
+
+      {/* Plan Modal */}
+      <Modal
+        isOpen={showPlanModal}
+        onClose={() => {
+          setShowPlanModal(false)
+          setEditingPlan(null)
+        }}
+        title={editingPlan ? 'Edit Plan' : 'Add New Plan'}
+      >
+        <PlanForm 
+          plan={editingPlan}
+          onSave={() => {
+            setShowPlanModal(false)
+            setEditingPlan(null)
+            loadPlans()
+          }}
+          onCancel={() => {
+            setShowPlanModal(false)
+            setEditingPlan(null)
+          }}
+        />
+      </Modal>
     </div>
+  )
+}
+
+function PlanForm({ plan, onSave, onCancel }: { plan: SubscriptionPlan | null, onSave: () => void, onCancel: () => void }) {
+  const [formData, setFormData] = useState({
+    name: plan?.name || '',
+    slug: plan?.slug || '',
+    description: plan?.description || '',
+    monthly_price: plan?.monthly_price || 0,
+    yearly_price: plan?.yearly_price || 0,
+    currency: plan?.currency || 'USD',
+    limits: plan?.limits || {},
+    features: plan?.features || {},
+    is_active: plan?.is_active ?? true,
+  })
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const planData = {
+        name: formData.name,
+        slug: formData.slug.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        description: formData.description,
+        monthly_price: formData.monthly_price,
+        yearly_price: formData.yearly_price,
+        currency: formData.currency,
+        limits: formData.limits,
+        features: formData.features,
+        is_active: formData.is_active,
+      }
+
+      let error
+      if (plan) {
+        const result = await supabase
+          .from('sa_subscription_plans')
+          .update(planData)
+          .eq('id', plan.id)
+        error = result.error
+      } else {
+        const result = await supabase
+          .from('sa_subscription_plans')
+          .insert(planData)
+        error = result.error
+      }
+
+      if (error) throw error
+
+      toast.success(plan ? 'Plan updated successfully' : 'Plan created successfully')
+      onSave()
+    } catch (error) {
+      console.error('Error saving plan:', error)
+      toast.error('Failed to save plan')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Plan Name *</label>
+        <input
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Slug *</label>
+        <input
+          type="text"
+          value={formData.slug}
+          onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          required
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <textarea
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          rows={3}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Monthly Price *</label>
+          <input
+            type="number"
+            step="0.01"
+            value={formData.monthly_price}
+            onChange={(e) => setFormData({ ...formData, monthly_price: parseFloat(e.target.value) || 0 })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Yearly Price *</label>
+          <input
+            type="number"
+            step="0.01"
+            value={formData.yearly_price}
+            onChange={(e) => setFormData({ ...formData, yearly_price: parseFloat(e.target.value) || 0 })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id="is_active"
+          checked={formData.is_active}
+          onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor="is_active" className="text-sm font-medium text-gray-700">Active</label>
+      </div>
+      <div className="flex justify-end space-x-3 pt-4">
+        <Button variant="outline" type="button" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? 'Saving...' : (plan ? 'Update' : 'Create')}
+        </Button>
+      </div>
+    </form>
   )
 }
