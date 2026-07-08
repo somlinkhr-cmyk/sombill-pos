@@ -269,283 +269,74 @@ export default function RestaurantSetupWizard() {
 
     setCreating(true)
     try {
-      console.log('Starting restaurant creation process...')
+      console.log('Starting restaurant creation process using create_restaurant function...')
       
-      // Step 1: Create tenant
-      console.log('Step 1: Creating tenant...')
-      
-      // Generate slug from name
-      let tenantSlug = formData.name.toLowerCase().replace(/\s+/g, '-')
+      // Generate unique slug from name
+      let restaurantSlug = formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-')
       
       // Check if slug already exists and make it unique
-      const { data: existingTenant } = await supabase
-        .from('tenants')
+      const { data: existingRestaurant } = await supabase
+        .from('restaurants')
         .select('slug')
-        .eq('slug', tenantSlug)
+        .eq('slug', restaurantSlug)
         .single()
       
-      if (existingTenant) {
-        // Append a number to make it unique
+      if (existingRestaurant) {
         let counter = 1
         while (true) {
-          const newSlug = `${tenantSlug}-${counter}`
-          const { data: checkTenant } = await supabase
-            .from('tenants')
+          const newSlug = `${restaurantSlug}-${counter}`
+          const { data: checkRestaurant } = await supabase
+            .from('restaurants')
             .select('slug')
             .eq('slug', newSlug)
             .single()
-          if (!checkTenant) {
-            tenantSlug = newSlug
+          if (!checkRestaurant) {
+            restaurantSlug = newSlug
             break
           }
           counter++
         }
       }
       
-      console.log('Using tenant slug:', tenantSlug)
+      console.log('Using restaurant slug:', restaurantSlug)
       
-      const { data: tenantData, error: tenantError } = await supabase
-        .from('tenants')
-        .insert({
-          name: formData.name,
-          slug: tenantSlug,
-          subscription_tier: 'silver',
-          subscription_status: 'trialing',
-          billing_cycle_start: new Date().toISOString().split('T')[0],
-          trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        })
-        .select()
-        .single()
-
-      if (tenantError) {
-        console.error('Tenant creation error:', tenantError)
-        throw tenantError
-      }
-      console.log('Tenant created successfully:', tenantData.id)
-
-      // Step 2: Create restaurant
-      console.log('Step 2: Creating restaurant...')
-      const { data: restaurantData, error: restaurantError } = await supabase
-        .from('restaurants')
-        .insert({
-          tenant_id: tenantData.id,
-          name: formData.name,
-          slug: formData.slug,
-          business_type: formData.business_type,
-          logo_url: formData.logo_url,
-          brand_color: formData.brand_color,
-          phone: formData.phone,
-          email: formData.email,
-          country: formData.country,
-          city: formData.city,
-          address: formData.address,
-          currency: formData.currency,
-          timezone: formData.timezone,
-          language: formData.language,
-          status: 'active',
-        })
-        .select()
-        .single()
-
-      if (restaurantError) {
-        console.error('Restaurant creation error:', restaurantError)
-        throw restaurantError
-      }
-      console.log('Restaurant created successfully:', restaurantData.id)
-
-      // Step 3: Create main branch
-      console.log('Step 3: Creating main branch...')
-      const { error: branchError } = await supabase
-        .from('branches')
-        .insert({
-          restaurant_id: restaurantData.id,
-          tenant_id: tenantData.id,
-          name: 'Main Branch',
-          address: formData.address,
-          phone: formData.phone,
-          email: formData.email,
-          is_main: true,
-          status: 'active',
-        })
-
-      if (branchError) {
-        console.error('Branch creation error:', branchError)
-        throw branchError
-      }
-      console.log('Branch created successfully')
-
-      // Step 4: Create subscription
-      console.log('Step 4: Creating subscription...')
-      const selectedPlan = plans.find(p => p.id === formData.plan_id)
-      console.log('Selected plan:', selectedPlan)
-      const startDate = new Date()
-      const endDate = new Date()
-      endDate.setMonth(endDate.getMonth() + (formData.billing_cycle === 'yearly' ? 12 : 1))
-      
-      const freeTrialDays = selectedPlan?.limits?.free_trial_days || 0
-      const trialEndDate = freeTrialDays > 0
-        ? new Date(Date.now() + freeTrialDays * 24 * 60 * 60 * 1000)
-        : null
-
-      const { error: subscriptionError } = await supabase
-        .from('subscriptions')
-        .insert({
-          tenant_id: tenantData.id,
-          restaurant_id: restaurantData.id,
-          plan_id: formData.plan_id,
-          status: trialEndDate ? 'trial' : 'active',
-          billing_cycle: formData.billing_cycle,
-          current_period_start: startDate.toISOString(),
-          current_period_end: endDate.toISOString(),
-          start_date: startDate.toISOString(),
-          end_date: endDate.toISOString(),
-          trial_end_date: trialEndDate?.toISOString(),
-          auto_renew: true,
-          features: selectedPlan?.features || {},
-        })
-
-      if (subscriptionError) {
-        console.error('Subscription creation error:', subscriptionError)
-        console.error('Error details:', JSON.stringify(subscriptionError, null, 2))
-        throw subscriptionError
-      }
-      console.log('Subscription created successfully')
-
-      // Step 5: Create restaurant settings
-      console.log('Step 5: Creating restaurant settings...')
-      const { error: settingsError } = await supabase
-        .from('restaurant_settings')
-        .insert({
-          restaurant_id: restaurantData.id,
-          tenant_id: tenantData.id,
-          tax_rate: formData.tax_rate,
-          service_charge: formData.service_charge,
-          timezone: formData.timezone,
-          currency_symbol: CURRENCIES.find(c => c.code === formData.currency)?.symbol || '$',
-          currency_position: 'before',
-          decimal_places: 2,
-          thousands_separator: ',',
-        })
-
-      if (settingsError) {
-        console.error('Settings creation error:', settingsError)
-        throw settingsError
-      }
-      console.log('Settings created successfully')
-
-      // Step 6: Create default roles
-      console.log('Step 6: Creating default roles...')
-      try {
-        await supabase.rpc('create_default_roles', {
-          p_tenant_id: tenantData.id,
-          p_restaurant_id: restaurantData.id,
-        })
-        console.log('Default roles created successfully')
-      } catch (roleError) {
-        console.warn('Default roles creation failed (non-critical):', roleError)
-        // Continue even if this fails
-      }
-
-      // Step 7: Create owner account
-      console.log('Step 7: Creating owner account...')
-      const { data: userData, error: userError } = await supabase.auth.signUp({
-        email: formData.owner_email,
-        password: formData.owner_password,
+      // Call the create_restaurant RPC function
+      const { data: result, error: createError } = await supabase.rpc('create_restaurant', {
+        p_restaurant_name: formData.name,
+        p_restaurant_slug: restaurantSlug,
+        p_business_type: formData.business_type,
+        p_phone: formData.phone,
+        p_email: formData.email,
+        p_country: formData.country,
+        p_city: formData.city,
+        p_address: formData.address,
+        p_currency: formData.currency,
+        p_timezone: formData.timezone,
+        p_language: formData.language,
+        p_plan_id: formData.plan_id,
+        p_billing_cycle: formData.billing_cycle,
+        p_owner_first_name: formData.owner_first_name,
+        p_owner_last_name: formData.owner_last_name,
+        p_owner_email: formData.owner_email,
+        p_owner_phone: formData.owner_phone,
+        p_owner_password: formData.owner_password,
+        p_created_by: (await supabase.auth.getUser()).data.user?.id
       })
 
-      if (userError) {
-        console.error('Owner account creation error:', userError)
-        throw userError
+      if (createError) {
+        console.error('Restaurant creation error:', createError)
+        console.error('Error details:', JSON.stringify(createError, null, 2))
+        throw createError
       }
-      console.log('Owner account created successfully:', userData.user?.id)
-
-      // Step 8: Create user profile
-      console.log('Step 8: Creating user profile...')
-      const ownerRole = await supabase
-        .from('roles')
-        .select('id')
-        .eq('tenant_id', tenantData.id)
-        .eq('restaurant_id', restaurantData.id)
-        .eq('slug', 'owner')
-        .single()
-
-      console.log('Owner role:', ownerRole.data)
-
-      const { error: profileError } = await supabase
-        .from('users')
-        .insert({
-          id: userData.user?.id,
-          tenant_id: tenantData.id,
-          restaurant_id: restaurantData.id,
-          branch_id: null, // Will be set after branch creation
-          role_id: ownerRole.data?.id,
-          email: formData.owner_email,
-          password_hash: '', // Handled by Supabase Auth
-          first_name: formData.owner_first_name,
-          last_name: formData.owner_last_name,
-          phone: formData.owner_phone,
-          is_restaurant_owner: true,
-          is_active: true,
-          is_verified: true,
-        })
-
-      if (profileError) {
-        console.error('User profile creation error:', profileError)
-        throw profileError
-      }
-      console.log('User profile created successfully')
-
-      // Step 9: Create default menu categories
-      console.log('Step 9: Creating default menu categories...')
-      const defaultCategories = ['Appetizers', 'Main Course', 'Desserts', 'Beverages']
-      for (const category of defaultCategories) {
-        await supabase.from('menu_categories').insert({
-          restaurant_id: restaurantData.id,
-          tenant_id: tenantData.id,
-          name: category,
-          description: `${category} items`,
-          is_active: true,
-        })
-      }
-      console.log('Default menu categories created successfully')
-
-      // Step 10: Create default tables
-      console.log('Step 10: Creating default tables...')
-      for (let i = 1; i <= 10; i++) {
-        await supabase.from('tables').insert({
-          restaurant_id: restaurantData.id,
-          tenant_id: tenantData.id,
-          number: i,
-          capacity: 4,
-          status: 'available',
-        })
-      }
-      console.log('Default tables created successfully')
-
-      // Step 11: Log activity
-      console.log('Step 11: Logging activity...')
-      try {
-        await supabase.from('sa_activity_logs').insert({
-          user_id: user?.id,
-          action: 'restaurant_created',
-          entity_type: 'restaurant',
-          entity_id: restaurantData.id,
-          details: {
-            restaurant_name: formData.name,
-            restaurant_slug: formData.slug,
-          },
-          ip_address: null,
-          user_agent: navigator.userAgent,
-        })
-        console.log('Activity logged successfully')
-      } catch (logError) {
-        console.warn('Activity logging failed (non-critical):', logError)
-        // Continue even if this fails
-      }
-
+      
+      console.log('Restaurant created successfully:', result)
+      
       toast.success('Restaurant created successfully!')
-      navigate(`/superadmin/restaurants/${restaurantData.id}`)
-    } catch (error: any) {
+      onComplete?.()
+      setCurrentStep(0)
+      setFormData(initialFormData)
+      
+    } catch (error) {
       console.error('Error creating restaurant:', error)
       toast.error(`Failed to create restaurant: ${error.message || 'Please try again.'}`)
     } finally {
