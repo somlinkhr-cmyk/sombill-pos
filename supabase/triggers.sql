@@ -156,7 +156,7 @@ $$;
 -- ============================================================================
 -- ACTIVITY LOG TRIGGER FUNCTION
 -- ============================================================================
-CREATE OR REPLACE FUNCTION public.handle_activity_log(p_action TEXT, p_entity_type TEXT DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.handle_activity_log()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -164,7 +164,23 @@ AS $$
 DECLARE
   v_tenant_id UUID;
   v_restaurant_id UUID;
+  v_action TEXT;
+  v_entity_type TEXT;
 BEGIN
+  -- Set action based on operation
+  v_action := TG_OP;
+  
+  -- Set entity type based on table name
+  IF TG_TABLE_NAME = 'restaurants' THEN
+    v_entity_type := 'restaurant';
+  ELSIF TG_TABLE_NAME = 'orders' THEN
+    v_entity_type := 'order';
+  ELSIF TG_TABLE_NAME = 'restaurant_users' THEN
+    v_entity_type := 'user';
+  ELSE
+    v_entity_type := TG_TABLE_NAME;
+  END IF;
+  
   -- Get tenant_id and restaurant_id from the record if available
   IF TG_TABLE_NAME = 'tenants' THEN
     v_tenant_id := COALESCE(NEW.id, OLD.id);
@@ -192,10 +208,10 @@ BEGIN
     v_tenant_id,
     v_restaurant_id,
     auth.uid(),
-    p_action,
-    p_entity_type,
+    v_action,
+    v_entity_type,
     COALESCE(NEW.id, OLD.id),
-    p_action || ' on ' || TG_TABLE_NAME,
+    v_action || ' on ' || TG_TABLE_NAME,
     jsonb_build_object('table', TG_TABLE_NAME)
   );
 
@@ -560,21 +576,21 @@ DROP TRIGGER IF EXISTS restaurants_activity_log ON public.restaurants;
 CREATE TRIGGER restaurants_activity_log
   AFTER INSERT OR UPDATE ON public.restaurants
   FOR EACH ROW
-  EXECUTE FUNCTION public.handle_activity_log(TG_OP, 'restaurant');
+  EXECUTE FUNCTION public.handle_activity_log();
 
 -- Orders
 DROP TRIGGER IF EXISTS orders_activity_log ON public.orders;
 CREATE TRIGGER orders_activity_log
   AFTER INSERT OR UPDATE ON public.orders
   FOR EACH ROW
-  EXECUTE FUNCTION public.handle_activity_log(TG_OP, 'order');
+  EXECUTE FUNCTION public.handle_activity_log();
 
 -- Restaurant Users
 DROP TRIGGER IF EXISTS restaurant_users_activity_log ON public.restaurant_users;
 CREATE TRIGGER restaurant_users_activity_log
   AFTER INSERT OR UPDATE OR DELETE ON public.restaurant_users
   FOR EACH ROW
-  EXECUTE FUNCTION public.handle_activity_log(TG_OP, 'user');
+  EXECUTE FUNCTION public.handle_activity_log();
 
 -- ============================================================================
 -- APPLY BUSINESS LOGIC TRIGGERS

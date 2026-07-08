@@ -50,17 +50,17 @@ CREATE OR REPLACE FUNCTION public.create_restaurant(
   p_country TEXT,
   p_city TEXT,
   p_address TEXT,
-  p_currency TEXT DEFAULT 'USD',
-  p_timezone TEXT DEFAULT 'UTC',
-  p_language TEXT DEFAULT 'en',
   p_plan_id UUID,
-  p_billing_cycle TEXT DEFAULT 'monthly',
   p_owner_first_name TEXT,
   p_owner_last_name TEXT,
   p_owner_email TEXT,
   p_owner_phone TEXT,
   p_owner_password TEXT,
-  p_created_by UUID
+  p_created_by UUID,
+  p_currency TEXT DEFAULT 'USD',
+  p_timezone TEXT DEFAULT 'UTC',
+  p_language TEXT DEFAULT 'en',
+  p_billing_cycle TEXT DEFAULT 'monthly'
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -617,8 +617,8 @@ CREATE OR REPLACE FUNCTION public.create_subscription(
   p_tenant_id UUID,
   p_restaurant_id UUID,
   p_plan_id UUID,
-  p_billing_cycle TEXT DEFAULT 'monthly',
-  p_trial_days INTEGER DEFAULT 14
+  p_trial_days INTEGER DEFAULT 14,
+  p_billing_cycle TEXT DEFAULT 'monthly'
 )
 RETURNS UUID
 LANGUAGE plpgsql
@@ -1006,8 +1006,8 @@ CREATE OR REPLACE FUNCTION public.create_tables(
   p_tenant_id UUID,
   p_restaurant_id UUID,
   p_branch_id UUID,
-  p_table_count INTEGER DEFAULT 20,
-  p_created_by UUID
+  p_created_by UUID,
+  p_table_count INTEGER DEFAULT 20
 )
 RETURNS VOID
 LANGUAGE plpgsql
@@ -1091,9 +1091,9 @@ $$;
 CREATE OR REPLACE FUNCTION public.create_restaurant_settings(
   p_restaurant_id UUID,
   p_tenant_id UUID,
+  p_created_by UUID,
   p_timezone TEXT DEFAULT 'UTC',
-  p_currency TEXT DEFAULT 'USD',
-  p_created_by UUID
+  p_currency TEXT DEFAULT 'USD'
 )
 RETURNS VOID
 LANGUAGE plpgsql
