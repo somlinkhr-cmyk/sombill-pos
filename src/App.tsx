@@ -323,6 +323,22 @@ function App() {
               }
             />
             <Route
+              path="/superadmin/plans/new"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminSubscriptions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/superadmin/plans/:id"
+              element={
+                <ProtectedRoute>
+                  <SuperAdminSubscriptions />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/superadmin/users"
               element={
                 <ProtectedRoute>
