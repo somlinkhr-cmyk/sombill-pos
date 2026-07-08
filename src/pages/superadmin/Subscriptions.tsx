@@ -34,23 +34,11 @@ interface SubscriptionPlan {
   description: string
   monthly_price: number
   yearly_price: number
-  free_trial_days: number
-  max_branches: number
-  max_employees: number
-  max_cashiers: number
-  max_waiters: number
-  max_kitchen_screens: number
-  max_products: number
-  max_menu_categories: number
-  max_customers: number
-  max_orders_per_month: number
-  max_storage_gb: number
-  max_api_requests_per_day: number
-  max_reports: number
-  max_locations: number
+  currency: string
+  limits: Record<string, any>
   features: Record<string, boolean>
   is_active: boolean
-  is_custom: boolean
+  is_custom?: boolean
 }
 
 interface Subscription {
@@ -457,7 +445,7 @@ export default function SuperAdminSubscriptions() {
                           const plan = plans.find(p => p.id === subscription.plan_id)
                           const employeeUsage = calculateUsagePercentage(
                             subscription.current_employee_count,
-                            plan?.max_employees || 1
+                            plan?.limits?.max_employees || 1
                           )
                           
                           return (
@@ -507,7 +495,7 @@ export default function SuperAdminSubscriptions() {
                                   <div className="flex items-center justify-between text-xs">
                                     <span className="text-gray-600">Employees</span>
                                     <span className={getUsageColor(employeeUsage)}>
-                                      {subscription.current_employee_count}/{plan?.max_employees || 0}
+                                      {subscription.current_employee_count}/{plan?.limits?.max_employees || 0}
                                     </span>
                                   </div>
                                   <div className="w-full bg-gray-200 rounded-full h-1.5">
@@ -612,27 +600,27 @@ export default function SuperAdminSubscriptions() {
                           ${plan.yearly_price}/year (Save {Math.round((1 - plan.yearly_price / (plan.monthly_price * 12)) * 100)}%)
                         </p>
                       )}
-                      {plan.free_trial_days > 0 && (
+                      {plan.limits?.free_trial_days > 0 && (
                         <p className="text-sm text-blue-600">
-                          {plan.free_trial_days} days free trial
+                          {plan.limits.free_trial_days} days free trial
                         </p>
                       )}
                       <div className="border-t pt-4 space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Branches</span>
-                          <span className="font-medium">{plan.max_branches}</span>
+                          <span className="font-medium">{plan.limits?.branches || 0}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Employees</span>
-                          <span className="font-medium">{plan.max_employees}</span>
+                          <span className="font-medium">{plan.limits?.staff || 0}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Products</span>
-                          <span className="font-medium">{plan.max_products}</span>
+                          <span className="font-medium">{plan.limits?.menu_items || 0}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Storage</span>
-                          <span className="font-medium">{plan.max_storage_gb} GB</span>
+                          <span className="font-medium">{plan.limits?.storage_gb || 0} GB</span>
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
