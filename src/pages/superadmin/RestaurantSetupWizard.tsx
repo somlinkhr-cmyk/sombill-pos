@@ -463,10 +463,30 @@ export default function RestaurantSetupWizard() {
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) => {
+                  const name = e.target.value
+                  setFormData({ 
+                    ...formData, 
+                    name,
+                    slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+                  })
+                }}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter restaurant name"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Slug (URL-friendly identifier) *
+              </label>
+              <input
+                type="text"
+                value={formData.slug}
+                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="my-restaurant"
+              />
+              <p className="text-xs text-gray-500 mt-1">Auto-generated from name, but you can customize it</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
