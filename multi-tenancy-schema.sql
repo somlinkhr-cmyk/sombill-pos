@@ -352,6 +352,10 @@ ALTER TABLE public.settings ALTER COLUMN tenant_id SET NOT NULL;
 -- Enable RLS on tenants table
 ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Super admins can manage tenants" ON public.tenants;
+DROP POLICY IF EXISTS "Users can view tenants" ON public.tenants;
+
 -- Allow super admins to manage tenants
 CREATE POLICY "Super admins can manage tenants"
 ON public.tenants
@@ -366,6 +370,10 @@ USING (
 
 -- Enable RLS on subscription_plans table
 ALTER TABLE public.subscription_plans ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Super admins can manage subscription plans" ON public.subscription_plans;
+DROP POLICY IF EXISTS "Authenticated users can view subscription plans" ON public.subscription_plans;
 
 -- Allow super admins to manage subscription plans
 CREATE POLICY "Super admins can manage subscription plans"
@@ -387,6 +395,10 @@ USING (true);
 
 -- Enable RLS on subscriptions table
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Super admins can manage subscriptions" ON public.subscriptions;
+DROP POLICY IF EXISTS "Users can view own tenant subscriptions" ON public.subscriptions;
 
 -- Allow super admins to manage all subscriptions
 CREATE POLICY "Super admins can manage subscriptions"
@@ -415,6 +427,10 @@ USING (
 -- ============================================================================
 ALTER TABLE public.restaurants ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Super admins can manage restaurants" ON public.restaurants;
+DROP POLICY IF EXISTS "Users can view own tenant restaurants" ON public.restaurants;
+
 CREATE POLICY "Super admins can manage restaurants"
 ON public.restaurants
 FOR ALL
@@ -439,6 +455,10 @@ USING (
 -- RLS POLICIES FOR BRANCHES TABLE
 -- ============================================================================
 ALTER TABLE public.branches ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Super admins can manage branches" ON public.branches;
+DROP POLICY IF EXISTS "Users can view own tenant branches" ON public.branches;
 
 CREATE POLICY "Super admins can manage branches"
 ON public.branches
@@ -465,6 +485,10 @@ USING (
 -- ============================================================================
 ALTER TABLE public.restaurant_settings ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Super admins can manage restaurant settings" ON public.restaurant_settings;
+DROP POLICY IF EXISTS "Users can view own restaurant settings" ON public.restaurant_settings;
+
 CREATE POLICY "Super admins can manage restaurant settings"
 ON public.restaurant_settings
 FOR ALL
@@ -490,6 +514,10 @@ USING (
 -- ============================================================================
 ALTER TABLE public.roles ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Super admins can manage roles" ON public.roles;
+DROP POLICY IF EXISTS "Users can view own tenant roles" ON public.roles;
+
 CREATE POLICY "Super admins can manage roles"
 ON public.roles
 FOR ALL
@@ -514,6 +542,10 @@ USING (
 -- RLS POLICIES FOR MENU CATEGORIES TABLE
 -- ============================================================================
 ALTER TABLE public.menu_categories ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Super admins can manage menu categories" ON public.menu_categories;
+DROP POLICY IF EXISTS "Users can view own restaurant menu categories" ON public.menu_categories;
 
 CREATE POLICY "Super admins can manage menu categories"
 ON public.menu_categories
