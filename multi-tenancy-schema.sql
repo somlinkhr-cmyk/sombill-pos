@@ -22,6 +22,97 @@ CREATE TABLE IF NOT EXISTS public.tenants (
 );
 
 -- ============================================================================
+-- RESTAURANTS TABLE (Restaurant details)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.restaurants (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  business_type TEXT,
+  logo_url TEXT,
+  brand_color TEXT,
+  phone TEXT,
+  email TEXT,
+  country TEXT,
+  city TEXT,
+  address TEXT,
+  currency TEXT DEFAULT 'USD',
+  timezone TEXT DEFAULT 'UTC',
+  language TEXT DEFAULT 'en',
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(tenant_id, slug)
+);
+
+-- ============================================================================
+-- BRANCHES TABLE (Restaurant locations)
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.branches (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  restaurant_id UUID NOT NULL REFERENCES public.restaurants(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  address TEXT,
+  phone TEXT,
+  email TEXT,
+  is_main BOOLEAN NOT NULL DEFAULT false,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================================================
+-- RESTAURANT SETTINGS TABLE
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.restaurant_settings (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  restaurant_id UUID NOT NULL REFERENCES public.restaurants(id) ON DELETE CASCADE,
+  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  tax_rate DECIMAL(5, 2) DEFAULT 0,
+  service_charge DECIMAL(5, 2) DEFAULT 0,
+  timezone TEXT DEFAULT 'UTC',
+  currency_symbol TEXT DEFAULT '$',
+  currency_position TEXT DEFAULT 'before',
+  decimal_places INTEGER DEFAULT 2,
+  thousands_separator TEXT DEFAULT ',',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(restaurant_id)
+);
+
+-- ============================================================================
+-- ROLES TABLE
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.roles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  restaurant_id UUID NOT NULL REFERENCES public.restaurants(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  description TEXT,
+  permissions JSONB DEFAULT '{}',
+  is_system BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(tenant_id, restaurant_id, slug)
+);
+
+-- ============================================================================
+-- MENU CATEGORIES TABLE
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.menu_categories (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  restaurant_id UUID NOT NULL REFERENCES public.restaurants(id) ON DELETE CASCADE,
+  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================================================
 -- SUBSCRIPTION PLANS TABLE (Plan definitions)
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS public.subscription_plans (
@@ -316,5 +407,130 @@ FOR SELECT
 USING (
   tenant_id IN (
     SELECT tenant_id FROM public.users WHERE id = auth.uid()
+  )
+);
+
+-- ============================================================================
+-- RLS POLICIES FOR RESTAURANTS TABLE
+-- ============================================================================
+ALTER TABLE public.restaurants ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Super admins can manage restaurants"
+ON public.restaurants
+FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM public.users
+    WHERE users.id = auth.uid()
+    AND users.is_super_admin = true
+  )
+);
+
+CREATE POLICY "Users can view own tenant restaurants"
+ON public.restaurants
+FOR SELECT
+USING (
+  tenant_id IN (
+    SELECT tenant_id FROM public.users WHERE id = auth.uid()
+  )
+);
+
+-- ============================================================================
+-- RLS POLICIES FOR BRANCHES TABLE
+-- ============================================================================
+ALTER TABLE public.branches ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Super admins can manage branches"
+ON public.branches
+FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM public.users
+    WHERE users.id = auth.uid()
+    AND users.is_super_admin = true
+  )
+);
+
+CREATE POLICY "Users can view own tenant branches"
+ON public.branches
+FOR SELECT
+USING (
+  tenant_id IN (
+    SELECT tenant_id FROM public.users WHERE id = auth.uid()
+  )
+);
+
+-- ============================================================================
+-- RLS POLICIES FOR RESTAURANT SETTINGS TABLE
+-- ============================================================================
+ALTER TABLE public.restaurant_settings ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Super admins can manage restaurant settings"
+ON public.restaurant_settings
+FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM public.users
+    WHERE users.id = auth.uid()
+    AND users.is_super_admin = true
+  )
+);
+
+CREATE POLICY "Users can view own restaurant settings"
+ON public.restaurant_settings
+FOR SELECT
+USING (
+  restaurant_id IN (
+    SELECT restaurant_id FROM public.users WHERE id = auth.uid()
+  )
+);
+
+-- ============================================================================
+-- RLS POLICIES FOR ROLES TABLE
+-- ============================================================================
+ALTER TABLE public.roles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Super admins can manage roles"
+ON public.roles
+FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM public.users
+    WHERE users.id = auth.uid()
+    AND users.is_super_admin = true
+  )
+);
+
+CREATE POLICY "Users can view own tenant roles"
+ON public.roles
+FOR SELECT
+USING (
+  tenant_id IN (
+    SELECT tenant_id FROM public.users WHERE id = auth.uid()
+  )
+);
+
+-- ============================================================================
+-- RLS POLICIES FOR MENU CATEGORIES TABLE
+-- ============================================================================
+ALTER TABLE public.menu_categories ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Super admins can manage menu categories"
+ON public.menu_categories
+FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM public.users
+    WHERE users.id = auth.uid()
+    AND users.is_super_admin = true
+  )
+);
+
+CREATE POLICY "Users can view own restaurant menu categories"
+ON public.menu_categories
+FOR SELECT
+USING (
+  restaurant_id IN (
+    SELECT restaurant_id FROM public.users WHERE id = auth.uid()
   )
 );
