@@ -148,16 +148,23 @@ CREATE TABLE IF NOT EXISTS public.subscription_plans (
 CREATE TABLE IF NOT EXISTS public.subscriptions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE CASCADE,
   plan_id UUID NOT NULL REFERENCES public.subscription_plans(id) ON DELETE RESTRICT,
-  status TEXT NOT NULL DEFAULT 'trialing' CHECK (status IN ('trialing', 'active', 'past_due', 'canceled')),
+  status TEXT NOT NULL DEFAULT 'trialing' CHECK (status IN ('trialing', 'active', 'past_due', 'canceled', 'trial')),
+  billing_cycle TEXT CHECK (billing_cycle IN ('monthly', 'yearly')),
   billing_provider TEXT, -- 'stripe', 'paypal', etc.
   billing_provider_ref TEXT, -- External subscription ID
   current_period_start TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   current_period_end TIMESTAMP WITH TIME ZONE NOT NULL,
+  start_date TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  end_date TIMESTAMP WITH TIME ZONE NOT NULL,
   cancel_at_period_end BOOLEAN NOT NULL DEFAULT false,
   canceled_at TIMESTAMP WITH TIME ZONE,
   trial_start TIMESTAMP WITH TIME ZONE,
   trial_end TIMESTAMP WITH TIME ZONE,
+  trial_end_date TIMESTAMP WITH TIME ZONE,
+  auto_renew BOOLEAN NOT NULL DEFAULT true,
+  features JSONB DEFAULT '{}',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   UNIQUE(tenant_id, billing_provider_ref)
