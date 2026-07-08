@@ -743,7 +743,7 @@ export default function SuperAdminSubscriptions() {
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleCancelSubscription}>
+            <Button variant="danger" onClick={handleCancelSubscription}>
               Cancel Subscription
             </Button>
           </div>

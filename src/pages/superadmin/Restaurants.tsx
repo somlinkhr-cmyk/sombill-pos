@@ -241,7 +241,6 @@ export default function SuperAdminRestaurants() {
   const getStatusBadge = (status: string) => {
     const styles = {
       active: 'bg-green-100 text-green-800',
-      trial: 'bg-blue-100 text-blue-800',
       trial: 'bg-yellow-100 text-yellow-800',
       suspended: 'bg-red-100 text-red-800',
       disabled: 'bg-gray-100 text-gray-800',
@@ -535,7 +534,7 @@ export default function SuperAdminRestaurants() {
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteRestaurant}>
+            <Button variant="danger" onClick={handleDeleteRestaurant}>
               Delete
             </Button>
           </div>
@@ -566,7 +565,7 @@ export default function SuperAdminRestaurants() {
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleSuspendRestaurant}>
+            <Button variant="danger" onClick={handleSuspendRestaurant}>
               Suspend
             </Button>
           </div>

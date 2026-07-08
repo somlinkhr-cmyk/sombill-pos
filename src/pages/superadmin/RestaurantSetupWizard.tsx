@@ -26,6 +26,7 @@ import {
 interface RestaurantFormData {
   // Step 1: Basic Info
   name: string
+  slug: string
   business_type: string
   logo_url?: string
   brand_color: string
@@ -127,6 +128,7 @@ export default function RestaurantSetupWizard() {
   
   const [formData, setFormData] = useState<RestaurantFormData>({
     name: '',
+    slug: '',
     business_type: 'Restaurant',
     logo_url: '',
     brand_color: '#3b82f6',
@@ -192,6 +194,10 @@ export default function RestaurantSetupWizard() {
       case 1:
         if (!formData.name.trim()) {
           toast.error('Restaurant name is required')
+          return false
+        }
+        if (!formData.slug.trim()) {
+          toast.error('Restaurant slug is required')
           return false
         }
         if (!formData.business_type) {
@@ -276,7 +282,7 @@ export default function RestaurantSetupWizard() {
         .insert({
           tenant_id: tenantData.id,
           name: formData.name,
-          slug: formData.name.toLowerCase().replace(/\s+/g, '-'),
+          slug: formData.slug,
           business_type: formData.business_type,
           logo_url: formData.logo_url,
           brand_color: formData.brand_color,

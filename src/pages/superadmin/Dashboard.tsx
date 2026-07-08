@@ -166,7 +166,7 @@ export default function SuperAdminDashboard() {
 
       const formattedAlerts = (notificationsData || []).map((notif: any) => ({
         id: notif.id,
-        type: notif.type === 'error' ? 'error' : notif.type === 'warning' ? 'warning' : 'info',
+        type: (notif.type === 'error' ? 'error' : notif.type === 'warning' ? 'warning' : 'info') as 'error' | 'success' | 'info' | 'warning',
         title: notif.title,
         message: notif.message,
         timestamp: notif.created_at,

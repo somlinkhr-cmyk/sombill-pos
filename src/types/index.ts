@@ -11,6 +11,7 @@ export interface User {
   salary: number
   shift: string
   is_active: boolean
+  is_super_admin?: boolean
   tenant_id: string
   created_at: string
   updated_at: string
