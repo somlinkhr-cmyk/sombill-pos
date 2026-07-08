@@ -278,7 +278,10 @@ export default function RestaurantSetupWizard() {
         .insert({
           name: formData.name,
           slug: formData.name.toLowerCase().replace(/\s+/g, '-'),
-          status: 'active',
+          subscription_tier: 'silver',
+          subscription_status: 'trialing',
+          billing_cycle_start: new Date().toISOString().split('T')[0],
+          trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         })
         .select()
         .single()
