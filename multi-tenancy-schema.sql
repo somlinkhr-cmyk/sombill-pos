@@ -253,3 +253,68 @@ ALTER TABLE public.ingredients ALTER COLUMN tenant_id SET NOT NULL;
 ALTER TABLE public.purchase_orders ALTER COLUMN tenant_id SET NOT NULL;
 ALTER TABLE public.attendance ALTER COLUMN tenant_id SET NOT NULL;
 ALTER TABLE public.settings ALTER COLUMN tenant_id SET NOT NULL;
+
+-- ============================================================================
+-- ROW LEVEL SECURITY POLICIES
+-- ============================================================================
+
+-- Enable RLS on tenants table
+ALTER TABLE public.tenants ENABLE ROW LEVEL SECURITY;
+
+-- Allow super admins to manage tenants
+CREATE POLICY "Super admins can manage tenants"
+ON public.tenants
+FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM public.users
+    WHERE users.id = auth.uid()
+    AND users.is_super_admin = true
+  )
+);
+
+-- Enable RLS on subscription_plans table
+ALTER TABLE public.subscription_plans ENABLE ROW LEVEL SECURITY;
+
+-- Allow super admins to manage subscription plans
+CREATE POLICY "Super admins can manage subscription plans"
+ON public.subscription_plans
+FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM public.users
+    WHERE users.id = auth.uid()
+    AND users.is_super_admin = true
+  )
+);
+
+-- Allow authenticated users to view subscription plans
+CREATE POLICY "Authenticated users can view subscription plans"
+ON public.subscription_plans
+FOR SELECT
+USING (true);
+
+-- Enable RLS on subscriptions table
+ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+
+-- Allow super admins to manage all subscriptions
+CREATE POLICY "Super admins can manage subscriptions"
+ON public.subscriptions
+FOR ALL
+USING (
+  EXISTS (
+    SELECT 1 FROM public.users
+    WHERE users.id = auth.uid()
+    AND users.is_super_admin = true
+  )
+);
+
+-- Allow users to view their own tenant's subscriptions
+CREATE POLICY "Users can view own tenant subscriptions"
+ON public.subscriptions
+FOR SELECT
+USING (
+  tenant_id IN (
+    SELECT tenant_id FROM public.users WHERE id = auth.uid()
+  )
+);
