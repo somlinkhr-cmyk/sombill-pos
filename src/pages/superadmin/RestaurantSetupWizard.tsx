@@ -395,6 +395,8 @@ export default function RestaurantSetupWizard() {
           plan_id: formData.plan_id,
           status: trialEndDate ? 'trial' : 'active',
           billing_cycle: formData.billing_cycle,
+          current_period_start: startDate.toISOString(),
+          current_period_end: endDate.toISOString(),
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
           trial_end_date: trialEndDate?.toISOString(),
