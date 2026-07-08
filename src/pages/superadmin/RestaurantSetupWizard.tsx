@@ -64,10 +64,10 @@ interface SubscriptionPlan {
   description: string
   monthly_price: number
   yearly_price: number
-  free_trial_days: number
-  max_branches: number
-  max_employees: number
+  currency: string
+  limits: Record<string, any>
   features: Record<string, boolean>
+  is_active: boolean
 }
 
 const STEPS = [
@@ -323,8 +323,9 @@ export default function RestaurantSetupWizard() {
       const endDate = new Date()
       endDate.setMonth(endDate.getMonth() + (formData.billing_cycle === 'yearly' ? 12 : 1))
       
-      const trialEndDate = selectedPlan?.free_trial_days
-        ? new Date(Date.now() + selectedPlan.free_trial_days * 24 * 60 * 60 * 1000)
+      const freeTrialDays = selectedPlan?.limits?.free_trial_days || 0
+      const trialEndDate = freeTrialDays > 0
+        ? new Date(Date.now() + freeTrialDays * 24 * 60 * 60 * 1000)
         : null
 
       const { error: subscriptionError } = await supabase
@@ -722,9 +723,9 @@ export default function RestaurantSetupWizard() {
                         </span>
                       )}
                     </div>
-                    {plan.free_trial_days > 0 && (
+                    {(plan.limits?.free_trial_days || 0) > 0 && (
                       <p className="text-xs text-green-600 mt-2">
-                        {plan.free_trial_days} days free trial
+                        {plan.limits.free_trial_days} days free trial
                       </p>
                     )}
                     <div className="mt-3 flex flex-wrap gap-2">
