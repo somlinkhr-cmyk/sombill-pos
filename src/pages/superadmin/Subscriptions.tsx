@@ -808,14 +808,16 @@ function PlanForm({ plan, onSave, onCancel }: { plan: SubscriptionPlan | null, o
       const planData = {
         name: formData.name,
         slug: formData.slug.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        description: formData.description,
+        description: formData.description || null,
         monthly_price: formData.monthly_price,
         yearly_price: formData.yearly_price,
         currency: formData.currency,
-        limits: formData.limits,
-        features: formData.features,
+        limits: formData.limits || {},
+        features: formData.features || {},
         is_active: formData.is_active,
       }
+
+      console.log('Saving plan data:', planData)
 
       let error
       if (plan) {
@@ -823,21 +825,28 @@ function PlanForm({ plan, onSave, onCancel }: { plan: SubscriptionPlan | null, o
           .from('sa_subscription_plans')
           .update(planData)
           .eq('id', plan.id)
+          .select()
         error = result.error
+        console.log('Update result:', result)
       } else {
         const result = await supabase
           .from('sa_subscription_plans')
           .insert(planData)
+          .select()
         error = result.error
+        console.log('Insert result:', result)
       }
 
-      if (error) throw error
+      if (error) {
+        console.error('Database error:', error)
+        throw error
+      }
 
       toast.success(plan ? 'Plan updated successfully' : 'Plan created successfully')
       onSave()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving plan:', error)
-      toast.error('Failed to save plan')
+      toast.error(`Failed to save plan: ${error.message || 'Unknown error'}`)
     } finally {
       setLoading(false)
     }
