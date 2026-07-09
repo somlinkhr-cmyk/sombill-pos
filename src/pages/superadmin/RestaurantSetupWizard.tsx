@@ -118,7 +118,36 @@ const LANGUAGES = [
   { code: 'ar', name: 'Arabic' },
 ]
 
-export default function RestaurantSetupWizard() {
+const initialFormData: RestaurantFormData = {
+  name: '',
+  slug: '',
+  business_type: 'Restaurant',
+  logo_url: '',
+  brand_color: '#3b82f6',
+  phone: '',
+  email: '',
+  country: '',
+  city: '',
+  address: '',
+  currency: 'USD',
+  timezone: 'UTC',
+  language: 'en',
+  tax_rate: 0,
+  service_charge: 0,
+  plan_id: '',
+  billing_cycle: 'monthly',
+  owner_first_name: '',
+  owner_last_name: '',
+  owner_email: '',
+  owner_phone: '',
+  owner_password: '',
+}
+
+interface RestaurantSetupWizardProps {
+  onComplete?: () => void
+}
+
+export default function RestaurantSetupWizard({ onComplete }: RestaurantSetupWizardProps) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState(1)
@@ -126,30 +155,7 @@ export default function RestaurantSetupWizard() {
   const [creating, setCreating] = useState(false)
   const [plans, setPlans] = useState<SubscriptionPlan[]>([])
   
-  const [formData, setFormData] = useState<RestaurantFormData>({
-    name: '',
-    slug: '',
-    business_type: 'Restaurant',
-    logo_url: '',
-    brand_color: '#3b82f6',
-    phone: '',
-    email: '',
-    country: '',
-    city: '',
-    address: '',
-    currency: 'USD',
-    timezone: 'UTC',
-    language: 'en',
-    tax_rate: 0,
-    service_charge: 0,
-    plan_id: '',
-    billing_cycle: 'monthly',
-    owner_first_name: '',
-    owner_last_name: '',
-    owner_email: '',
-    owner_phone: '',
-    owner_password: '',
-  })
+  const [formData, setFormData] = useState<RestaurantFormData>(initialFormData)
 
   const loadPlans = useCallback(async () => {
     try {
