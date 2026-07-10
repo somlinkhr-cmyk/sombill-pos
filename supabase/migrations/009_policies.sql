@@ -105,6 +105,11 @@ CREATE POLICY subscription_plans_select_public ON public.subscription_plans
   FOR SELECT
   USING (is_public = true);
 
+DROP POLICY IF EXISTS subscription_plans_select_all ON public.subscription_plans;
+CREATE POLICY subscription_plans_select_all ON public.subscription_plans
+  FOR SELECT
+  USING (true);
+
 DROP POLICY IF EXISTS subscription_plans_super_admin ON public.subscription_plans;
 CREATE POLICY subscription_plans_super_admin ON public.subscription_plans
   FOR ALL
