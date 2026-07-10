@@ -8,6 +8,1059 @@
 -- ============================================================================
 
 -- ============================================================================
+-- ADD MISSING COLUMNS FOR BACKWARD COMPATIBILITY
+-- ============================================================================
+-- This section adds columns that may be missing from existing Supabase tables
+-- to ensure the migration can run on databases with different schemas
+DO $$
+BEGIN
+  -- Customers table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'customers' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.customers ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added restaurant_id column to customers table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'customers' 
+    AND column_name = 'customer_code'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.customers ADD COLUMN customer_code TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added customer_code column to customers table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'customers' 
+    AND column_name = 'loyalty_tier'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.customers ADD COLUMN loyalty_tier TEXT DEFAULT 'bronze';
+    RAISE NOTICE 'Added loyalty_tier column to customers table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'customers' 
+    AND column_name = 'last_visit_at'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.customers ADD COLUMN last_visit_at TIMESTAMP WITH TIME ZONE;
+    RAISE NOTICE 'Added last_visit_at column to customers table';
+  END IF;
+  
+  -- Tenants table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'tenants' 
+    AND column_name = 'status'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.tenants ADD COLUMN status TEXT NOT NULL DEFAULT 'active';
+    RAISE NOTICE 'Added status column to tenants table';
+  END IF;
+  
+  -- Subscription plans table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'subscription_plans' 
+    AND column_name = 'slug'
+    AND table_schema = 'public'
+  ) THEN
+    -- Add column without NOT NULL first
+    ALTER TABLE public.subscription_plans ADD COLUMN slug TEXT;
+    -- Update existing rows with slug based on name
+    UPDATE public.subscription_plans SET slug = LOWER(REPLACE(name, ' ', '-')) WHERE slug IS NULL;
+    -- Now add NOT NULL and UNIQUE constraints
+    ALTER TABLE public.subscription_plans ALTER COLUMN slug SET NOT NULL;
+    ALTER TABLE public.subscription_plans ADD CONSTRAINT subscription_plans_slug_key UNIQUE (slug);
+    RAISE NOTICE 'Added slug column to subscription_plans table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'subscription_plans' 
+    AND column_name = 'is_active'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.subscription_plans ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT true;
+    RAISE NOTICE 'Added is_active column to subscription_plans table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'subscription_plans' 
+    AND column_name = 'sort_order'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.subscription_plans ADD COLUMN sort_order INTEGER DEFAULT 0;
+    RAISE NOTICE 'Added sort_order column to subscription_plans table';
+  END IF;
+  
+  -- Roles table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'roles' 
+    AND column_name = 'level'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.roles ADD COLUMN level INTEGER DEFAULT 0;
+    RAISE NOTICE 'Added level column to roles table';
+  END IF;
+  
+  -- Tables table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'tables' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.tables ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added restaurant_id column to tables table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'tables' 
+    AND column_name = 'branch_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.tables ADD COLUMN branch_id UUID REFERENCES public.restaurant_branches(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added branch_id column to tables table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'tables' 
+    AND column_name = 'table_number'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.tables ADD COLUMN table_number TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added table_number column to tables table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'tables' 
+    AND column_name = 'status'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.tables ADD COLUMN status TEXT NOT NULL DEFAULT 'available';
+    RAISE NOTICE 'Added status column to tables table';
+  END IF;
+  
+  -- Menu categories table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'menu_categories' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.menu_categories ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added restaurant_id column to menu_categories table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'menu_categories' 
+    AND column_name = 'slug'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.menu_categories ADD COLUMN slug TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added slug column to menu_categories table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'menu_categories' 
+    AND column_name = 'parent_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.menu_categories ADD COLUMN parent_id UUID REFERENCES public.menu_categories(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added parent_id column to menu_categories table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'menu_categories' 
+    AND column_name = 'sort_order'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.menu_categories ADD COLUMN sort_order INTEGER DEFAULT 0;
+    RAISE NOTICE 'Added sort_order column to menu_categories table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'menu_categories' 
+    AND column_name = 'is_active'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.menu_categories ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT true;
+    RAISE NOTICE 'Added is_active column to menu_categories table';
+  END IF;
+  
+  -- Products table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'products' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.products ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added restaurant_id column to products table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'products' 
+    AND column_name = 'category_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.products ADD COLUMN category_id UUID REFERENCES public.menu_categories(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added category_id column to products table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'products' 
+    AND column_name = 'slug'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.products ADD COLUMN slug TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added slug column to products table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'products' 
+    AND column_name = 'sku'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.products ADD COLUMN sku TEXT;
+    RAISE NOTICE 'Added sku column to products table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'products' 
+    AND column_name = 'barcode'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.products ADD COLUMN barcode TEXT;
+    RAISE NOTICE 'Added barcode column to products table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'products' 
+    AND column_name = 'is_available'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.products ADD COLUMN is_available BOOLEAN NOT NULL DEFAULT true;
+    RAISE NOTICE 'Added is_available column to products table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'products' 
+    AND column_name = 'is_featured'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.products ADD COLUMN is_featured BOOLEAN NOT NULL DEFAULT false;
+    RAISE NOTICE 'Added is_featured column to products table';
+  END IF;
+  
+  -- Inventory table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'inventory' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.inventory ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added restaurant_id column to inventory table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'inventory' 
+    AND column_name = 'branch_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.inventory ADD COLUMN branch_id UUID REFERENCES public.restaurant_branches(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added branch_id column to inventory table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'inventory' 
+    AND column_name = 'product_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.inventory ADD COLUMN product_id UUID REFERENCES public.products(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added product_id column to inventory table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'inventory' 
+    AND column_name = 'category_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.inventory ADD COLUMN category_id UUID;
+    RAISE NOTICE 'Added category_id column to inventory table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'inventory' 
+    AND column_name = 'supplier_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.inventory ADD COLUMN supplier_id UUID;
+    RAISE NOTICE 'Added supplier_id column to inventory table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'inventory' 
+    AND column_name = 'item_code'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.inventory ADD COLUMN item_code TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added item_code column to inventory table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'inventory' 
+    AND column_name = 'status'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.inventory ADD COLUMN status TEXT NOT NULL DEFAULT 'in_stock';
+    RAISE NOTICE 'Added status column to inventory table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'inventory' 
+    AND column_name = 'expiry_date'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.inventory ADD COLUMN expiry_date DATE;
+    RAISE NOTICE 'Added expiry_date column to inventory table';
+  END IF;
+  
+  -- Inventory categories table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'inventory_categories' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.inventory_categories ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added restaurant_id column to inventory_categories table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'inventory_categories' 
+    AND column_name = 'slug'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.inventory_categories ADD COLUMN slug TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added slug column to inventory_categories table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'inventory_categories' 
+    AND column_name = 'parent_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.inventory_categories ADD COLUMN parent_id UUID REFERENCES public.inventory_categories(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added parent_id column to inventory_categories table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'inventory_categories' 
+    AND column_name = 'sort_order'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.inventory_categories ADD COLUMN sort_order INTEGER DEFAULT 0;
+    RAISE NOTICE 'Added sort_order column to inventory_categories table';
+  END IF;
+  
+  -- Suppliers table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'suppliers' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.suppliers ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added restaurant_id column to suppliers table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'suppliers' 
+    AND column_name = 'supplier_code'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.suppliers ADD COLUMN supplier_code TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added supplier_code column to suppliers table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'suppliers' 
+    AND column_name = 'status'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.suppliers ADD COLUMN status TEXT NOT NULL DEFAULT 'active';
+    RAISE NOTICE 'Added status column to suppliers table';
+  END IF;
+  
+  -- Orders table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'orders' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.orders ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added restaurant_id column to orders table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'orders' 
+    AND column_name = 'branch_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.orders ADD COLUMN branch_id UUID REFERENCES public.restaurant_branches(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added branch_id column to orders table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'orders' 
+    AND column_name = 'table_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.orders ADD COLUMN table_id UUID REFERENCES public.tables(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added table_id column to orders table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'orders' 
+    AND column_name = 'customer_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.orders ADD COLUMN customer_id UUID REFERENCES public.customers(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added customer_id column to orders table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'orders' 
+    AND column_name = 'order_number'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.orders ADD COLUMN order_number TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added order_number column to orders table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'orders' 
+    AND column_name = 'order_type'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.orders ADD COLUMN order_type TEXT NOT NULL DEFAULT 'dine_in';
+    RAISE NOTICE 'Added order_type column to orders table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'orders' 
+    AND column_name = 'status'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.orders ADD COLUMN status TEXT NOT NULL DEFAULT 'pending';
+    RAISE NOTICE 'Added status column to orders table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'orders' 
+    AND column_name = 'payment_status'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.orders ADD COLUMN payment_status TEXT NOT NULL DEFAULT 'unpaid';
+    RAISE NOTICE 'Added payment_status column to orders table';
+  END IF;
+  
+  -- Order items table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'order_items' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.order_items ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added restaurant_id column to order_items table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'order_items' 
+    AND column_name = 'order_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.order_items ADD COLUMN order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added order_id column to order_items table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'order_items' 
+    AND column_name = 'product_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.order_items ADD COLUMN product_id UUID REFERENCES public.products(id) ON DELETE RESTRICT;
+    RAISE NOTICE 'Added product_id column to order_items table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'order_items' 
+    AND column_name = 'status'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.order_items ADD COLUMN status TEXT NOT NULL DEFAULT 'pending';
+    RAISE NOTICE 'Added status column to order_items table';
+  END IF;
+  
+  -- Payments table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'payments' 
+    AND column_name = 'payment_method_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.payments ADD COLUMN payment_method_id UUID REFERENCES public.payment_methods(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added payment_method_id column to payments table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'payments' 
+    AND column_name = 'payment_number'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.payments ADD COLUMN payment_number TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added payment_number column to payments table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'payments' 
+    AND column_name = 'payment_type'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.payments ADD COLUMN payment_type TEXT NOT NULL DEFAULT 'cash';
+    RAISE NOTICE 'Added payment_type column to payments table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'payments' 
+    AND column_name = 'status'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.payments ADD COLUMN status TEXT NOT NULL DEFAULT 'pending';
+    RAISE NOTICE 'Added status column to payments table';
+  END IF;
+  
+  -- Payment methods table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'payment_methods' 
+    AND column_name = 'type'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.payment_methods ADD COLUMN type TEXT NOT NULL DEFAULT 'cash';
+    RAISE NOTICE 'Added type column to payment_methods table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'payment_methods' 
+    AND column_name = 'is_active'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.payment_methods ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT true;
+    RAISE NOTICE 'Added is_active column to payment_methods table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'payment_methods' 
+    AND column_name = 'is_default'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.payment_methods ADD COLUMN is_default BOOLEAN NOT NULL DEFAULT false;
+    RAISE NOTICE 'Added is_default column to payment_methods table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'payment_methods' 
+    AND column_name = 'sort_order'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.payment_methods ADD COLUMN sort_order INTEGER DEFAULT 0;
+    RAISE NOTICE 'Added sort_order column to payment_methods table';
+  END IF;
+  
+  -- Tax settings table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'tax_settings' 
+    AND column_name = 'is_active'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.tax_settings ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT true;
+    RAISE NOTICE 'Added is_active column to tax_settings table';
+  END IF;
+  
+  -- Currencies table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'currencies' 
+    AND column_name = 'is_default'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.currencies ADD COLUMN is_default BOOLEAN NOT NULL DEFAULT false;
+    RAISE NOTICE 'Added is_default column to currencies table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'currencies' 
+    AND column_name = 'is_active'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.currencies ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT true;
+    RAISE NOTICE 'Added is_active column to currencies table';
+  END IF;
+  
+  -- Audit logs table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'audit_logs' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.audit_logs ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added restaurant_id column to audit_logs table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'audit_logs' 
+    AND column_name = 'table_name'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.audit_logs ADD COLUMN table_name TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added table_name column to audit_logs table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'audit_logs' 
+    AND column_name = 'action'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.audit_logs ADD COLUMN action TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added action column to audit_logs table';
+  END IF;
+  
+  -- Activity logs table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'activity_logs' 
+    AND column_name = 'entity_type'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.activity_logs ADD COLUMN entity_type TEXT;
+    RAISE NOTICE 'Added entity_type column to activity_logs table';
+  END IF;
+  
+  -- Notifications table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'notifications' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.notifications ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added restaurant_id column to notifications table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'notifications' 
+    AND column_name = 'type'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.notifications ADD COLUMN type TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added type column to notifications table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'notifications' 
+    AND column_name = 'is_read'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.notifications ADD COLUMN is_read BOOLEAN NOT NULL DEFAULT false;
+    RAISE NOTICE 'Added is_read column to notifications table';
+  END IF;
+  
+  -- API keys table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'api_keys' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.api_keys ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added restaurant_id column to api_keys table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'api_keys' 
+    AND column_name = 'key_hash'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.api_keys ADD COLUMN key_hash TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added key_hash column to api_keys table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'api_keys' 
+    AND column_name = 'is_active'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.api_keys ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT true;
+    RAISE NOTICE 'Added is_active column to api_keys table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'api_keys' 
+    AND column_name = 'expires_at'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.api_keys ADD COLUMN expires_at TIMESTAMP WITH TIME ZONE;
+    RAISE NOTICE 'Added expires_at column to api_keys table';
+  END IF;
+  
+  -- User sessions table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'user_sessions' 
+    AND column_name = 'tenant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.user_sessions ADD COLUMN tenant_id UUID REFERENCES public.tenants(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added tenant_id column to user_sessions table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'user_sessions' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.user_sessions ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added restaurant_id column to user_sessions table';
+  END IF;
+  
+  -- Login history table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'login_history' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.login_history ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added restaurant_id column to login_history table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'login_history' 
+    AND column_name = 'status'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.login_history ADD COLUMN status TEXT NOT NULL DEFAULT 'success';
+    RAISE NOTICE 'Added status column to login_history table';
+  END IF;
+  
+  -- Support tickets table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'support_tickets' 
+    AND column_name = 'ticket_number'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.support_tickets ADD COLUMN ticket_number TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added ticket_number column to support_tickets table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'support_tickets' 
+    AND column_name = 'status'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.support_tickets ADD COLUMN status TEXT NOT NULL DEFAULT 'open';
+    RAISE NOTICE 'Added status column to support_tickets table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'support_tickets' 
+    AND column_name = 'priority'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.support_tickets ADD COLUMN priority TEXT DEFAULT 'medium';
+    RAISE NOTICE 'Added priority column to support_tickets table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'support_tickets' 
+    AND column_name = 'assigned_to'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.support_tickets ADD COLUMN assigned_to UUID;
+    RAISE NOTICE 'Added assigned_to column to support_tickets table';
+  END IF;
+  
+  -- Attachments table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'attachments' 
+    AND column_name = 'entity_type'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.attachments ADD COLUMN entity_type TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added entity_type column to attachments table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'attachments' 
+    AND column_name = 'entity_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.attachments ADD COLUMN entity_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000';
+    RAISE NOTICE 'Added entity_id column to attachments table';
+  END IF;
+  
+  -- Restaurant storage table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'restaurant_storage' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.restaurant_storage ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added restaurant_id column to restaurant_storage table';
+  END IF;
+  
+  -- Restaurant statistics table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'restaurant_statistics' 
+    AND column_name = 'branch_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.restaurant_statistics ADD COLUMN branch_id UUID REFERENCES public.restaurant_branches(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added branch_id column to restaurant_statistics table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'restaurant_statistics' 
+    AND column_name = 'date'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.restaurant_statistics ADD COLUMN date DATE NOT NULL DEFAULT CURRENT_DATE;
+    RAISE NOTICE 'Added date column to restaurant_statistics table';
+  END IF;
+  
+  -- Analytics table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'analytics' 
+    AND column_name = 'user_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.analytics ADD COLUMN user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added user_id column to analytics table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'analytics' 
+    AND column_name = 'event_name'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.analytics ADD COLUMN event_name TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added event_name column to analytics table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'analytics' 
+    AND column_name = 'session_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.analytics ADD COLUMN session_id TEXT;
+    RAISE NOTICE 'Added session_id column to analytics table';
+  END IF;
+  
+  -- Subscriptions table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'subscriptions' 
+    AND column_name = 'restaurant_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.subscriptions ADD COLUMN restaurant_id UUID REFERENCES public.restaurants(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added restaurant_id column to subscriptions table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'subscriptions' 
+    AND column_name = 'plan_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.subscriptions ADD COLUMN plan_id UUID REFERENCES public.subscription_plans(id) ON DELETE RESTRICT;
+    RAISE NOTICE 'Added plan_id column to subscriptions table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'subscriptions' 
+    AND column_name = 'status'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.subscriptions ADD COLUMN status TEXT NOT NULL DEFAULT 'trialing';
+    RAISE NOTICE 'Added status column to subscriptions table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'subscriptions' 
+    AND column_name = 'current_period_end'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.subscriptions ADD COLUMN current_period_end TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW() + INTERVAL '1 month';
+    RAISE NOTICE 'Added current_period_end column to subscriptions table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'subscriptions' 
+    AND column_name = 'trial_end_date'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.subscriptions ADD COLUMN trial_end_date TIMESTAMP WITH TIME ZONE;
+    RAISE NOTICE 'Added trial_end_date column to subscriptions table';
+  END IF;
+  
+  -- Restaurant users table
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'restaurant_users' 
+    AND column_name = 'branch_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.restaurant_users ADD COLUMN branch_id UUID REFERENCES public.restaurant_branches(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added branch_id column to restaurant_users table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'restaurant_users' 
+    AND column_name = 'user_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.restaurant_users ADD COLUMN user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
+    RAISE NOTICE 'Added user_id column to restaurant_users table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'restaurant_users' 
+    AND column_name = 'role_id'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.restaurant_users ADD COLUMN role_id UUID REFERENCES public.roles(id) ON DELETE SET NULL;
+    RAISE NOTICE 'Added role_id column to restaurant_users table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'restaurant_users' 
+    AND column_name = 'email'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.restaurant_users ADD COLUMN email TEXT NOT NULL DEFAULT '';
+    RAISE NOTICE 'Added email column to restaurant_users table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'restaurant_users' 
+    AND column_name = 'status'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.restaurant_users ADD COLUMN status TEXT NOT NULL DEFAULT 'active';
+    RAISE NOTICE 'Added status column to restaurant_users table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'restaurant_users' 
+    AND column_name = 'is_owner'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.restaurant_users ADD COLUMN is_owner BOOLEAN NOT NULL DEFAULT false;
+    RAISE NOTICE 'Added is_owner column to restaurant_users table';
+  END IF;
+END $$;
+
+-- ============================================================================
 -- USERS TABLE INDEXES
 -- ============================================================================
 CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
@@ -81,6 +1134,26 @@ BEGIN
     ALTER TABLE public.subscription_plans ALTER COLUMN slug SET NOT NULL;
     ALTER TABLE public.subscription_plans ADD CONSTRAINT subscription_plans_slug_key UNIQUE (slug);
     RAISE NOTICE 'Added slug column to subscription_plans table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'subscription_plans' 
+    AND column_name = 'is_active'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.subscription_plans ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT true;
+    RAISE NOTICE 'Added is_active column to subscription_plans table';
+  END IF;
+  
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'subscription_plans' 
+    AND column_name = 'sort_order'
+    AND table_schema = 'public'
+  ) THEN
+    ALTER TABLE public.subscription_plans ADD COLUMN sort_order INTEGER DEFAULT 0;
+    RAISE NOTICE 'Added sort_order column to subscription_plans table';
   END IF;
 END $$;
 
