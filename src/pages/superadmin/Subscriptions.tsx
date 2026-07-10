@@ -92,8 +92,8 @@ export default function SuperAdminSubscriptions() {
     setLoading(true)
     try {
       const { data: subscriptionsData, error } = await supabase
-        .from('sa_subscriptions')
-        .select('*, sa_subscription_plans(name)')
+        .from('subscriptions')
+        .select('*, subscription_plans(name)')
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -101,7 +101,7 @@ export default function SuperAdminSubscriptions() {
       const formattedSubscriptions = (subscriptionsData || []).map((sub: any) => ({
         ...sub,
         restaurant_name: 'Restaurant', // Will need to join with restaurants table
-        plan_name: sub.sa_subscription_plans?.name,
+        plan_name: sub.subscription_plans?.name,
       }))
 
       setSubscriptions(formattedSubscriptions)
@@ -116,7 +116,7 @@ export default function SuperAdminSubscriptions() {
   const loadPlans = useCallback(async () => {
     try {
       const { data, error } = await supabase
-        .from('sa_subscription_plans')
+        .from('subscription_plans')
         .select('*')
         .order('monthly_price', { ascending: true })
 
@@ -799,7 +799,7 @@ function PlanForm({ plan, onSave, onCancel }: { plan: SubscriptionPlan | null, o
       // Check if slug already exists (for new plans only)
       if (!plan) {
         const { data: existingPlan } = await supabase
-          .from('sa_subscription_plans')
+          .from('subscription_plans')
           .select('slug')
           .eq('slug', slug)
           .single()
@@ -810,7 +810,7 @@ function PlanForm({ plan, onSave, onCancel }: { plan: SubscriptionPlan | null, o
           while (true) {
             const newSlug = `${slug}-${counter}`
             const { data: checkPlan } = await supabase
-              .from('sa_subscription_plans')
+              .from('subscription_plans')
               .select('slug')
               .eq('slug', newSlug)
               .single()
@@ -840,7 +840,7 @@ function PlanForm({ plan, onSave, onCancel }: { plan: SubscriptionPlan | null, o
       let error
       if (plan) {
         const result = await supabase
-          .from('sa_subscription_plans')
+          .from('subscription_plans')
           .update(planData)
           .eq('id', plan.id)
           .select()
@@ -848,7 +848,7 @@ function PlanForm({ plan, onSave, onCancel }: { plan: SubscriptionPlan | null, o
         console.log('Update result:', result)
       } else {
         const result = await supabase
-          .from('sa_subscription_plans')
+          .from('subscription_plans')
           .insert(planData)
           .select()
         error = result.error
