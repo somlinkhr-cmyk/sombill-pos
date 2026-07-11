@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from './auth'
 import { useAuth } from '../contexts/AuthContext'
 
 /**

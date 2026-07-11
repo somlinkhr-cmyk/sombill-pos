@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from './auth'
 import toast from 'react-hot-toast'
 
 export type OrderStatus = 'new' | 'preparing' | 'ready' | 'served' | 'completed' | 'cancelled' | 'refunded'

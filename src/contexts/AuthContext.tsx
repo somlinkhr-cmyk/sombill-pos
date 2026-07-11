@@ -6,6 +6,7 @@ interface User {
   id: string
   email: string
   full_name: string | null
+  name?: string // Alias for full_name for compatibility
   is_super_admin: boolean
   role?: string
   tenant_id?: string | null
@@ -16,6 +17,8 @@ interface AuthContextType {
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
+  logout: () => Promise<void> // Alias for signOut for compatibility
+  hasModuleAccess?: (module: string) => boolean // Optional for now
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -116,6 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: profile.id,
           email: profile.email,
           full_name: profile.full_name,
+          name: profile.full_name, // Alias for compatibility
           is_super_admin: profile.is_super_admin,
           role: userRole,
           tenant_id: profile.tenant_id,
@@ -166,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signIn, signOut, logout: signOut, hasModuleAccess: () => true }}>
       {children}
     </AuthContext.Provider>
   )
