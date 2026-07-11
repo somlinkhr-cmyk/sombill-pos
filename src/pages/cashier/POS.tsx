@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../../lib/auth'
 import { formatCurrency } from '../../lib/utils'
 import { printReceipt, downloadReceiptPDF, reprintReceipt } from '../../lib/receiptPrinter'
 import { Button } from '../../components/ui/Button'

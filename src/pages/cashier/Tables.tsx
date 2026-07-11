@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../../lib/auth'
 import { useAuth } from '../../contexts/AuthContext'
 import { Table as TableIcon, Users, Plus, Edit, Trash2, Move, Merge, Split, Clock, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react'
 

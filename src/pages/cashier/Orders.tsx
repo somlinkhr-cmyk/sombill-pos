@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../../lib/auth'
 import { useAuth } from '../../contexts/AuthContext'
 import { Search, Calendar, Filter, Printer, Copy, Play, X, CheckCircle, Clock, AlertCircle, ArrowLeft, Download } from 'lucide-react'
 import { formatCurrency } from '../../lib/utils'

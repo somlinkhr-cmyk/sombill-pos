@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../../lib/auth'
 import { formatCurrency } from '../../lib/utils'
 import toast from 'react-hot-toast'
 import { Bell } from 'lucide-react'

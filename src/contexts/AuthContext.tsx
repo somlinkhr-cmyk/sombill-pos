@@ -1,253 +1,172 @@
-import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
-import { User, UserRole, Tenant, Subscription, SubscriptionPlan } from '../types'
-import { supabase } from '../lib/supabase'
-import toast from 'react-hot-toast'
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { User as SupabaseUser } from '@supabase/supabase-js'
+import { supabase } from '../lib/auth'
+
+interface User {
+  id: string
+  email: string
+  full_name: string | null
+  is_super_admin: boolean
+  role?: string
+  tenant_id?: string | null
+}
 
 interface AuthContextType {
   user: User | null
-  tenant: Tenant | null
-  subscription: Subscription | null
-  plan: SubscriptionPlan | null
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
-  logout: () => Promise<void>
-  hasPermission: (permission: string) => boolean
-  hasModuleAccess: (module: string) => boolean
+  signIn: (email: string, password: string) => Promise<void>
+  signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const PERMISSIONS: Record<UserRole, string[]> = {
-  super_admin: ['*'], // All permissions
-  manager: [
-    'dashboard.view',
-    'orders.view',
-    'orders.create',
-    'orders.edit',
-    'orders.delete',
-    'orders.refund',
-    'menu.view',
-    'menu.create',
-    'menu.edit',
-    'menu.delete',
-    'inventory.view',
-    'inventory.create',
-    'inventory.edit',
-    'inventory.delete',
-    'tables.view',
-    'tables.create',
-    'tables.edit',
-    'tables.delete',
-    'staff.view',
-    'staff.create',
-    'staff.edit',
-    'staff.delete',
-    'customers.view',
-    'customers.create',
-    'customers.edit',
-    'customers.delete',
-    'reports.view',
-    'reports.export',
-    'expenses.view',
-    'expenses.create',
-    'expenses.edit',
-    'expenses.delete',
-    'settings.view',
-    'settings.edit',
-  ],
-  cashier: [
-    'pos.view',
-    'orders.create',
-    'orders.edit',
-    'tables.view',
-    'customers.view',
-    'customers.create',
-  ],
-  waiter: [
-    'tables.view',
-    'tables.edit',
-    'orders.create',
-    'orders.edit',
-    'customers.view',
-  ],
-  kitchen: [
-    'kds.view',
-    'orders.edit',
-  ],
-}
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [tenant, setTenant] = useState<Tenant | null>(null)
-  const [subscription, setSubscription] = useState<Subscription | null>(null)
-  const [plan, setPlan] = useState<SubscriptionPlan | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    checkAuth()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          await loadUserProfile(session.user.id)
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null)
-          setTenant(null)
-          setSubscription(null)
-          setPlan(null)
-          setLoading(false)
-        }
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchUserProfile(session.user)
+      } else {
+        setLoading(false)
       }
-    )
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        fetchUserProfile(session.user)
+      } else {
+        setUser(null)
+        setLoading(false)
+      }
+    })
 
     return () => subscription.unsubscribe()
   }, [])
 
-  async function checkAuth() {
+  async function fetchUserProfile(supabaseUser: SupabaseUser) {
+    console.log('=== AUTH DEBUG: fetchUserProfile ===')
+    console.log('Supabase User ID:', supabaseUser.id)
+    console.log('Supabase User Email:', supabaseUser.email)
+    
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user) {
-        await loadUserProfile(session.user.id)
-      } else {
-        setLoading(false)
-      }
-    } catch (error) {
-      console.error('Auth check error:', error)
-      setLoading(false)
-    }
-  }
-
-  async function loadUserProfile(userId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('users')
+      // Check if profile exists
+      let profile = null
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('id', supabaseUser.id)
         .single()
 
-      if (error) throw error
-      if (data && data.is_active) {
-        setUser(data)
-        
-        // Load tenant data only if not super admin and has tenant_id
-        if (!data.is_super_admin && data.tenant_id) {
-          await loadTenantData(data.tenant_id)
+      profile = profileData
+      console.log('Profile query result:', profile ? 'FOUND' : 'NOT FOUND')
+      if (profileError) console.error('Profile error:', profileError)
+      if (profile) console.log('Profile data:', profile)
+
+      if (!profile) {
+        console.log('Profile not found, creating profile manually...')
+        // Create profile manually if trigger didn't work
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: supabaseUser.id,
+            email: supabaseUser.email,
+            full_name: supabaseUser.user_metadata?.full_name || supabaseUser.email?.split('@')[0] || 'User',
+            is_super_admin: supabaseUser.user_metadata?.is_super_admin || false,
+            tenant_id: null,
+          })
+          .select()
+          .single()
+
+        if (createError) {
+          console.error('Error creating profile:', createError)
+        } else {
+          console.log('Profile created successfully:', newProfile)
+          profile = newProfile
         }
+      }
+
+      if (profile) {
+        // Get user's role from restaurant_users
+        console.log('Fetching restaurant_users assignment...')
+        const { data: restaurantUser, error: restaurantUserError } = await supabase
+          .from('restaurant_users')
+          .select(`
+            roles!inner (
+              slug
+            )
+          `)
+          .eq('profile_id', profile.id)
+          .eq('status', 'active')
+          .single()
+
+        console.log('Restaurant user query result:', restaurantUser ? 'FOUND' : 'NOT FOUND')
+        if (restaurantUserError) console.error('Restaurant user error:', restaurantUserError)
+        if (restaurantUser) console.log('Restaurant user data:', restaurantUser)
+
+        const userRole = restaurantUser ? (restaurantUser as any).roles.slug : undefined
+        console.log('User role:', userRole)
+
+        const userData = {
+          id: profile.id,
+          email: profile.email,
+          full_name: profile.full_name,
+          is_super_admin: profile.is_super_admin,
+          role: userRole,
+          tenant_id: profile.tenant_id,
+        }
+
+        console.log('Setting user state:', userData)
+        setUser(userData)
       } else {
-        await supabase.auth.signOut()
-        toast.error('Account is inactive')
+        console.error('Failed to get or create profile')
+        setUser(null)
       }
     } catch (error) {
-      console.error('Error loading user profile:', error)
-      await supabase.auth.signOut()
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function loadTenantData(tenantId: string) {
-    try {
-      // Load tenant
-      const { data: tenantData, error: tenantError } = await supabase
-        .from('tenants')
-        .select('*')
-        .eq('id', tenantId)
-        .single()
-
-      if (tenantError) throw tenantError
-      setTenant(tenantData)
-
-      // Load subscription
-      const { data: subscriptionData, error: subscriptionError } = await supabase
-        .from('subscriptions')
-        .select('*, subscription_plans(*)')
-        .eq('tenant_id', tenantId)
-        .eq('status', 'active')
-        .single()
-
-      if (!subscriptionError && subscriptionData) {
-        setSubscription(subscriptionData)
-        setPlan(subscriptionData.subscription_plans as any)
-      }
-    } catch (error) {
-      console.error('Error loading tenant data:', error)
-    }
-  }
-
-  async function login(email: string, password: string) {
-    try {
-      setLoading(true)
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) throw error
-
-      if (data.user) {
-        await loadUserProfile(data.user.id)
-        toast.success('Login successful')
-      }
-    } catch (error: any) {
-      toast.error(error.message || 'Login failed')
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function logout() {
-    try {
-      await supabase.auth.signOut()
+      console.error('Error fetching user profile:', error)
       setUser(null)
-      setTenant(null)
-      setSubscription(null)
-      setPlan(null)
-      toast.success('Logged out successfully')
-    } catch (error) {
-      toast.error('Logout failed')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const hasPermission = useCallback((permission: string): boolean => {
-    if (!user) return false
-    const userPermissions = PERMISSIONS[user.role] || []
-    return userPermissions.includes(permission)
-  }, [user])
-
-  const hasModuleAccess = useCallback((module: string): boolean => {
-    // For demo purposes, return true if no plan is set
-    if (!plan) return true
+  async function signIn(email: string, password: string) {
+    console.log('=== AUTH DEBUG: signIn ===')
+    console.log('Email:', email)
     
-    const moduleAccess: Record<string, keyof SubscriptionPlan> = {
-      'cashier': 'allow_cashier',
-      'manager': 'allow_manager',
-      'waiter': 'allow_waiter',
-      'waiter_dashboard': 'allow_waiter',
-      'kitchen_display': 'allow_kitchen_display',
-      'customer_menu': 'allow_customer_menu',
-      'multi_branch': 'allow_multi_branch',
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) {
+      console.error('Sign in error:', error)
+      throw error
     }
-    
-    const accessKey = moduleAccess[module]
-    return accessKey ? (plan as any)[accessKey] : true
-  }, [plan])
 
-  const contextValue = useMemo(() => ({
-    user,
-    tenant,
-    subscription,
-    plan,
-    loading,
-    login,
-    logout,
-    hasPermission,
-    hasModuleAccess,
-  }), [user, tenant, subscription, plan, loading, login, logout, hasPermission, hasModuleAccess])
+    console.log('Sign in successful')
+    console.log('Session:', data.session ? 'EXISTS' : 'NULL')
+    console.log('User:', data.user ? 'EXISTS' : 'NULL')
+    if (data.user) {
+      console.log('User ID:', data.user.id)
+      console.log('User email:', data.user.email)
+    }
+
+    // Profile will be fetched by the auth state change listener
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut()
+    setUser(null)
+  }
 
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={{ user, loading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   )

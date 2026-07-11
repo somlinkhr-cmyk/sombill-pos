@@ -100,14 +100,16 @@ function RoleRedirect() {
   }
 
   const roleRoutes: Record<string, string> = {
+    owner: '/manager', // Redirect to manager dashboard (owner not implemented yet)
     manager: '/manager',
     cashier: '/cashier',
-    waiter: '/waiter/dashboard',
-    kitchen: '/kitchen/system',
-    customer: '/menu',
+    waiter: '/waiter', // Use Waiter Panel
+    kitchen: '/kitchen/system', // Use Kitchen Display System
+    inventory: '/manager', // Redirect to manager dashboard (inventory not implemented yet)
+    accountant: '/manager', // Redirect to manager dashboard (accountant not implemented yet)
   }
 
-  return <Navigate to={roleRoutes[user.role] || '/login'} replace />
+  return <Navigate to={roleRoutes[user.role] || '/manager'} replace />
 }
 
 function App() {
